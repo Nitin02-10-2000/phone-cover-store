@@ -1,0 +1,248 @@
+@layer base;
+
+:root {
+  /* User-Defined Color Palette */
+  --background: #FAF9F6;        /* Soft Cream */
+  --surface: #FFFFFF;           /* Cards Pure White */
+  --surface-raised: #F3E8FF;    /* Highlight Soft Purple */
+  --surface-border: #E5E7EB;    /* Subtle Border */
+  --foreground: #171717;        /* Main Text */
+  --foreground-muted: #6B7280;  /* Secondary Text */
+  
+  --primary: #111111;           /* Deep Black */
+  --main-accent: #7C3AED;       /* Electric Purple */
+  --main-accent-bright: #8B5CF6;
+  --main-accent-dark: #6D28D9;
+  --secondary-accent: #EC4899;  /* Hot Pink */
+  --highlight: #F3E8FF;         /* Soft Purple */
+  --cards: #FFFFFF;             /* Pure White */
+
+  /* Hachiman Brand Tokens */
+  --hachiman-purple: #7C3AED;
+  --hachiman-purple-bright: #8B5CF6;
+  --hachiman-purple-dark: #6D28D9;
+  --hachiman-purple-glow: rgba(124, 58, 237, 0.25);
+  --hachiman-pink: #EC4899;
+  --hachiman-pink-glow: rgba(236, 72, 153, 0.25);
+
+  /* Aliases for component compatibility */
+  --shinra-red: #7C3AED;        /* Electric Purple */
+  --shinra-red-bright: #8B5CF6;
+  --shinra-red-dark: #6D28D9;
+  --shinra-red-glow: rgba(124, 58, 237, 0.25);
+  --shinra-pink: #EC4899;       /* Hot Pink */
+  --shinra-pink-glow: rgba(236, 72, 153, 0.25);
+
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-hachiman: 0 10px 30px -10px rgba(17, 17, 17, 0.08);
+  --shadow-shinra: 0 10px 30px -10px rgba(17, 17, 17, 0.08);
+  --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--main-accent);
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 3rem;
+  }
+}
+
+/* Skewed Badge */
+.hachiman-badge,
+.shinra-badge {
+  display: inline-block;
+  background-color: var(--primary);
+  color: #ffffff;
+  padding: 5px 14px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transform: skewX(-10deg);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 15px rgba(17, 17, 17, 0.1);
+  border-radius: 4px;
+}
+
+.hachiman-badge > *,
+.shinra-badge > * {
+  transform: skewX(10deg);
+  display: inline-block;
+}
+
+.hachiman-badge-purple,
+.hachiman-badge-red,
+.shinra-badge-red {
+  background: linear-gradient(135deg, var(--main-accent), var(--secondary-accent));
+  color: #ffffff;
+  border: none;
+}
+
+/* Buttons */
+.hachiman-btn,
+.shinra-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.85rem;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.hachiman-btn-primary,
+.shinra-btn-primary {
+  background-color: var(--main-accent);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+
+.hachiman-btn-primary:hover,
+.shinra-btn-primary:hover {
+  background-color: var(--main-accent-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+}
+
+.hachiman-btn-dark,
+.shinra-btn-dark {
+  background-color: var(--primary);
+  color: #ffffff;
+  border: 1px solid var(--primary);
+}
+
+.hachiman-btn-dark:hover,
+.shinra-btn-dark:hover {
+  background-color: #000000;
+  border-color: #000000;
+  transform: translateY(-2px);
+}
+
+.hachiman-btn-ghost,
+.shinra-btn-ghost {
+  background-color: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--surface-border);
+}
+
+.hachiman-btn-ghost:hover,
+.shinra-btn-ghost:hover {
+  background-color: var(--surface-raised);
+  border-color: var(--main-accent);
+  color: var(--main-accent);
+}
+
+.shinra-btn-ghost:hover {
+  background-color: var(--surface-raised);
+  border-color: var(--main-accent);
+  color: var(--main-accent);
+}
+
+/* Marquee / Ticker */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.marquee-content {
+  display: inline-flex;
+  animation: marquee-scroll 25s linear infinite;
+  gap: 2rem;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Product Card Glow & Hover */
+.product-card {
+  background: var(--cards);
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.product-card:hover {
+  border-color: var(--main-accent);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 35px rgba(124, 58, 237, 0.12), 0 0 20px rgba(124, 58, 237, 0.1);
+}
