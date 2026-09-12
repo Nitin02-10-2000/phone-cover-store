@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/lib/cartContext";
+import CaseTadkaLogo from "@/components/CaseTadkaLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,9 +19,10 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    login(email, name || undefined);
-    router.push("/account");
+    if (!email.trim() || !password.trim()) return;
+
+    login(email, name || email.split("@")[0]);
+    router.push("/shop");
   };
 
   const handleDemoLogin = () => {
@@ -32,21 +34,47 @@ export default function LoginPage() {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
 
-      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem 1rem" }}>
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "3rem 1.5rem",
+          position: "relative",
+        }}
+      >
+        {/* Glow ambient */}
+        <div
+          style={{
+            position: "absolute",
+            top: "20%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "500px",
+            height: "500px",
+            backgroundColor: "rgba(255, 42, 58, 0.08)",
+            borderRadius: "50%",
+            filter: "blur(120px)",
+            pointerEvents: "none",
+          }}
+        />
+
         <div
           style={{
             width: "100%",
-            maxWidth: "440px",
+            maxWidth: "460px",
             backgroundColor: "var(--surface)",
             border: "1px solid var(--surface-border)",
             borderRadius: "16px",
             padding: "2.5rem 2rem",
-            boxShadow: "0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(229,9,20,0.1)",
+            boxShadow: "var(--shadow-shinra)",
             position: "relative",
             overflow: "hidden",
+            zIndex: 1,
           }}
         >
-          {/* Top accent bar */}
+          {/* Red top bar */}
           <div
             style={{
               position: "absolute",
@@ -54,29 +82,14 @@ export default function LoginPage() {
               left: 0,
               right: 0,
               height: "4px",
-              backgroundColor: "var(--shinra-red)",
+              backgroundColor: "#FF2A3A",
             }}
           />
 
           {/* Logo & Title */}
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                backgroundColor: "#000000",
-                border: "1px solid var(--shinra-red)",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 1rem auto",
-                boxShadow: "0 0 20px var(--shinra-red-glow)",
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--shinra-red)" strokeWidth="2.5">
-                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-              </svg>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+              <CaseTadkaLogo variant="badge" size="sm" />
             </div>
 
             <h1
@@ -88,7 +101,7 @@ export default function LoginPage() {
                 textTransform: "uppercase",
               }}
             >
-              {mode === "login" ? "ACCESS HACHIMAN" : "JOIN THE COLLECTIVE"}
+              {mode === "login" ? "ACCESS CASE TADKA" : "JOIN THE TADKA FAM"}
             </h1>
             <p style={{ color: "var(--foreground-muted)", fontSize: "0.85rem", marginTop: "4px" }}>
               {mode === "login" ? "Sign in to manage drops, orders & custom cases" : "Create an account for VIP early drop access"}

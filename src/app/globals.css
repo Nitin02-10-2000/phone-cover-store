@@ -1,42 +1,50 @@
 @layer base;
 
 :root {
-  /* User-Defined Color Palette (Light Mode) */
-  --background: #F8F9FA;        /* Ultra-light Grey/Cream */
+  /* Case Tadka Color Palette (Light Mode) */
+  --background: #F9FAFB;        /* Crisp Clean Background */
   --surface: #FFFFFF;           /* Cards Pure White */
-  --surface-raised: #F1F5F9;    /* Highlight Soft Grey */
-  --surface-border: #E2E8F0;    /* Subtle Border */
+  --surface-raised: #F3F4F6;    /* Highlight Soft Grey */
+  --surface-border: #E5E7EB;    /* Subtle Border */
   --foreground: #0F172A;        /* Main Text */
   --foreground-muted: #64748B;  /* Secondary Text */
   
-  --primary: #0F172A;           /* Deep Blackish Blue */
-  --main-accent: #7C3AED;       /* Electric Purple */
-  --main-accent-bright: #8B5CF6;
-  --main-accent-dark: #6D28D9;
-  --secondary-accent: #EC4899;  /* Hot Pink */
-  --highlight: #F3E8FF;         /* Soft Purple */
+  --primary: #0F172A;           /* Deep Black */
+  --main-accent: #FF2A3A;       /* Case Tadka Spicy Fiery Red */
+  --main-accent-bright: #FF4D5A;
+  --main-accent-dark: #D61524;
+  --secondary-accent: #FF9F1C;  /* Warm Golden Saffron Spice */
+  --secondary-accent-bright: #FFAA33;
+  --highlight: #FFF1F2;         /* Soft Red Tint */
   --cards: #FFFFFF;             /* Pure White */
 
   /* Glassmorphism Tokens */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(229, 231, 235, 0.8);
+  --glass-shadow: 0 8px 32px 0 rgba(255, 42, 58, 0.06);
 
-  /* Brand Tokens */
-  --hachiman-purple: #7C3AED;
-  --hachiman-purple-bright: #8B5CF6;
-  --hachiman-purple-dark: #6D28D9;
-  --hachiman-purple-glow: rgba(124, 58, 237, 0.25);
-  --hachiman-pink: #EC4899;
-  --hachiman-pink-glow: rgba(236, 72, 153, 0.25);
+  /* Case Tadka Brand Tokens */
+  --tadka-red: #FF2A3A;
+  --tadka-red-bright: #FF4D5A;
+  --tadka-red-dark: #D61524;
+  --tadka-red-glow: rgba(255, 42, 58, 0.28);
+  --tadka-amber: #FF9F1C;
+  --tadka-amber-glow: rgba(255, 159, 28, 0.25);
 
   /* Aliases for component compatibility */
-  --shinra-red: #7C3AED;        /* Electric Purple */
-  --shinra-red-bright: #8B5CF6;
-  --shinra-red-dark: #6D28D9;
-  --shinra-red-glow: rgba(124, 58, 237, 0.25);
-  --shinra-pink: #EC4899;       /* Hot Pink */
-  --shinra-pink-glow: rgba(236, 72, 153, 0.25);
+  --hachiman-purple: #FF2A3A;
+  --hachiman-purple-bright: #FF4D5A;
+  --hachiman-purple-dark: #D61524;
+  --hachiman-purple-glow: rgba(255, 42, 58, 0.28);
+  --hachiman-pink: #FF9F1C;
+  --hachiman-pink-glow: rgba(255, 159, 28, 0.25);
+
+  --shinra-red: #FF2A3A;        /* Case Tadka Spicy Red */
+  --shinra-red-bright: #FF4D5A;
+  --shinra-red-dark: #D61524;
+  --shinra-red-glow: rgba(255, 42, 58, 0.28);
+  --shinra-pink: #FF9F1C;       /* Warm Golden Spice */
+  --shinra-pink-glow: rgba(255, 159, 28, 0.25);
 
   --font-heading: 'Space Grotesk', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
@@ -45,30 +53,30 @@
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-hachiman: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
-  --shadow-shinra: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
-  --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.25);
+  --shadow-hachiman: 0 10px 30px -10px rgba(255, 42, 58, 0.1);
+  --shadow-shinra: 0 10px 30px -10px rgba(255, 42, 58, 0.1);
+  --shadow-glow: 0 0 25px rgba(255, 42, 58, 0.28);
 }
 
 [data-theme="dark"] {
-  /* User-Defined Color Palette (Dark Mode) */
-  --background: #09090B;        /* Deep Space Black */
-  --surface: #18181B;           /* Dark Card */
-  --surface-raised: #27272A;    /* Lighter Highlight */
-  --surface-border: #3F3F46;    /* Dark Border */
-  --foreground: #F8FAFC;        /* Crisp White Text */
-  --foreground-muted: #94A3B8;  /* Muted Text */
+  /* Case Tadka Color Palette (Dark Mode - Match Logo Backdrop) */
+  --background: #09090C;        /* Deep Space Black matching logo */
+  --surface: #131317;           /* Premium Matte Charcoal Card */
+  --surface-raised: #1D1D24;    /* Lighter Highlight */
+  --surface-border: #2B2B36;    /* Dark Border */
+  --foreground: #F9FAFB;        /* Crisp White Text */
+  --foreground-muted: #9CA3AF;  /* Muted Text */
   
-  --primary: #F8FAFC;           /* Inverse for contrast */
-  --cards: #18181B;             /* Dark Card */
+  --primary: #F9FAFB;           /* Crisp White */
+  --cards: #131317;             /* Dark Card */
 
   /* Glassmorphism Tokens - Dark Mode */
-  --glass-bg: rgba(24, 24, 27, 0.75);
+  --glass-bg: rgba(15, 15, 18, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
 
-  --shadow-hachiman: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
-  --shadow-shinra: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  --shadow-hachiman: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  --shadow-shinra: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
 }
 
 * {
@@ -195,6 +203,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Skewed Badge */
+.casetadka-badge,
 .hachiman-badge,
 .shinra-badge {
   display: inline-block;
@@ -206,17 +215,19 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.15em;
   text-transform: uppercase;
   transform: skewX(-10deg);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(255, 42, 58, 0.2);
   box-shadow: 0 4px 15px rgba(17, 17, 17, 0.1);
   border-radius: 4px;
 }
 
+.casetadka-badge > *,
 .hachiman-badge > *,
 .shinra-badge > * {
   transform: skewX(10deg);
   display: inline-block;
 }
 
+.casetadka-badge-red,
 .hachiman-badge-purple,
 .hachiman-badge-red,
 .shinra-badge-red {
@@ -226,6 +237,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Buttons */
+.casetadka-btn,
 .hachiman-btn,
 .shinra-btn {
   display: inline-flex;
@@ -245,20 +257,23 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none;
 }
 
+.casetadka-btn-primary,
 .hachiman-btn-primary,
 .shinra-btn-primary {
   background-color: var(--main-accent);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 4px 14px rgba(255, 42, 58, 0.35);
 }
 
+.casetadka-btn-primary:hover,
 .hachiman-btn-primary:hover,
 .shinra-btn-primary:hover {
   background-color: var(--main-accent-dark);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 6px 20px rgba(255, 42, 58, 0.5);
 }
 
+.casetadka-btn-dark,
 .hachiman-btn-dark,
 .shinra-btn-dark {
   background-color: var(--primary);

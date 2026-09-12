@@ -80,7 +80,7 @@ export default function AdminPage() {
       >
         {/* Brand */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid var(--surface-border)" }}>
-          <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.2em", color: "var(--shinra-red)", textTransform: "uppercase", marginBottom: "4px" }}>HACHIMAN</div>
+          <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.2em", color: "#FF2A3A", textTransform: "uppercase", marginBottom: "4px" }}>CASE TADKA</div>
           <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--foreground)" }}>Admin Panel</div>
         </div>
 
@@ -167,7 +167,7 @@ export default function AdminPage() {
               }}
             />
             <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--main-accent)" }}>
-              HACHIMAN OPS COMMAND TERMINAL // SECURE NODE
+              CASE TADKA OPS COMMAND TERMINAL // SECURE NODE
             </span>
           </div>
 
@@ -606,9 +606,9 @@ export default function AdminPage() {
         {activeTab === "coupons" && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
             {[
-              { code: "HACHIMAN", disc: "10% OFF Sitewide", uses: "1,249 redeemed", status: "ACTIVE" },
+              { code: "TADKA10", disc: "10% OFF Sitewide", uses: "1,249 redeemed", status: "ACTIVE" },
               { code: "DROP20", disc: "20% OFF Orders > ₹1,499", uses: "582 redeemed", status: "ACTIVE" },
-              { code: "HACHIMAN50", disc: "Flat ₹50 OFF for New Hunters", uses: "3,110 redeemed", status: "ACTIVE" },
+              { code: "TADKA50", disc: "Flat ₹50 OFF for New Hunters", uses: "3,110 redeemed", status: "ACTIVE" },
               { code: "CYBERPUNK", disc: "15% OFF Tough Cases Only", uses: "419 redeemed", status: "PAUSED" },
             ].map((c) => (
               <div

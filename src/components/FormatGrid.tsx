@@ -17,8 +17,8 @@ export default function FormatGrid() {
       <div className="container">
         {/* Section Header */}
         <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 3rem" }}>
-          <div className="shinra-badge" style={{ marginBottom: "1rem" }}>
-            <span>GALLERY GRADE MATERIALS</span>
+          <div className="shinra-badge shinra-badge-red" style={{ marginBottom: "1rem" }}>
+            <span>CASE TADKA ARMOR TIERS</span>
           </div>
           <h2
             style={{
@@ -27,9 +27,10 @@ export default function FormatGrid() {
               fontWeight: 900,
               color: "var(--foreground)",
               marginBottom: "0.75rem",
+              letterSpacing: "-0.02em",
             }}
           >
-            SHOP BY FORMAT & MATERIAL
+            CHOOSE YOUR CASE FORMAT
           </h2>
           <p
             style={{
@@ -38,7 +39,7 @@ export default function FormatGrid() {
               lineHeight: 1.6,
             }}
           >
-            Every piece is crafted made-to-order with zero compromises. Pick the exact material that elevates your room setup or everyday carry.
+            Good covers, better vibes. Pick the exact phone armor chassis engineered for your everyday carry and style.
           </p>
         </div>
 
@@ -56,7 +57,7 @@ export default function FormatGrid() {
               style={{
                 backgroundColor: "var(--surface)",
                 border: "1px solid var(--surface-border)",
-                borderRadius: "8px",
+                borderRadius: "12px",
                 padding: "1.75rem",
                 display: "flex",
                 flexDirection: "column",
@@ -69,9 +70,9 @@ export default function FormatGrid() {
             >
               <style jsx>{`
                 .format-box:hover {
-                  border-color: var(--shinra-red);
+                  border-color: var(--main-accent);
                   transform: translateY(-4px);
-                  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.12), 0 0 20px var(--shinra-red-glow);
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 0 20px var(--tadka-red-glow);
                 }
               `}</style>
 
@@ -91,11 +92,11 @@ export default function FormatGrid() {
                       fontFamily: "var(--font-heading)",
                       fontSize: "0.85rem",
                       fontWeight: 800,
-                      color: "var(--shinra-red-bright)",
-                      backgroundColor: "var(--surface-raised)",
+                      color: "var(--main-accent)",
+                      backgroundColor: "var(--accent-glow)",
                       padding: "4px 10px",
-                      borderRadius: "4px",
-                      border: "1px solid rgba(124, 58, 237, 0.2)",
+                      borderRadius: "6px",
+                      border: "1px solid rgba(255, 42, 58, 0.2)",
                     }}
                   >
                     {fmt.priceText}
@@ -119,7 +120,7 @@ export default function FormatGrid() {
                     fontSize: "0.78rem",
                     fontWeight: 700,
                     letterSpacing: "0.08em",
-                    color: "var(--shinra-red)",
+                    color: "var(--main-accent)",
                     textTransform: "uppercase",
                     marginBottom: "0.85rem",
                   }}

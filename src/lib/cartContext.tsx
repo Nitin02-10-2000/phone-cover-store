@@ -374,6 +374,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Promo code discounts
   const promoDiscount =
+    promoCode.toUpperCase() === "TADKA10" ||
+    promoCode.toUpperCase() === "CASETADKA" ||
+    promoCode.toUpperCase() === "TADKA" ||
     promoCode.toUpperCase() === "HACHIMAN" ||
     promoCode.toUpperCase() === "HACHIMAN10" ||
     promoCode.toUpperCase() === "SHINRA" ||
@@ -381,13 +384,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       ? Math.round((subtotal - tierDiscount) * 0.1)
       : promoCode.toUpperCase() === "DROP20"
       ? Math.round((subtotal - tierDiscount) * 0.2)
-      : promoCode.toUpperCase() === "HACHIMAN50" || promoCode.toUpperCase() === "SHINRA50"
+      : promoCode.toUpperCase() === "TADKA50" || promoCode.toUpperCase() === "HACHIMAN50" || promoCode.toUpperCase() === "SHINRA50"
       ? 50
       : 0;
 
   const applyPromo = (code: string) => {
     const clean = code.trim().toUpperCase();
     if (
+      clean === "TADKA10" ||
+      clean === "CASETADKA" ||
+      clean === "TADKA" ||
+      clean === "TADKA50" ||
       clean === "HACHIMAN" ||
       clean === "HACHIMAN10" ||
       clean === "HACHIMAN50" ||
@@ -400,7 +407,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       showToast(`Promo code ${clean} applied!`);
       return true;
     }
-    showToast("Invalid promo code. Try 'HACHIMAN'");
+    showToast("Invalid promo code. Try 'TADKA10'");
     return false;
   };
 

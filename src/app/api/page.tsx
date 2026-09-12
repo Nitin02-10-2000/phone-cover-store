@@ -50,7 +50,7 @@ const ENDPOINTS: EndpointDef[] = [
     exampleResponse: {
       status: "healthy",
       uptime: "99.99%",
-      service: "HACHIMAN Phone Armor Commerce API",
+      service: "CASE TADKA Phone Armor Commerce API",
       version: "v1.4.2",
       region: "ap-south-1 (Mumbai)",
     },
@@ -63,7 +63,7 @@ const ENDPOINTS: EndpointDef[] = [
     params: [
       { name: "items", type: "CartItem[]", desc: "Array of selected cases, models, and quantities" },
       { name: "shipping", type: "object", desc: "Delivery address, city, pincode, and phone number" },
-      { name: "promoCode", type: "string", desc: "Optional discount code (e.g. HACHIMAN)" },
+      { name: "promoCode", type: "string", desc: "Optional discount code (e.g. TADKA10)" },
     ],
     exampleResponse: {
       success: true,
@@ -136,7 +136,7 @@ export default function ApiPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    HACHIMAN CORE API v1.4
+                    CASE TADKA CORE API v1.4
                   </span>
                   <span
                     style={{

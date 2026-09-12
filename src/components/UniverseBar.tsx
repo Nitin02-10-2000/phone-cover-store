@@ -80,12 +80,12 @@ export default function UniverseBar({
                 fontSize: "0.72rem",
                 fontWeight: 800,
                 letterSpacing: "0.2em",
-                color: "var(--shinra-red)",
+                color: "var(--main-accent)",
                 textTransform: "uppercase",
                 marginBottom: "4px",
               }}
             >
-              Curated Themes & Custom Editions
+              GOOD COVERS • BETTER VIBES • 20+ THEMES
             </div>
             <h2
               style={{
@@ -96,7 +96,7 @@ export default function UniverseBar({
                 letterSpacing: "-0.02em",
               }}
             >
-              EXPLORE BY CATEGORY
+              EXPLORE CASE TADKA DROPS
             </h2>
           </div>
 

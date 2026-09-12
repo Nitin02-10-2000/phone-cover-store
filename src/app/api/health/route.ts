@@ -5,7 +5,7 @@ export async function GET() {
     status: "healthy",
     uptime: "99.99%",
     timestamp: new Date().toISOString(),
-    service: "HACHIMAN Phone Armor Commerce API",
+    service: "CASE TADKA Phone Armor Commerce API",
     version: "v1.4.2",
     region: "ap-south-1 (Mumbai)",
     environment: "production",

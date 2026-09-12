@@ -383,7 +383,7 @@ export default function CartPage() {
                       type="text"
                       value={inputCode}
                       onChange={(e) => setInputCode(e.target.value)}
-                      placeholder="Use: HACHIMAN or DROP20"
+                      placeholder="Use: TADKA10 or DROP20"
                       style={{
                         flex: 1,
                         backgroundColor: "var(--background)",

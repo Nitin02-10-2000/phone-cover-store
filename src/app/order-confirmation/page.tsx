@@ -139,7 +139,7 @@ function OrderConfirmationContent() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem", position: "relative" }}>
           {[
             { step: "1", title: "Order Confirmed", desc: "Payment verified", done: true },
-            { step: "2", title: "300 GSM Printing", desc: "Quality inspection", done: true },
+            { step: "2", title: "UV Armor Printing", desc: "Quality inspection", done: true },
             { step: "3", title: "Dispatched", desc: "Handover to Bluedart", done: false },
             { step: "4", title: "Delivered", desc: "At your doorstep", done: false },
           ].map((s, idx) => (

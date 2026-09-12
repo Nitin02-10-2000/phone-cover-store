@@ -295,7 +295,7 @@ export default function DevicePickerModal() {
                 key={item.id}
                 onClick={() => handleSelectModel(item)}
                 style={{
-                  backgroundColor: isCurrent ? "rgba(124, 58, 237, 0.15)" : "var(--surface-raised)",
+                  backgroundColor: isCurrent ? "rgba(255, 42, 58, 0.15)" : "var(--surface-raised)",
                   border: isCurrent ? "2px solid var(--main-accent)" : "1px solid var(--surface-border)",
                   borderRadius: "12px",
                   padding: "12px 14px",

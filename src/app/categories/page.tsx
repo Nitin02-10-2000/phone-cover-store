@@ -84,10 +84,10 @@ export default function CategoriesPage() {
                   letterSpacing: "0.15em",
                   textTransform: "uppercase",
                   color: "var(--main-accent)",
-                  backgroundColor: "rgba(124, 58, 237, 0.1)",
+                  backgroundColor: "rgba(255, 42, 58, 0.1)",
                   padding: "4px 10px",
                   borderRadius: "20px",
-                  border: "1px solid rgba(124, 58, 237, 0.25)",
+                  border: "1px solid rgba(255, 42, 58, 0.25)",
                 }}
               >
                 20 OFFICIAL THEMES & FINISHES
@@ -184,7 +184,7 @@ export default function CategoriesPage() {
                       backgroundColor: isActive ? "var(--main-accent)" : "var(--surface)",
                       color: isActive ? "#ffffff" : "var(--foreground)",
                       border: isActive ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
-                      boxShadow: isActive ? "0 4px 14px rgba(124, 58, 237, 0.35)" : "none",
+                      boxShadow: isActive ? "0 4px 14px rgba(255, 42, 58, 0.35)" : "none",
                     }}
                   >
                     <span>{tab.icon}</span>
@@ -469,10 +469,10 @@ export default function CategoriesPage() {
                         fontWeight: 700,
                         letterSpacing: "0.08em",
                         color: "var(--main-accent)",
-                        backgroundColor: "rgba(124, 58, 237, 0.12)",
+                        backgroundColor: "rgba(255, 42, 58, 0.12)",
                         padding: "4px 10px",
                         borderRadius: "4px",
-                        border: "1px solid rgba(124, 58, 237, 0.25)",
+                        border: "1px solid rgba(255, 42, 58, 0.25)",
                       }}
                     >
                       {f.priceText}

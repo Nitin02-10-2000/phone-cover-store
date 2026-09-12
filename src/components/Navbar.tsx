@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
 import { CATEGORIES } from "@/data/products";
+import CaseTadkaLogo from "@/components/CaseTadkaLogo";
 
 
 export default function Navbar() {
@@ -57,7 +58,7 @@ export default function Navbar() {
           <span>•</span>
           <span>🧲 MAGSAFE WIRELESS CHARGING READY</span>
           <span>•</span>
-          <span>USE CODE: <span style={{ color: "var(--secondary-accent)", fontWeight: 800 }}>HACHIMAN</span> FOR EXTRA 10% OFF</span>
+          <span>USE CODE: <span style={{ color: "#FF2A3A", fontWeight: 900 }}>TADKA10</span> FOR EXTRA 10% OFF</span>
           <span>•</span>
           <span>🔥 BUY 2 PHONE CASES: 10% OFF</span>
           <span>•</span>
@@ -91,71 +92,17 @@ export default function Navbar() {
               gap: "1.2rem",
             }}
           >
-            {/* Brand Logo & Flame Icon */}
+            {/* Case Tadka Brand Logo */}
             <div style={{ display: "flex", alignItems: "center", gap: "2.2rem" }}>
               <Link
                 href="/"
                 style={{
-                  display: "flex",
+                  display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.65rem",
                   textDecoration: "none",
                 }}
               >
-                <div
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    backgroundColor: "var(--primary)",
-                    border: "1.5px solid var(--main-accent)",
-                    borderRadius: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: "0 4px 15px rgba(124, 58, 237, 0.25)",
-                    flexShrink: 0,
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--main-accent)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-                  </svg>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-heading)",
-                      fontSize: "1.45rem",
-                      fontWeight: 900,
-                      letterSpacing: "0.06em",
-                      color: "var(--foreground)",
-                      lineHeight: 1,
-                    }}
-                  >
-                    HACHIMAN
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "0.56rem",
-                      fontWeight: 800,
-                      letterSpacing: "0.22em",
-                      color: "var(--main-accent)",
-                      textTransform: "uppercase",
-                      marginTop: "2px",
-                    }}
-                  >
-                    PHONE ARMOR & CASES
-                  </span>
-                </div>
+                <CaseTadkaLogo variant="full" size="md" />
               </Link>
 
               {/* Desktop Nav Links (Visible on >= 1024px) */}
@@ -259,7 +206,7 @@ export default function Navbar() {
                                 display: "block",
                               }}
                             >
-                              HACHIMAN ARMOR DIRECTORY
+                              CASE TADKA ARMOR DIRECTORY
                             </span>
                             <h4
                               style={{
@@ -284,8 +231,8 @@ export default function Navbar() {
                             textDecoration: "none",
                             padding: "6px 14px",
                             borderRadius: "8px",
-                            backgroundColor: "rgba(124, 58, 237, 0.1)",
-                            border: "1px solid rgba(124, 58, 237, 0.25)",
+                            backgroundColor: "rgba(255, 42, 58, 0.1)",
+                            border: "1px solid rgba(255, 42, 58, 0.25)",
                             display: "inline-flex",
                             alignItems: "center",
                             gap: "6px",
@@ -296,7 +243,7 @@ export default function Navbar() {
                             e.currentTarget.style.color = "#ffffff";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "rgba(124, 58, 237, 0.1)";
+                            e.currentTarget.style.backgroundColor = "rgba(255, 42, 58, 0.1)";
                             e.currentTarget.style.color = "var(--main-accent-bright)";
                           }}
                         >
@@ -690,9 +637,9 @@ export default function Navbar() {
                                     fontWeight: 900,
                                     padding: "2px 6px",
                                     borderRadius: "4px",
-                                    backgroundColor: "rgba(124, 58, 237, 0.15)",
+                                    backgroundColor: "rgba(255, 42, 58, 0.15)",
                                     color: "var(--main-accent)",
-                                    border: "1px solid rgba(124, 58, 237, 0.3)",
+                                    border: "1px solid rgba(255, 42, 58, 0.3)",
                                     flexShrink: 0,
                                   }}
                                 >
@@ -920,8 +867,8 @@ export default function Navbar() {
                   height: "38px",
                   padding: "0 10px",
                   borderRadius: "8px",
-                  border: "1px solid rgba(124, 58, 237, 0.35)",
-                  backgroundColor: "rgba(124, 58, 237, 0.06)",
+                  border: "1px solid rgba(255, 42, 58, 0.35)",
+                  backgroundColor: "rgba(255, 42, 58, 0.06)",
                   color: "var(--main-accent)",
                   fontFamily: "var(--font-heading)",
                   fontSize: "0.72rem",
@@ -937,7 +884,7 @@ export default function Navbar() {
                   e.currentTarget.style.color = "#ffffff";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(124, 58, 237, 0.06)";
+                  e.currentTarget.style.backgroundColor = "rgba(255, 42, 58, 0.06)";
                   e.currentTarget.style.color = "var(--main-accent)";
                 }}
               >
@@ -1102,7 +1049,7 @@ export default function Navbar() {
                     ) : (
                       <>
                         <div style={{ padding: "6px 8px 10px", borderBottom: "1px solid var(--surface-border)", marginBottom: "6px" }}>
-                          <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--foreground)" }}>Welcome to Hachiman</div>
+                          <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--foreground)" }}>Welcome to Case Tadka</div>
                           <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)" }}>Sign in to view orders & saved armor</div>
                         </div>
 
@@ -1223,7 +1170,7 @@ export default function Navbar() {
                   fontWeight: 800,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  boxShadow: "0 4px 15px rgba(124, 58, 237, 0.3)",
+                  boxShadow: "0 4px 15px rgba(255, 42, 58, 0.3)",
                   transition: "all 0.2s",
                 }}
                 onMouseEnter={(e) => {
@@ -1364,8 +1311,8 @@ export default function Navbar() {
                 style={{
                   padding: "0.85rem 1rem",
                   borderRadius: "10px",
-                  backgroundColor: "rgba(124, 58, 237, 0.1)",
-                  border: "1px solid rgba(124, 58, 237, 0.4)",
+                  backgroundColor: "rgba(255, 42, 58, 0.1)",
+                  border: "1px solid rgba(255, 42, 58, 0.4)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1421,8 +1368,8 @@ export default function Navbar() {
                     gap: "5px",
                     padding: "9px 4px",
                     borderRadius: "8px",
-                    backgroundColor: "rgba(124, 58, 237, 0.1)",
-                    border: "1px solid rgba(124, 58, 237, 0.3)",
+                    backgroundColor: "rgba(255, 42, 58, 0.1)",
+                    border: "1px solid rgba(255, 42, 58, 0.3)",
                     fontSize: "0.74rem",
                     fontWeight: 800,
                     textDecoration: "none",

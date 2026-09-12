@@ -25,18 +25,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HACHIMAN — Best Anime Phone Cases & Armor in India | Premium Streetwear & Tech",
+  title: "Case Tadka — Good Covers. Better Vibes. | Desi Vibes. Global Style.",
   description:
-    "Shop premium anime phone cases, military drop protection armor, and wall art in India. MagSafe, 9H tempered glass, tough dual-layer cases for iPhone, Samsung & OnePlus. Pan-India shipping.",
+    "Shop premium phone covers, custom 3D armor, and impact cases at Case Tadka. Good Covers, Better Vibes. 12ft drop protection, MagSafe ready, 9H tempered glass for iPhone, Samsung, OnePlus & Pixel. Desi Vibes. Global Style.",
+  icons: {
+    icon: "/case-tadka-logo.png",
+    apple: "/case-tadka-logo.png",
+  },
   keywords: [
+    "case tadka",
+    "case tadka phone covers",
+    "good covers better vibes",
+    "desi vibes global style",
     "anime phone cases",
-    "hachiman phone cases",
-    "anime posters",
-    "magsafe anime cases",
-    "one piece phone cases",
-    "jujutsu kaisen phone cases",
-    "berserk phone case",
-    "india anime merch",
+    "custom phone cover",
+    "magsafe phone cases",
+    "phone cover store india",
   ],
 };
 
@@ -54,7 +58,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                var theme = localStorage.getItem('hachiman_theme') || 'dark';
+                var theme = localStorage.getItem('casetadka_theme') || localStorage.getItem('hachiman_theme') || 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
               } catch (_) {}
             `,

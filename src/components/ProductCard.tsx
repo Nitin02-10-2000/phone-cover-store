@@ -332,14 +332,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
             <div
               style={{
-                color: "var(--shinra-red)",
+                color: "var(--main-accent)",
                 fontWeight: 800,
                 display: "flex",
                 alignItems: "center",
                 gap: "3px",
               }}
             >
-              <span>Customize</span>
+              <span>View Case</span>
               <span>→</span>
             </div>
           </div>

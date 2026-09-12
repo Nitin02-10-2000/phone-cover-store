@@ -310,7 +310,7 @@ export default function CartDrawer() {
                           fontSize: "0.68rem",
                           fontWeight: 700,
                           color: "var(--main-accent-bright)",
-                          backgroundColor: "rgba(124, 58, 237, 0.15)",
+                          backgroundColor: "rgba(255, 42, 58, 0.15)",
                           padding: "1px 6px",
                           borderRadius: "3px",
                           display: "inline-block",
@@ -437,7 +437,7 @@ export default function CartDrawer() {
             <div style={{ display: "flex", gap: "8px" }}>
               <input
                 type="text"
-                placeholder="PROMO CODE (TRY 'HACHIMAN')"
+                placeholder="PROMO CODE (TRY 'TADKA10')"
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value)}
                 style={{

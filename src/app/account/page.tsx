@@ -39,7 +39,7 @@ export default function AccountPage() {
               right: "-50px",
               width: "250px",
               height: "250px",
-              background: "radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 70%)",
+              background: "radial-gradient(circle, rgba(255, 42, 58, 0.12), transparent 70%)",
               pointerEvents: "none",
             }}
           />

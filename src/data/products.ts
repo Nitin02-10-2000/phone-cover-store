@@ -115,6 +115,22 @@ export const UNIVERSES = CATEGORIES;
 
 export const PRODUCTS: Product[] = [
   {
+    id: "case-tadka-signature-edition",
+    name: "Case Tadka Signature Armor — Good Covers Better Vibes",
+    franchise: "desi",
+    theme: "desi",
+    category: "case",
+    tag: "🌶️ TADKA SIGNATURE",
+    price: 699,
+    originalPrice: 1399,
+    rating: 5.0,
+    reviewsCount: 680,
+    image: "/case-tadka-logo.png",
+    formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "9H Tempered Glass Back"],
+    description: "The official Case Tadka signature flagship phone armor. Featuring our fiery tadka chili swirl, 'Good Covers Better Vibes ❤️' motto, and 12ft military drop protection.",
+    dropProtection: "12ft Drop Tested",
+  },
+  {
     id: "porsche-911-gt3-case",
     name: "Porsche 911 GT3 RS — German Engineering Glass Case",
     franchise: "cars",
@@ -487,7 +503,7 @@ export const CASE_ANATOMY = [
 export const FAQS = [
   {
     q: "Will this case protect my phone against hard drops?",
-    a: "Yes! All Hachiman cases feature military-grade drop certification (MIL-STD-810G). Our Ultra Impact MagSafe and Tough Armor cases are tested for repeated 10ft to 12ft concrete drops with internal shock dissipation corners.",
+    a: "Yes! All Case Tadka cases feature military-grade drop certification (MIL-STD-810G). Our Ultra Impact MagSafe and Tough Armor cases are tested for repeated 10ft to 12ft concrete drops with internal shock dissipation corners.",
   },
   {
     q: "Are the camera lenses and front screen protected?",

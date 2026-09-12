@@ -65,7 +65,7 @@ const PRESET_ARTWORKS = [
   },
 ];
 
-const STICKERS = ["⚡ HACHIMAN CORPS", "👁️ HONORED ONE", "🔥 GEAR 5 NIKA", "⚔️ BERSERK BRAND", "👑 ARISE"];
+const STICKERS = ["⚡ CASE TADKA", "🌶️ SPICY ARMOR", "🔥 GEAR 5 NIKA", "⚔️ BERSERK BRAND", "👑 ARISE"];
 
 export default function CustomizePage() {
   const router = useRouter();
@@ -77,9 +77,9 @@ export default function CustomizePage() {
   const [selectedBrand, setSelectedBrand] = useState(() => getPhoneModelDetails(globalModel).brand);
   const [selectedModel, setSelectedModel] = useState(globalModel);
   const [selectedArtUrl, setSelectedArtUrl] = useState(PRESET_ARTWORKS[0].url);
-  const [customText, setCustomText] = useState("HACHIMAN-01");
+  const [customText, setCustomText] = useState("TADKA-01");
   const [textColor, setTextColor] = useState("#ffffff");
-  const [activeSticker, setActiveSticker] = useState<string | null>("⚡ HACHIMAN CORPS");
+  const [activeSticker, setActiveSticker] = useState<string | null>("⚡ CASE TADKA");
   const [zoomLevel, setZoomLevel] = useState(100);
   const [caseFinish, setCaseFinish] = useState<"matte" | "tempered">("tempered");
 
@@ -177,10 +177,10 @@ export default function CustomizePage() {
                 textTransform: "uppercase",
               }}
             >
-              CUSTOM DESIGN LAB
+              CASE TADKA CUSTOM ARMOR LAB
             </h1>
             <p style={{ color: "var(--foreground-muted)", fontSize: "0.95rem" }}>
-              Upload your own anime art, adjust camera framing, add custom typography, and print onto military-grade shockproof cases or museum posters.
+              Upload your own photo or design, adjust camera framing, add custom typography, and print onto military-grade shockproof phone armor.
             </p>
           </div>
         </section>

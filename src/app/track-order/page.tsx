@@ -25,30 +25,30 @@ function TrackOrderContent() {
     {
       title: "Order Placed & Verified",
       date: "Sep 06, 2026 • 02:45 PM",
-      location: "Hachiman Armory HQ, Bengaluru",
+      location: "Case Tadka Hub, Bengaluru",
       completed: true,
-      desc: "Payment authorized via 256-bit SSL gateway. Order sent to high-definition printing queue.",
+      desc: "Payment authorized via 256-bit SSL gateway. Order queued for made-to-order device precision molding.",
     },
     {
-      title: "High-Resolution Archival Printing",
+      title: "UV-Cured Armor Printing",
       date: "Sep 07, 2026 • 11:20 AM",
-      location: "Workshop Lab, Bengaluru",
+      location: "Case Tadka Print Lab, Bengaluru",
       completed: true,
-      desc: "Printed on 300 GSM matte artboard with 12-color archival pigment inks. Color-calibrated and inspected.",
+      desc: "Japanese UV DTF inks bonded directly into the shock armor substrate with scratch-proof hard coat. Precision color-calibrated.",
     },
     {
-      title: "Framing & Bulletproof Armor Packaging",
+      title: "QC Inspection & Shockproof Packaging",
       date: "Sep 07, 2026 • 04:30 PM",
       location: "Fulfillment Bay 2",
       completed: true,
-      desc: "Sealed in protective cellophane and secured into 3-ply heavy-gauge cylindrical carton tube.",
+      desc: "1.8mm camera ring tolerance tested, tactile click responsiveness verified, and sealed in shockproof Case Tadka box.",
     },
     {
       title: "Dispatched with Courier Partner",
       date: "Sep 08, 2026 • 09:15 AM",
       location: "Bluedart Air Hub, Kempegowda Intl",
       completed: matchedOrder.status === "SHIPPED" || matchedOrder.status === "DELIVERED",
-      desc: `Manifested with Bluedart Air under AWB #${matchedOrder?.trackingNumber || "BD-SHN-99824102-IN"}. In transit to destination city.`,
+      desc: `Manifested with Bluedart Air under AWB #${matchedOrder?.trackingNumber || "BD-TADKA-99824102-IN"}. In transit to destination city.`,
     },
     {
       title: "Out for Doorstep Delivery",
@@ -92,10 +92,10 @@ function TrackOrderContent() {
             marginTop: "0.4rem",
           }}
         >
-          TRACK YOUR ANIME DROP
+          TRACK YOUR CASE TADKA ARMOR
         </h1>
         <p style={{ color: "var(--foreground-muted)", fontSize: "0.95rem" }}>
-          Track the live production, framing, and express courier transit of your Hachiman order.
+          Track the live production, UV curing, and express courier transit of your Case Tadka order.
         </p>
       </div>
 

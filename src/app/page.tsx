@@ -6,7 +6,7 @@ import HeroBanner from "@/components/HeroBanner";
 import UniverseBar from "@/components/UniverseBar";
 import ProductCard from "@/components/ProductCard";
 import FormatGrid from "@/components/FormatGrid";
-import WhyHachiman from "@/components/WhyHachiman";
+import WhyCaseTadka from "@/components/WhyCaseTadka";
 import CustomerWall from "@/components/CustomerWall";
 import FaqSection from "@/components/FaqSection";
 import Footer from "@/components/Footer";
@@ -127,7 +127,7 @@ export default function Home() {
             >
               <div>
                 <div className="shinra-badge shinra-badge-red" style={{ marginBottom: "0.5rem" }}>
-                  <span>ANIME PHONE ARMOR • 2026 ARCHIVE</span>
+                  <span>CASE TADKA • GOOD COVERS. BETTER VIBES. 🌶️</span>
                 </div>
                 <h2
                   style={{
@@ -135,12 +135,13 @@ export default function Home() {
                     fontSize: "clamp(1.8rem, 3.5vw, 2.75rem)",
                     fontWeight: 900,
                     color: "var(--foreground)",
+                    letterSpacing: "-0.02em",
                   }}
                 >
-                  TRENDING PHONE CASE DROPS
+                  FRESH TADKA DROPS & PHONE ARMOR
                 </h2>
                 <p style={{ color: "var(--foreground-muted)", fontSize: "0.9rem", marginTop: "4px" }}>
-                  Showing {filteredProducts.length} battle-ready phone cases • MagSafe & 12ft Drop Tested
+                  Showing {filteredProducts.length} battle-ready phone covers • MagSafe & 12ft Drop Tested
                 </p>
               </div>
 
@@ -252,10 +253,10 @@ export default function Home() {
                   marginBottom: "0.75rem",
                 }}
               >
-                ANATOMY OF HACHIMAN PHONE ARMOR
+                ANATOMY OF CASE TADKA PHONE ARMOR
               </h2>
               <p style={{ fontSize: "0.95rem", color: "var(--foreground-muted)", lineHeight: 1.6 }}>
-                Engineered from the ground up for extreme impact resistance. We merge Japanese anime art with precision dual-polymer chassis engineering.
+                Engineered from the ground up for extreme impact resistance. We merge vibrant art with precision dual-polymer chassis engineering. Desi vibes, global style.
               </p>
             </div>
 
@@ -280,7 +281,7 @@ export default function Home() {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = "var(--shinra-red)";
                     e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = "0 15px 30px rgba(124, 58, 237, 0.12), 0 0 20px var(--shinra-red-glow)";
+                    e.currentTarget.style.boxShadow = "0 15px 30px rgba(255, 42, 58, 0.12), 0 0 20px var(--shinra-red-glow)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = "var(--surface-border)";
@@ -312,8 +313,8 @@ export default function Home() {
         {/* Case Finishes & Protection Tiers */}
         <FormatGrid />
 
-        {/* Why Hachiman & Standard Guarantees */}
-        <WhyHachiman />
+        {/* Why Case Tadka & Standard Guarantees */}
+        <WhyCaseTadka />
 
         {/* Customer Verified Setups & Reviews */}
         <CustomerWall />

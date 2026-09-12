@@ -46,7 +46,7 @@ export default function HeroBanner() {
         borderBottom: "1px solid var(--surface-border)",
       }}
     >
-      {/* Electric Purple & Hot Pink Mesh Glows */}
+      {/* Fiery Spicy Red & Golden Saffron Spice Glows */}
       <div
         style={{
           position: "absolute",
@@ -54,7 +54,7 @@ export default function HeroBanner() {
           right: "-5%",
           width: "650px",
           height: "650px",
-          backgroundColor: "rgba(124, 58, 237, 0.14)",
+          backgroundColor: "rgba(255, 42, 58, 0.16)",
           borderRadius: "50%",
           filter: "blur(140px)",
           pointerEvents: "none",
@@ -67,7 +67,7 @@ export default function HeroBanner() {
           left: "-10%",
           width: "500px",
           height: "500px",
-          backgroundColor: "rgba(236, 72, 153, 0.12)",
+          backgroundColor: "rgba(255, 159, 28, 0.14)",
           borderRadius: "50%",
           filter: "blur(120px)",
           pointerEvents: "none",
@@ -80,7 +80,7 @@ export default function HeroBanner() {
           position: "absolute",
           inset: 0,
           backgroundImage:
-            "linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(124, 58, 237, 0.04) 1px, transparent 1px)",
+            "linear-gradient(rgba(255, 42, 58, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 42, 58, 0.04) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
           pointerEvents: "none",
         }}
@@ -113,13 +113,13 @@ export default function HeroBanner() {
                 alignItems: "center",
                 gap: "8px",
                 padding: "8px 18px",
-                backgroundColor: "rgba(124, 58, 237, 0.1)",
-                border: "1px solid rgba(124, 58, 237, 0.3)",
+                backgroundColor: "rgba(255, 42, 58, 0.1)",
+                border: "1px solid rgba(255, 42, 58, 0.3)",
                 borderRadius: "20px",
                 marginBottom: "1.5rem",
               }}
             >
-              <span style={{ fontSize: "0.9rem" }}>🛡️</span>
+              <span style={{ fontSize: "0.9rem" }}>🌶️</span>
               <span
                 style={{
                   fontSize: "0.75rem",
@@ -129,7 +129,7 @@ export default function HeroBanner() {
                   textTransform: "uppercase",
                 }}
               >
-                12FT MIL-SPEC DROP PROTECTION • MAGSAFE READY
+                CASE TADKA • 12FT DROP PROTECTION • MAGSAFE READY
               </span>
             </div>
 
@@ -145,15 +145,15 @@ export default function HeroBanner() {
                 textTransform: "uppercase",
               }}
             >
-              ENGINEERED
+              GOOD COVERS.
               <br />
               <span
                 style={{
                   color: "var(--main-accent)",
-                  textShadow: "0 0 35px rgba(124, 58, 237, 0.3)",
+                  textShadow: "0 0 35px rgba(255, 42, 58, 0.35)",
                 }}
               >
-                ANIME PHONE ARMOR.
+                BETTER VIBES.
               </span>
             </h1>
 
@@ -168,7 +168,7 @@ export default function HeroBanner() {
                 lineHeight: 1.6,
               }}
             >
-              Dual-layer shock dissipation, 1.8mm raised camera protection, and N52 MagSafe magnets. Tested for 12ft concrete drops with zero cracking.
+              Desi vibes, global style. Dual-layer shock dissipation, 1.8mm raised camera protection, and N52 MagSafe magnets. Tested for 12ft concrete drops with zero cracking.
             </p>
 
             {/* Interactive "Find Your Device" Fast-Finder */}
@@ -179,7 +179,7 @@ export default function HeroBanner() {
                 borderRadius: "14px",
                 padding: "20px 24px",
                 marginBottom: "2.25rem",
-                boxShadow: "0 15px 35px rgba(124, 58, 237, 0.08)",
+                boxShadow: "0 15px 35px rgba(255, 42, 58, 0.08)",
               }}
             >
               <div
@@ -272,7 +272,7 @@ export default function HeroBanner() {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "8px",
-                    boxShadow: "0 4px 15px rgba(124, 58, 237, 0.35)",
+                    boxShadow: "0 4px 15px rgba(255, 42, 58, 0.35)",
                   }}
                 >
                   <span>BROWSE CASES</span>
@@ -476,7 +476,7 @@ export default function HeroBanner() {
                       backgroundColor: "#0d0d10",
                       border: isCenter ? "3px solid var(--main-accent)" : "2px solid rgba(255, 255, 255, 0.2)",
                       boxShadow: isCenter
-                        ? "0 35px 70px -10px rgba(0, 0, 0, 0.95), 0 15px 30px rgba(0,0,0,0.8), 0 0 35px var(--hachiman-purple-glow), inset 0 0 0 1.5px rgba(255,255,255,0.2)"
+                        ? "0 35px 70px -10px rgba(0, 0, 0, 0.95), 0 15px 30px rgba(0,0,0,0.8), 0 0 35px var(--tadka-red-glow), inset 0 0 0 1.5px rgba(255,255,255,0.2)"
                         : "0 25px 50px -10px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255,255,255,0.12)",
                       transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
                       zIndex,
@@ -803,7 +803,7 @@ export default function HeroBanner() {
                       width: isActive ? "24px" : "8px",
                       height: "8px",
                       borderRadius: "999px",
-                      backgroundColor: isActive ? "var(--main-accent)" : "rgba(124, 58, 237, 0.25)",
+                      backgroundColor: isActive ? "var(--main-accent)" : "rgba(255, 42, 58, 0.25)",
                       border: "none",
                       cursor: "pointer",
                       transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",

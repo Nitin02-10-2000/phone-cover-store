@@ -997,7 +997,7 @@ export default function CheckoutPage() {
                                     borderRadius: "3px",
                                   }}
                                 >
-                                  HACHIMAN
+                                  CASE TADKA
                                 </div>
                               </div>
                               <div style={{ color: "#000000", fontWeight: 900, fontSize: "0.95rem", marginTop: "8px" }}>
