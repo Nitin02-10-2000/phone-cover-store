@@ -1,70 +1,42 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
-import { CASE_TYPES, PHONE_MODELS } from "@/data/products";
+import { CASE_TYPES, CATEGORIES } from "@/data/products";
 import Link from "next/link";
 
 export default function CategoriesPage() {
-  const franchiseBanners = [
-    {
-      id: "one-piece",
-      name: "One Piece Cases",
-      japanese: "ワンピース",
-      tagline: "Sun God Nika Gear 5, Zoro Enma & Straw Hat Pirates",
-      image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787153686/mockups/luffy-gear-5-one-piece-poster-paper-5.jpg",
-      drops: "12 Case Editions",
-      accent: "#f59e0b",
-    },
-    {
-      id: "jujutsu-kaisen",
-      name: "Jujutsu Kaisen Cases",
-      japanese: "呪術廻戦",
-      tagline: "Infinite Void Gojo, Malevolent Shrine Sukuna & Megumi",
-      image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786122801/mockups/gojo-satoru-honored-one-poster-paper-1.jpg",
-      drops: "10 Case Editions",
-      accent: "#8b5cf6",
-    },
-    {
-      id: "berserk",
-      name: "Berserk Dark Fantasy Cases",
-      japanese: "ベルセルク",
-      tagline: "Brand of Sacrifice, Dragonslayer Sword & Guts Eclipse",
-      image: "https://res.cloudinary.com/dv7oqos1m/image/private/s--tUURy_y1--/t_shinra_card/v1/products/kbvsttiw8hoxpfel82du?_a=BAMAPqfk0",
-      drops: "6 Case Editions",
-      accent: "#e50914",
-    },
-    {
-      id: "demon-slayer",
-      name: "Demon Slayer Cases",
-      japanese: "鬼滅の刃",
-      tagline: "Sun Breathing Tanjiro, Zenitsu Thunder & Hashira Corps",
-      image: "https://res.cloudinary.com/dv7oqos1m/image/upload/t_shinra_card/v1788284762/mockups/tanjiro-kamado-poster-demon-slayer-anime-wall-art-hinokami-kagura-paper-1.jpg",
-      drops: "8 Case Editions",
-      accent: "#eab308",
-    },
-    {
-      id: "solo-leveling",
-      name: "Solo Leveling Hunter Cases",
-      japanese: "나 혼자만 레벨업",
-      tagline: "The Shadow Monarch, Arise Army & Dagger Arts",
-      image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1788283838/mockups/solo-leveling-poster-sung-jin-woo-shadow-monarch-anime-wall-art-paper-1.jpg",
-      drops: "7 Case Editions",
-      accent: "#3b82f6",
-    },
-    {
-      id: "naruto",
-      name: "Naruto Shinobi Cases",
-      japanese: "ナルト",
-      tagline: "Itachi Crow Genjutsu, Sasuke Rinnegan & Akatsuki Clouds",
-      image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1788283307/mockups/itachi-uchiha-poster-naruto-anime-wall-art-crow-genjutsu-paper-1.jpg",
-      drops: "9 Case Editions",
-      accent: "#f97316",
-    },
+  const [activeFilter, setActiveFilter] = useState<"all" | "franchises" | "aesthetics" | "custom">("all");
+
+  const filterTabs = [
+    { id: "all", label: "All 20 Categories", icon: "🔥" },
+    { id: "franchises", label: "Pop Culture & Franchises", icon: "🎮" },
+    { id: "aesthetics", label: "Aesthetics & Art", icon: "✨" },
+    { id: "custom", label: "Personalized Customizer", icon: "⚡" },
   ];
+
+  const displayedCategories = useMemo(() => {
+    // Exclude 'all' entry from the grid since it's just the catalog link
+    const validCategories = CATEGORIES.filter((c) => c.id !== "all");
+
+    if (activeFilter === "franchises") {
+      return validCategories.filter((c) =>
+        ["anime", "gaming", "cars", "sports", "music", "y2k", "streetwear", "luxury"].includes(c.id)
+      );
+    }
+    if (activeFilter === "aesthetics") {
+      return validCategories.filter((c) =>
+        ["aesthetic", "dark-gothic", "cute-kawaii", "floral", "quotes", "abstract-art", "trending", "desi"].includes(c.id)
+      );
+    }
+    if (activeFilter === "custom") {
+      return validCategories.filter((c) => c.isCustom);
+    }
+    return validCategories;
+  }, [activeFilter]);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -78,7 +50,7 @@ export default function CategoriesPage() {
           style={{
             backgroundColor: "var(--background)",
             borderBottom: "1px solid var(--surface-border)",
-            padding: "3rem 0",
+            padding: "3.5rem 0 3rem",
             position: "relative",
             overflow: "hidden",
           }}
@@ -91,7 +63,7 @@ export default function CategoriesPage() {
                 gap: "0.5rem",
                 fontSize: "0.75rem",
                 color: "var(--foreground-muted)",
-                marginBottom: "0.75rem",
+                marginBottom: "0.85rem",
                 fontFamily: "var(--font-heading)",
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
@@ -101,40 +73,341 @@ export default function CategoriesPage() {
                 Home
               </Link>
               <span>/</span>
-              <span style={{ color: "var(--shinra-red)" }}>Case Categories</span>
+              <span style={{ color: "var(--main-accent)" }}>Case Categories Hub</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "0.5rem" }}>
+              <span
+                style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 900,
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "var(--main-accent)",
+                  backgroundColor: "rgba(124, 58, 237, 0.1)",
+                  padding: "4px 10px",
+                  borderRadius: "20px",
+                  border: "1px solid rgba(124, 58, 237, 0.25)",
+                }}
+              >
+                20 OFFICIAL THEMES & FINISHES
+              </span>
             </div>
 
             <h1
               style={{
                 fontFamily: "var(--font-heading)",
-                fontSize: "clamp(2rem, 4.5vw, 3rem)",
+                fontSize: "clamp(2rem, 4.5vw, 3.2rem)",
                 fontWeight: 900,
                 letterSpacing: "0.04em",
                 textTransform: "uppercase",
-                marginBottom: "0.75rem",
+                marginBottom: "0.85rem",
               }}
             >
-              CASE CATEGORIES & FINISHES
+              PHONE CASE CATEGORIES & ARMOR DIRECTORY
             </h1>
             <p
               style={{
                 color: "var(--foreground-muted)",
-                fontSize: "1rem",
-                maxWidth: "650px",
+                fontSize: "1.05rem",
+                maxWidth: "720px",
                 lineHeight: 1.6,
               }}
             >
-              Compare military-grade drop defense tiers, high-gloss 9H tempered glass backs, MagSafe arrays, or shop by your favorite anime universe.
+              From Anime & Esports Gaming to Supercars, Y2K liquid chrome, Cute Kawaii, Luxury 24K gold, and customizable photo & pet cases — engineered with real 12ft drop protection for iPhone, Samsung, OnePlus & Pixel.
             </p>
           </div>
         </section>
 
-        {/* Section 1: Phone Case Protection Tiers */}
+        {/* Section 1: Browse All 20 Themes */}
         <section className="container" style={{ marginTop: "3.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: "1.2rem",
+              marginBottom: "2rem",
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  color: "var(--main-accent)",
+                  fontFamily: "var(--font-heading)",
+                  fontSize: "0.75rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                }}
+              >
+                CURATED ARCHIVE
+              </span>
+              <h2
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
+                  fontWeight: 800,
+                  marginTop: "0.3rem",
+                }}
+              >
+                CHOOSE YOUR STYLE & THEME
+              </h2>
+            </div>
+
+            {/* Filter Pills */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                flexWrap: "wrap",
+              }}
+            >
+              {filterTabs.map((tab) => {
+                const isActive = activeFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFilter(tab.id as any)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "8px 16px",
+                      borderRadius: "999px",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      backgroundColor: isActive ? "var(--main-accent)" : "var(--surface)",
+                      color: isActive ? "#ffffff" : "var(--foreground)",
+                      border: isActive ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
+                      boxShadow: isActive ? "0 4px 14px rgba(124, 58, 237, 0.35)" : "none",
+                    }}
+                  >
+                    <span>{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 20 Categories Grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: "1.5rem",
+            }}
+          >
+            {displayedCategories.map((cat) => {
+              const targetUrl = cat.isCustom ? `/customize?theme=${cat.id}` : `/shop?universe=${cat.id}`;
+              return (
+                <div
+                  key={cat.id}
+                  style={{
+                    backgroundColor: "var(--surface)",
+                    border: "1px solid var(--surface-border)",
+                    borderRadius: "14px",
+                    padding: "1.5rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    transition: "all 0.25s ease",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  className="category-card"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = cat.accentColor;
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.boxShadow = `0 12px 30px rgba(0,0,0,0.15), 0 0 20px ${cat.accentColor}25`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--surface-border)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  {/* Accent corner ambient light */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      width: "90px",
+                      height: "90px",
+                      background: `radial-gradient(circle at top right, ${cat.accentColor}25, transparent 70%)`,
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  <div>
+                    {/* Header: Icon + Badge + Drops Count */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "12px",
+                          backgroundColor: "var(--surface-raised)",
+                          border: `1.5px solid ${cat.accentColor}44`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "1.75rem",
+                          boxShadow: `0 4px 15px ${cat.accentColor}18`,
+                        }}
+                      >
+                        {cat.icon}
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        {cat.badge && (
+                          <span
+                            style={{
+                              fontSize: "0.68rem",
+                              fontWeight: 900,
+                              letterSpacing: "0.08em",
+                              textTransform: "uppercase",
+                              padding: "3px 8px",
+                              borderRadius: "4px",
+                              backgroundColor: `${cat.accentColor}22`,
+                              color: cat.accentColor,
+                              border: `1px solid ${cat.accentColor}55`,
+                            }}
+                          >
+                            {cat.badge}
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            color: "var(--foreground-muted)",
+                            backgroundColor: "var(--surface-raised)",
+                            padding: "3px 7px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {cat.count}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h3
+                      style={{
+                        fontFamily: "var(--font-heading)",
+                        fontSize: "1.3rem",
+                        fontWeight: 900,
+                        marginBottom: "0.4rem",
+                        color: "var(--foreground)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      {cat.name}
+                    </h3>
+
+                    {/* Tagline */}
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "var(--foreground-muted)",
+                        lineHeight: 1.5,
+                        marginBottom: "1rem",
+                        minHeight: "42px",
+                      }}
+                    >
+                      {cat.tagline}
+                    </p>
+
+                    {/* Subtags pills */}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "6px",
+                        marginBottom: "1.4rem",
+                      }}
+                    >
+                      {cat.subtags.map((sub, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            backgroundColor: "var(--surface-raised)",
+                            color: "var(--foreground)",
+                            border: "1px solid var(--surface-border)",
+                          }}
+                        >
+                          {sub}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CTA button */}
+                  <Link
+                    href={targetUrl}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "0.75rem 1rem",
+                      borderRadius: "8px",
+                      backgroundColor: cat.isCustom ? "var(--secondary-accent)" : "var(--surface-raised)",
+                      border: cat.isCustom ? "1px solid var(--secondary-accent)" : `1px solid ${cat.accentColor}55`,
+                      color: cat.isCustom ? "#ffffff" : "var(--foreground)",
+                      fontSize: "0.8rem",
+                      fontWeight: 800,
+                      textDecoration: "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: cat.isCustom ? "0 4px 14px rgba(236, 72, 153, 0.25)" : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!cat.isCustom) {
+                        e.currentTarget.style.backgroundColor = cat.accentColor;
+                        e.currentTarget.style.color = "#ffffff";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!cat.isCustom) {
+                        e.currentTarget.style.backgroundColor = "var(--surface-raised)";
+                        e.currentTarget.style.color = "var(--foreground)";
+                      }
+                    }}
+                  >
+                    <span>{cat.isCustom ? "LAUNCH CUSTOM STUDIO" : `EXPLORE ${cat.name.toUpperCase()}`}</span>
+                    <span>→</span>
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Section 2: Armor & Defense Levels */}
+        <section className="container" style={{ marginTop: "5rem" }}>
           <div style={{ marginBottom: "2rem" }}>
             <span
               style={{
-                color: "var(--shinra-red)",
+                color: "var(--main-accent)",
                 fontFamily: "var(--font-heading)",
                 fontSize: "0.75rem",
                 fontWeight: 800,
@@ -142,24 +415,24 @@ export default function CategoriesPage() {
                 textTransform: "uppercase",
               }}
             >
-              CHOOSE YOUR ARMOR LEVEL
+              MIL-SPEC PROTECTION
             </span>
             <h2
               style={{
                 fontFamily: "var(--font-heading)",
-                fontSize: "1.8rem",
+                fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
                 fontWeight: 800,
                 marginTop: "0.3rem",
               }}
             >
-              PHONE CASE FINISHES & PROTECTION
+              PHONE CASE FINISHES & DROP DEFENSE
             </h2>
           </div>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
               gap: "1.75rem",
             }}
           >
@@ -195,11 +468,11 @@ export default function CategoriesPage() {
                         fontSize: "0.75rem",
                         fontWeight: 700,
                         letterSpacing: "0.08em",
-                        color: "var(--shinra-red)",
-                        backgroundColor: "rgba(230, 57, 70, 0.12)",
+                        color: "var(--main-accent)",
+                        backgroundColor: "rgba(124, 58, 237, 0.12)",
                         padding: "4px 10px",
                         borderRadius: "4px",
-                        border: "1px solid rgba(230, 57, 70, 0.25)",
+                        border: "1px solid rgba(124, 58, 237, 0.25)",
                       }}
                     >
                       {f.priceText}
@@ -220,7 +493,7 @@ export default function CategoriesPage() {
                   <div
                     style={{
                       fontSize: "0.75rem",
-                      color: "var(--shinra-red)",
+                      color: "var(--main-accent)",
                       fontWeight: 700,
                       letterSpacing: "0.05em",
                       textTransform: "uppercase",
@@ -249,177 +522,27 @@ export default function CategoriesPage() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "0.85rem 1rem",
-                    backgroundColor: "rgba(255, 255, 255, 0.04)",
+                    backgroundColor: "var(--surface-raised)",
                     border: "1px solid var(--surface-border)",
                     borderRadius: "6px",
-                    color: "#ffffff",
+                    color: "var(--foreground)",
                     fontSize: "0.8rem",
                     fontWeight: 700,
                     textDecoration: "none",
                     transition: "all 0.2s ease",
                   }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--main-accent)";
+                    e.currentTarget.style.color = "#ffffff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--surface-raised)";
+                    e.currentTarget.style.color = "var(--foreground)";
+                  }}
                 >
                   <span>BROWSE {f.name.toUpperCase()}</span>
                   <span>→</span>
                 </Link>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Section 2: Anime Universe Banners */}
-        <section className="container" style={{ marginTop: "5rem" }}>
-          <div style={{ marginBottom: "2rem" }}>
-            <span
-              style={{
-                color: "var(--shinra-red)",
-                fontFamily: "var(--font-heading)",
-                fontSize: "0.75rem",
-                fontWeight: 800,
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-              }}
-            >
-              EXCLUSIVE DROPS
-            </span>
-            <h2
-              style={{
-                fontFamily: "var(--font-heading)",
-                fontSize: "1.8rem",
-                fontWeight: 800,
-                marginTop: "0.3rem",
-              }}
-            >
-              PHONE CASES BY ANIME UNIVERSE
-            </h2>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-              gap: "2rem",
-            }}
-          >
-            {franchiseBanners.map((f) => (
-              <div
-                key={f.id}
-                style={{
-                  position: "relative",
-                  borderRadius: "14px",
-                  overflow: "hidden",
-                  border: "1px solid var(--surface-border)",
-                  height: "320px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                  padding: "1.75rem",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
-                }}
-              >
-                {/* Background Image */}
-                <img
-                  src={f.image}
-                  alt={f.name}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    zIndex: 0,
-                    filter: "brightness(0.35) contrast(1.2)",
-                  }}
-                />
-
-                {/* Gradient vignette */}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
-                    zIndex: 1,
-                  }}
-                />
-
-                {/* Content */}
-                <div style={{ position: "relative", zIndex: 2 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "0.75rem",
-                        fontWeight: 800,
-                        color: f.accent,
-                        letterSpacing: "0.1em",
-                      }}
-                    >
-                      {f.japanese}
-                    </span>
-                    <span
-                      style={{
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
-                        border: `1px solid ${f.accent}55`,
-                        color: "#ffffff",
-                        padding: "3px 8px",
-                        borderRadius: "4px",
-                        fontSize: "0.7rem",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {f.drops}
-                    </span>
-                  </div>
-
-                  <h3
-                    style={{
-                      fontFamily: "var(--font-heading)",
-                      fontSize: "1.4rem",
-                      fontWeight: 900,
-                      color: "#ffffff",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    {f.name}
-                  </h3>
-
-                  <p
-                    style={{
-                      fontSize: "0.82rem",
-                      color: "rgba(255, 255, 255, 0.75)",
-                      lineHeight: 1.4,
-                      marginBottom: "16px",
-                    }}
-                  >
-                    {f.tagline}
-                  </p>
-
-                  <Link
-                    href={`/shop?universe=${f.id}`}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      backgroundColor: "var(--shinra-red)",
-                      color: "#ffffff",
-                      fontSize: "0.78rem",
-                      fontWeight: 800,
-                      letterSpacing: "0.08em",
-                      textDecoration: "none",
-                    }}
-                  >
-                    <span>EXPLORE {f.name.toUpperCase()}</span>
-                    <span>→</span>
-                  </Link>
-                </div>
               </div>
             ))}
           </div>

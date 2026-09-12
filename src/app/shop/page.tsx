@@ -22,9 +22,13 @@ function ShopContent() {
 
   const filteredProducts = useMemo(() => {
     return PRODUCTS.filter((product) => {
-      // Franchise match
-      if (selectedUniverse !== "all" && product.franchise !== selectedUniverse) {
-        return false;
+      // Franchise or Theme match
+      if (selectedUniverse !== "all") {
+        const isMatch =
+          product.franchise === selectedUniverse ||
+          product.theme === selectedUniverse ||
+          (selectedUniverse === "anime" && (!product.theme || product.theme === "anime"));
+        if (!isMatch) return false;
       }
       // Case Type match
       if (selectedCaseType !== "all") {
@@ -372,9 +376,9 @@ function ShopContent() {
               marginBottom: "0.6rem",
             }}
           >
-            FILTER BY ANIME UNIVERSE:
+            FILTER BY CATEGORY & THEME:
           </div>
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {UNIVERSES.map((u) => {
               const isSelected = selectedUniverse === u.id;
               return (
@@ -383,17 +387,36 @@ function ShopContent() {
                   onClick={() => setSelectedUniverse(u.id)}
                   style={{
                     backgroundColor: isSelected ? "var(--shinra-red)" : "var(--surface)",
-                    color: isSelected ? "#ffffff" : "var(--foreground-muted)",
+                    color: isSelected ? "#ffffff" : "var(--foreground)",
                     border: isSelected ? "1px solid var(--shinra-red)" : "1px solid var(--surface-border)",
-                    borderRadius: "4px",
-                    padding: "5px 12px",
-                    fontSize: "0.72rem",
+                    borderRadius: "6px",
+                    padding: "6px 14px",
+                    fontSize: "0.75rem",
                     fontWeight: 700,
                     cursor: "pointer",
                     transition: "all 0.2s",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: isSelected ? "0 4px 12px var(--shinra-red-glow)" : "none",
                   }}
                 >
-                  {u.name}
+                  {u.icon && <span>{u.icon}</span>}
+                  <span>{u.name}</span>
+                  {u.badge && (
+                    <span
+                      style={{
+                        fontSize: "0.6rem",
+                        padding: "1px 5px",
+                        borderRadius: "3px",
+                        backgroundColor: isSelected ? "rgba(0,0,0,0.3)" : "rgba(229, 9, 20, 0.12)",
+                        color: isSelected ? "#ffffff" : "var(--shinra-red)",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {u.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

@@ -1,15 +1,15 @@
 @layer base;
 
 :root {
-  /* User-Defined Color Palette */
-  --background: #FAF9F6;        /* Soft Cream */
+  /* User-Defined Color Palette (Light Mode) */
+  --background: #F8F9FA;        /* Ultra-light Grey/Cream */
   --surface: #FFFFFF;           /* Cards Pure White */
-  --surface-raised: #F3E8FF;    /* Highlight Soft Purple */
-  --surface-border: #E5E7EB;    /* Subtle Border */
-  --foreground: #171717;        /* Main Text */
-  --foreground-muted: #6B7280;  /* Secondary Text */
+  --surface-raised: #F1F5F9;    /* Highlight Soft Grey */
+  --surface-border: #E2E8F0;    /* Subtle Border */
+  --foreground: #0F172A;        /* Main Text */
+  --foreground-muted: #64748B;  /* Secondary Text */
   
-  --primary: #111111;           /* Deep Black */
+  --primary: #0F172A;           /* Deep Blackish Blue */
   --main-accent: #7C3AED;       /* Electric Purple */
   --main-accent-bright: #8B5CF6;
   --main-accent-dark: #6D28D9;
@@ -17,7 +17,12 @@
   --highlight: #F3E8FF;         /* Soft Purple */
   --cards: #FFFFFF;             /* Pure White */
 
-  /* Hachiman Brand Tokens */
+  /* Glassmorphism Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+  /* Brand Tokens */
   --hachiman-purple: #7C3AED;
   --hachiman-purple-bright: #8B5CF6;
   --hachiman-purple-dark: #6D28D9;
@@ -40,9 +45,30 @@
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-hachiman: 0 10px 30px -10px rgba(17, 17, 17, 0.08);
-  --shadow-shinra: 0 10px 30px -10px rgba(17, 17, 17, 0.08);
+  --shadow-hachiman: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+  --shadow-shinra: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
   --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.25);
+}
+
+[data-theme="dark"] {
+  /* User-Defined Color Palette (Dark Mode) */
+  --background: #09090B;        /* Deep Space Black */
+  --surface: #18181B;           /* Dark Card */
+  --surface-raised: #27272A;    /* Lighter Highlight */
+  --surface-border: #3F3F46;    /* Dark Border */
+  --foreground: #F8FAFC;        /* Crisp White Text */
+  --foreground-muted: #94A3B8;  /* Muted Text */
+  
+  --primary: #F8FAFC;           /* Inverse for contrast */
+  --cards: #18181B;             /* Dark Card */
+
+  /* Glassmorphism Tokens - Dark Mode */
+  --glass-bg: rgba(24, 24, 27, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+
+  --shadow-hachiman: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  --shadow-shinra: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -238,13 +264,13 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-hachiman);
 }
 
 .product-card:hover {
   border-color: var(--main-accent);
   transform: translateY(-4px);
-  box-shadow: 0 16px 35px rgba(124, 58, 237, 0.12), 0 0 20px rgba(124, 58, 237, 0.1);
+  box-shadow: var(--shadow-hachiman), var(--shadow-glow);
 }
 
 /* ===================================================
@@ -312,35 +338,61 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
 }
 
-.nav-dropdown-container:hover .nav-dropdown-card,
-.nav-dropdown-container:focus-within .nav-dropdown-card {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
 .nav-dropdown-card {
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(8px);
-  padding-top: 10px;
+  padding-top: 12px;
   min-width: 260px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 100;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+  z-index: 1000;
+}
+
+.nav-dropdown-card.mega-menu {
+  left: -160px;
+  transform: translateY(8px);
+  width: 960px;
+  max-width: min(95vw, 980px);
+}
+
+.nav-dropdown-card.align-right {
+  left: auto;
+  right: 0;
+  transform: translateY(8px);
+}
+
+/* Open states on container hover, focus, or React is-open state */
+.nav-dropdown-container:hover .nav-dropdown-card,
+.nav-dropdown-container:focus-within .nav-dropdown-card,
+.nav-dropdown-card.is-open {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+.nav-dropdown-container:hover .nav-dropdown-card.mega-menu,
+.nav-dropdown-container:focus-within .nav-dropdown-card.mega-menu,
+.nav-dropdown-card.mega-menu.is-open {
+  transform: translateY(0) !important;
+}
+
+.nav-dropdown-container:hover .nav-dropdown-card.align-right,
+.nav-dropdown-container:focus-within .nav-dropdown-card.align-right,
+.nav-dropdown-card.align-right.is-open {
+  transform: translateY(0) !important;
 }
 
 .nav-dropdown-inner {
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-radius: 12px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-  padding: 0.75rem;
-  backdrop-filter: blur(12px);
+  background-color: var(--surface) !important;
+  border: 1px solid var(--surface-border) !important;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  padding: 0.85rem;
 }
 
 .nav-pill-badge {
@@ -354,4 +406,37 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+/* 3D Phone Case Interactive Mockup */
+.case-silhouette {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+.product-card:hover .case-silhouette {
+  transform: rotateY(-46deg) rotateX(5deg) scale(1.08) translateY(-10px);
+}
+
+.case-shadow-base {
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+.product-card:hover .case-shadow-base {
+  transform: translateX(-24px) translateY(20px) scale(0.9) rotate(-10deg);
+  opacity: 0.6 !important;
+  filter: blur(16px) !important;
+}
+
+.product-card:hover .case-front {
+  border-color: #3f3f46 !important;
+  box-shadow: 0 24px 50px rgba(0,0,0,0.32), 0 0 25px var(--shinra-red-glow) !important;
+}
+
+.product-card:hover .case-side-face {
+  opacity: 1 !important;
+}
+
+
 

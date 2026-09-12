@@ -3,14 +3,18 @@ import { PRODUCTS, CASE_TYPES, UNIVERSES } from "@/data/products";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const franchise = searchParams.get("franchise");
+  const franchise = searchParams.get("franchise") || searchParams.get("universe") || searchParams.get("category");
   const limit = searchParams.get("limit");
 
   let filtered = [...PRODUCTS];
 
-  if (franchise) {
+  if (franchise && franchise !== "all") {
+    const fLower = franchise.toLowerCase();
     filtered = filtered.filter(
-      (p) => p.franchise.toLowerCase() === franchise.toLowerCase()
+      (p) =>
+        p.franchise.toLowerCase() === fLower ||
+        p.theme?.toLowerCase() === fLower ||
+        (fLower === "anime" && (!p.theme || p.theme === "anime"))
     );
   }
 
@@ -31,7 +35,13 @@ export async function GET(request: Request) {
     universes: UNIVERSES.map((u) => ({
       id: u.id,
       name: u.name,
+      icon: u.icon,
+      tagline: u.tagline,
+      subtags: u.subtags,
+      badge: u.badge,
       count: u.count,
+      accentColor: u.accentColor,
+      isCustom: u.isCustom,
     })),
     data: filtered,
   });

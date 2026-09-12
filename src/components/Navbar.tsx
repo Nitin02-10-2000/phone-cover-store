@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cartContext";
+import { CATEGORIES } from "@/data/products";
+
 
 export default function Navbar() {
   const { totalItems, setIsCartOpen, setIsSearchOpen, theme, toggleTheme, user, logout } = useCart();
@@ -71,11 +73,11 @@ export default function Navbar() {
           position: "sticky",
           top: 0,
           zIndex: 50,
-          backgroundColor: "var(--background)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-          borderBottom: "1px solid var(--surface-border)",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+          backgroundColor: "var(--glass-bg)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid var(--glass-border)",
+          boxShadow: "var(--glass-shadow)",
         }}
       >
         <div className="container" style={{ padding: "0.75rem 1.5rem" }}>
@@ -205,95 +207,532 @@ export default function Navbar() {
                     </svg>
                   </Link>
 
-                  {/* Dropdown Card */}
-                  <div className="nav-dropdown-card" style={{ minWidth: "300px" }}>
-                    <div className="nav-dropdown-inner">
-                      <div style={{ fontSize: "0.65rem", fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--foreground-muted)", padding: "4px 8px 8px" }}>
-                        Case Finishes & Defense
+                  {/* Categories Mega Dropdown */}
+                  <div className={`nav-dropdown-card mega-menu${categoryMenuOpen ? " is-open" : ""}`}>
+                    <div
+                      className="nav-dropdown-inner"
+                      style={{
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--surface-border)",
+                        borderRadius: "16px",
+                        boxShadow: "0 30px 70px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+                        padding: "1.25rem 1.5rem",
+                        position: "relative",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Top Accent Gradient Border */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: "3px",
+                          background: "linear-gradient(90deg, var(--main-accent) 0%, var(--secondary-accent) 50%, var(--main-accent) 100%)",
+                        }}
+                      />
+
+                      {/* Header bar inside mega menu */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          paddingBottom: "0.85rem",
+                          borderBottom: "1px solid var(--surface-border)",
+                          marginBottom: "1.1rem",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "1.25rem" }}>🔥</span>
+                          <div>
+                            <span
+                              style={{
+                                fontSize: "0.65rem",
+                                fontWeight: 900,
+                                letterSpacing: "0.16em",
+                                textTransform: "uppercase",
+                                color: "var(--main-accent)",
+                                display: "block",
+                              }}
+                            >
+                              HACHIMAN ARMOR DIRECTORY
+                            </span>
+                            <h4
+                              style={{
+                                margin: 0,
+                                fontSize: "1.05rem",
+                                fontWeight: 800,
+                                color: "var(--foreground)",
+                                letterSpacing: "-0.01em",
+                              }}
+                            >
+                              Explore All 20 Themes & Custom Studio
+                            </h4>
+                          </div>
+                        </div>
+
+                        <Link
+                          href="/categories"
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            color: "var(--main-accent-bright)",
+                            textDecoration: "none",
+                            padding: "6px 14px",
+                            borderRadius: "8px",
+                            backgroundColor: "rgba(124, 58, 237, 0.1)",
+                            border: "1px solid rgba(124, 58, 237, 0.25)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            transition: "all 0.2s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--main-accent)";
+                            e.currentTarget.style.color = "#ffffff";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "rgba(124, 58, 237, 0.1)";
+                            e.currentTarget.style.color = "var(--main-accent-bright)";
+                          }}
+                        >
+                          <span>View Full Hub</span>
+                          <span>→</span>
+                        </Link>
                       </div>
 
-                      <Link
-                        href="/categories"
+                      {/* 3 Perfectly Balanced Columns Grid (8 rows per column) */}
+                      <div
                         style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr 1fr",
+                          gap: "1.25rem",
+                        }}
+                      >
+                        {/* Col 1: Popular & Franchises (8 items) */}
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <div
+                            style={{
+                              fontSize: "0.68rem",
+                              fontWeight: 900,
+                              letterSpacing: "0.14em",
+                              textTransform: "uppercase",
+                              color: "var(--main-accent)",
+                              marginBottom: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              height: "20px",
+                            }}
+                          >
+                            <span>🔥</span>
+                            <span>POPULAR & FRANCHISES</span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            {CATEGORIES.filter((c) =>
+                              ["anime", "gaming", "cars", "sports", "music", "y2k", "streetwear", "luxury"].includes(c.id)
+                            ).map((cat) => (
+                              <Link
+                                key={cat.id}
+                                href={`/shop?universe=${cat.id}`}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "6px 8px",
+                                  borderRadius: "8px",
+                                  textDecoration: "none",
+                                  color: "var(--foreground)",
+                                  transition: "all 0.15s ease",
+                                  height: "38px",
+                                  boxSizing: "border-box",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "var(--surface-raised)";
+                                  e.currentTarget.style.transform = "translateX(3px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                  e.currentTarget.style.transform = "translateX(0)";
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden" }}>
+                                  <span
+                                    style={{
+                                      fontSize: "1.05rem",
+                                      width: "28px",
+                                      height: "28px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      backgroundColor: "var(--surface-raised)",
+                                      borderRadius: "6px",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {cat.icon}
+                                  </span>
+                                  <div style={{ overflow: "hidden" }}>
+                                    <div style={{ fontSize: "0.8rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                      {cat.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: "0.64rem",
+                                        color: "var(--foreground-muted)",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: "155px",
+                                      }}
+                                    >
+                                      {cat.subtags.slice(0, 3).join(", ")}
+                                    </div>
+                                  </div>
+                                </div>
+                                {cat.badge && (
+                                  <span
+                                    style={{
+                                      fontSize: "0.58rem",
+                                      fontWeight: 900,
+                                      padding: "2px 6px",
+                                      borderRadius: "4px",
+                                      backgroundColor: `${cat.accentColor}22`,
+                                      color: cat.accentColor,
+                                      border: `1px solid ${cat.accentColor}44`,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {cat.badge}
+                                  </span>
+                                )}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Col 2: Aesthetics & Vibes (8 items) */}
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <div
+                            style={{
+                              fontSize: "0.68rem",
+                              fontWeight: 900,
+                              letterSpacing: "0.14em",
+                              textTransform: "uppercase",
+                              color: "var(--main-accent)",
+                              marginBottom: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              height: "20px",
+                            }}
+                          >
+                            <span>✨</span>
+                            <span>AESTHETICS & ART</span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            {CATEGORIES.filter((c) =>
+                              ["cute-kawaii", "aesthetic", "dark-gothic", "floral", "trending", "desi", "quotes", "abstract-art"].includes(c.id)
+                            ).map((cat) => (
+                              <Link
+                                key={cat.id}
+                                href={`/shop?universe=${cat.id}`}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "6px 8px",
+                                  borderRadius: "8px",
+                                  textDecoration: "none",
+                                  color: "var(--foreground)",
+                                  transition: "all 0.15s ease",
+                                  height: "38px",
+                                  boxSizing: "border-box",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "var(--surface-raised)";
+                                  e.currentTarget.style.transform = "translateX(3px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                  e.currentTarget.style.transform = "translateX(0)";
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden" }}>
+                                  <span
+                                    style={{
+                                      fontSize: "1.05rem",
+                                      width: "28px",
+                                      height: "28px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      backgroundColor: "var(--surface-raised)",
+                                      borderRadius: "6px",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {cat.icon}
+                                  </span>
+                                  <div style={{ overflow: "hidden" }}>
+                                    <div style={{ fontSize: "0.8rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                      {cat.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: "0.64rem",
+                                        color: "var(--foreground-muted)",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: "155px",
+                                      }}
+                                    >
+                                      {cat.subtags.slice(0, 3).join(", ")}
+                                    </div>
+                                  </div>
+                                </div>
+                                {cat.badge && (
+                                  <span
+                                    style={{
+                                      fontSize: "0.58rem",
+                                      fontWeight: 900,
+                                      padding: "2px 6px",
+                                      borderRadius: "4px",
+                                      backgroundColor: `${cat.accentColor}22`,
+                                      color: cat.accentColor,
+                                      border: `1px solid ${cat.accentColor}44`,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {cat.badge}
+                                  </span>
+                                )}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Col 3: Custom Studio & Armor Finishes (Exact 8 items matching row height!) */}
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <div
+                            style={{
+                              fontSize: "0.68rem",
+                              fontWeight: 900,
+                              letterSpacing: "0.14em",
+                              textTransform: "uppercase",
+                              color: "var(--secondary-accent)",
+                              marginBottom: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              height: "20px",
+                            }}
+                          >
+                            <span>⚡</span>
+                            <span>CUSTOM STUDIO & ARMOR</span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            {/* 4 Customizer Editions */}
+                            {[
+                              { id: "couples", icon: "💕", name: "Couples Edition", tag: "Initials, matching covers", badge: "CUSTOM" },
+                              { id: "pets", icon: "🐶", name: "Pet Portrait", tag: "Upload your dog/cat photo", badge: "CUSTOM" },
+                              { id: "photo-custom", icon: "📸", name: "Photo Customizer", tag: "Personal photos & polaroids", badge: "CUSTOM" },
+                              { id: "name-initials", icon: "✍️", name: "Name & Monogram", tag: "Custom name & typography", badge: "CUSTOM" },
+                            ].map((item) => (
+                              <Link
+                                key={item.id}
+                                href={`/customize?theme=${item.id}`}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "6px 8px",
+                                  borderRadius: "8px",
+                                  textDecoration: "none",
+                                  color: "var(--foreground)",
+                                  transition: "all 0.15s ease",
+                                  height: "38px",
+                                  boxSizing: "border-box",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "rgba(236, 72, 153, 0.12)";
+                                  e.currentTarget.style.transform = "translateX(3px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                  e.currentTarget.style.transform = "translateX(0)";
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden" }}>
+                                  <span
+                                    style={{
+                                      fontSize: "1.05rem",
+                                      width: "28px",
+                                      height: "28px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      backgroundColor: "rgba(236, 72, 153, 0.14)",
+                                      borderRadius: "6px",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {item.icon}
+                                  </span>
+                                  <div style={{ overflow: "hidden" }}>
+                                    <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--secondary-accent)", whiteSpace: "nowrap" }}>
+                                      {item.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: "0.64rem",
+                                        color: "var(--foreground-muted)",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: "155px",
+                                      }}
+                                    >
+                                      {item.tag}
+                                    </div>
+                                  </div>
+                                </div>
+                                <span
+                                  style={{
+                                    fontSize: "0.58rem",
+                                    fontWeight: 900,
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "rgba(236, 72, 153, 0.15)",
+                                    color: "var(--secondary-accent)",
+                                    border: "1px solid rgba(236, 72, 153, 0.3)",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {item.badge}
+                                </span>
+                              </Link>
+                            ))}
+
+                            {/* 4 Armor Finishes */}
+                            {[
+                              { icon: "🧲", name: "Ultra Impact MagSafe", tag: "12ft Drop Tested • N52 Magnets", badge: "12FT" },
+                              { icon: "🛡️", name: "Tough Armor Dual-Layer", tag: "TPU + Rigid Polycarbonate", badge: "ARMOR" },
+                              { icon: "💎", name: "9H Tempered Glass", tag: "High-Gloss Mirror Finish", badge: "GLASS" },
+                              { icon: "⚡", name: "Matte Slim EDC", tag: "1.2mm Featherweight Profile", badge: "SLIM" },
+                            ].map((finish) => (
+                              <Link
+                                key={finish.name}
+                                href="/categories"
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "6px 8px",
+                                  borderRadius: "8px",
+                                  textDecoration: "none",
+                                  color: "var(--foreground)",
+                                  transition: "all 0.15s ease",
+                                  height: "38px",
+                                  boxSizing: "border-box",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "var(--surface-raised)";
+                                  e.currentTarget.style.transform = "translateX(3px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                  e.currentTarget.style.transform = "translateX(0)";
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden" }}>
+                                  <span
+                                    style={{
+                                      fontSize: "1.05rem",
+                                      width: "28px",
+                                      height: "28px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      backgroundColor: "var(--surface-raised)",
+                                      borderRadius: "6px",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {finish.icon}
+                                  </span>
+                                  <div style={{ overflow: "hidden" }}>
+                                    <div style={{ fontSize: "0.8rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                      {finish.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: "0.64rem",
+                                        color: "var(--foreground-muted)",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: "155px",
+                                      }}
+                                    >
+                                      {finish.tag}
+                                    </div>
+                                  </div>
+                                </div>
+                                <span
+                                  style={{
+                                    fontSize: "0.58rem",
+                                    fontWeight: 900,
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "rgba(124, 58, 237, 0.15)",
+                                    color: "var(--main-accent)",
+                                    border: "1px solid rgba(124, 58, 237, 0.3)",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {finish.badge}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer CTA in dropdown */}
+                      <div
+                        style={{
+                          borderTop: "1px solid var(--surface-border)",
+                          marginTop: "1.1rem",
+                          paddingTop: "0.85rem",
                           display: "flex",
                           alignItems: "center",
-                          gap: "10px",
-                          padding: "8px",
-                          borderRadius: "8px",
-                          textDecoration: "none",
-                          color: "var(--foreground)",
-                          transition: "background 0.15s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                      >
-                        <span style={{ fontSize: "1.2rem" }}>🧲</span>
-                        <div>
-                          <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>Ultra Impact MagSafe</div>
-                          <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>12ft Drop Tested • N52 Array</div>
-                        </div>
-                      </Link>
-
-                      <Link
-                        href="/categories"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          padding: "8px",
-                          borderRadius: "8px",
-                          textDecoration: "none",
-                          color: "var(--foreground)",
-                          transition: "background 0.15s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                      >
-                        <span style={{ fontSize: "1.2rem" }}>🛡️</span>
-                        <div>
-                          <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>Tough Armor Dual-Layer</div>
-                          <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>Shock-absorbing TPU + PC</div>
-                        </div>
-                      </Link>
-
-                      <Link
-                        href="/categories"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          padding: "8px",
-                          borderRadius: "8px",
-                          textDecoration: "none",
-                          color: "var(--foreground)",
-                          transition: "background 0.15s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                      >
-                        <span style={{ fontSize: "1.2rem" }}>🪶</span>
-                        <div>
-                          <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>Matte Slim Precision</div>
-                          <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>Ultra-thin featherweight feel</div>
-                        </div>
-                      </Link>
-
-                      <div style={{ borderTop: "1px solid var(--surface-border)", margin: "6px 0" }} />
-
-                      <Link
-                        href="/categories"
-                        style={{
-                          display: "block",
-                          textAlign: "center",
-                          padding: "6px",
-                          fontSize: "0.75rem",
-                          fontWeight: 800,
-                          color: "var(--main-accent)",
-                          textDecoration: "none",
+                          justifyContent: "space-between",
                         }}
                       >
-                        Explore All Categories & Finishes →
-                      </Link>
+                        <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span>🛡️</span>
+                          <span>12ft Mil-Spec Drop Tested • 🧲 MagSafe Ready • 🚀 Free Shipping Pan-India over ₹799</span>
+                        </span>
+                        <Link
+                          href="/shop"
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            color: "var(--main-accent)",
+                            textDecoration: "none",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <span>Explore All Phone Cases</span>
+                          <span>→</span>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -548,7 +987,7 @@ export default function Navbar() {
                 </Link>
 
                 {/* Account Dropdown Menu */}
-                <div className="nav-dropdown-card" style={{ right: 0, left: "auto", transform: "translateY(8px)" }}>
+                <div className={`nav-dropdown-card align-right${accountMenuOpen ? " is-open" : ""}`}>
                   <div className="nav-dropdown-inner" style={{ minWidth: "240px" }}>
                     {user ? (
                       <>
@@ -943,8 +1382,46 @@ export default function Navbar() {
                   style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
                 >
                   <span>📂</span>
-                  <span>Case Categories & Finishes</span>
+                  <span>Case Categories & Finishes (20+)</span>
                 </Link>
+
+                {/* Mobile Quick Category Badges */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "6px",
+                    overflowX: "auto",
+                    paddingBottom: "6px",
+                    WebkitOverflowScrolling: "touch",
+                  }}
+                >
+                  {CATEGORIES.slice(1, 10).map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/shop?universe=${c.id}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        whiteSpace: "nowrap",
+                        padding: "4px 8px",
+                        borderRadius: "20px",
+                        backgroundColor: "var(--surface-raised)",
+                        border: "1px solid var(--surface-border)",
+                        fontSize: "0.68rem",
+                        fontWeight: 700,
+                        color: "var(--foreground)",
+                        textDecoration: "none",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span>{c.icon}</span>
+                      <span>{c.name}</span>
+                    </Link>
+                  ))}
+                </div>
+
 
                 <Link
                   href="/customize"

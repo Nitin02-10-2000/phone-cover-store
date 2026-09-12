@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { CartProvider } from "@/lib/cartContext";
 
@@ -37,8 +38,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}>
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('hachiman_theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+              } catch (_) {}
+            `,
+          }}
+        />
         <CartProvider>{children}</CartProvider>
       </body>
     </html>

@@ -16,7 +16,8 @@ export default function SearchModal() {
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.franchise.toLowerCase().includes(q) ||
-        p.tag.toLowerCase().includes(q)
+        p.tag.toLowerCase().includes(q) ||
+        (p.theme && p.theme.toLowerCase().includes(q))
     );
   }, [query]);
 
@@ -139,7 +140,7 @@ export default function SearchModal() {
           <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", fontWeight: 700 }}>
             POPULAR:
           </span>
-          {["One Piece", "Gojo", "Berserk", "Akira", "Demon Slayer", "Solo Leveling"].map((tag) => (
+          {["One Piece", "Porsche", "Gaming", "Y2K", "Luxury", "Gojo", "Demon Slayer", "Naruto"].map((tag) => (
             <button
               key={tag}
               onClick={() => setQuery(tag)}

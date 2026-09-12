@@ -2,6 +2,7 @@ export interface Product {
   id: string;
   name: string;
   franchise: string;
+  theme?: string;
   category: "case" | "both" | "poster";
   tag: string;
   price: number;
@@ -72,29 +73,116 @@ export const CASE_TYPES = [
 // Alias for backwards compatibility with existing format selectors
 export const FORMATS = CASE_TYPES;
 
-export const UNIVERSES = [
-  { id: "all", name: "All Anime Drops", count: "40+ Cases" },
-  { id: "one-piece", name: "One Piece", badge: "Pirates", count: "12 Cases" },
-  { id: "jujutsu-kaisen", name: "Jujutsu Kaisen", badge: "Sorcery", count: "10 Cases" },
-  { id: "demon-slayer", name: "Demon Slayer", badge: "Breathing", count: "8 Cases" },
-  { id: "naruto", name: "Naruto", badge: "Shinobi", count: "9 Cases" },
-  { id: "berserk", name: "Berserk", badge: "Eclipse", count: "6 Cases" },
-  { id: "solo-leveling", name: "Solo Leveling", badge: "Hunter", count: "7 Cases" },
-  { id: "chainsaw-man", name: "Chainsaw Man", badge: "Devil", count: "6 Cases" },
-  { id: "attack-on-titan", name: "Attack on Titan", badge: "Scouts", count: "8 Cases" },
-  { id: "dragon-ball", name: "Dragon Ball Z", badge: "Saiyan", count: "5 Cases" },
-  { id: "cyberpunk", name: "Cyberpunk", badge: "Edgerunners", count: "3 Cases" },
-  { id: "ghibli", name: "Studio Ghibli", badge: "Magic", count: "4 Cases" },
-  { id: "mha", name: "My Hero Academia", badge: "Plus Ultra", count: "5 Cases" },
-  { id: "fma", name: "Fullmetal Alchemist", badge: "Alchemy", count: "4 Cases" },
-  { id: "eva", name: "Evangelion", badge: "Mecha", count: "3 Cases" },
+export interface CategoryItem {
+  id: string;
+  name: string;
+  icon: string;
+  tagline: string;
+  subtags: string[];
+  badge?: string;
+  count: string;
+  accentColor: string;
+  isCustom?: boolean;
+}
+
+export const CATEGORIES: CategoryItem[] = [
+  { id: "all", name: "All Drops", icon: "🔥", tagline: "Complete Catalog Archive", subtags: ["All Cases"], count: "100+ Cases", accentColor: "#e50914" },
+  { id: "anime", name: "Anime", icon: "🗡️", tagline: "Naruto, One Piece, JJK, Demon Slayer, Pokémon", subtags: ["Naruto", "One Piece", "JJK", "Demon Slayer", "Pokémon", "Solo Leveling"], badge: "HOT", count: "45+ Cases", accentColor: "#8b5cf6" },
+  { id: "gaming", name: "Gaming", icon: "🎮", tagline: "GTA, Minecraft, Valorant, Free Fire, Fortnite", subtags: ["GTA", "Minecraft", "Valorant", "Free Fire", "Fortnite"], badge: "POPULAR", count: "25+ Cases", accentColor: "#3b82f6" },
+  { id: "cars", name: "Cars", icon: "🏎️", tagline: "BMW, Lamborghini, Porsche, JDM, F1", subtags: ["BMW", "Lamborghini", "Porsche", "JDM", "F1"], badge: "TRENDING", count: "20+ Cases", accentColor: "#ef4444" },
+  { id: "sports", name: "Sports", icon: "⚽", tagline: "Football, Cricket, NBA, F1", subtags: ["Football", "Cricket", "NBA", "F1"], count: "18+ Cases", accentColor: "#10b981" },
+  { id: "music", name: "Music", icon: "🎵", tagline: "Artists, albums, lyrics, Spotify-style designs", subtags: ["Artists", "Albums", "Lyrics", "Spotify-style"], count: "16+ Cases", accentColor: "#1db954" },
+  { id: "cute-kawaii", name: "Cute / Kawaii", icon: "🧸", tagline: "Sanrio, cute animals, pastel designs", subtags: ["Sanrio", "Cute Animals", "Pastel Designs"], badge: "CUTE", count: "22+ Cases", accentColor: "#ec4899" },
+  { id: "aesthetic", name: "Aesthetic", icon: "🖤", tagline: "Dark, minimalist, grunge, vintage", subtags: ["Dark", "Minimalist", "Grunge", "Vintage"], count: "20+ Cases", accentColor: "#a1a1aa" },
+  { id: "y2k", name: "Y2K", icon: "🦋", tagline: "Chrome, butterflies, stars, 2000s graphics", subtags: ["Chrome", "Butterflies", "Stars", "2000s Graphics"], badge: "VIRAL", count: "15+ Cases", accentColor: "#06b6d4" },
+  { id: "streetwear", name: "Streetwear", icon: "🏙️", tagline: "Graffiti, sneakers, urban graphics", subtags: ["Graffiti", "Sneakers", "Urban Graphics"], badge: "BESTSELLER", count: "24+ Cases", accentColor: "#f59e0b" },
+  { id: "dark-gothic", name: "Dark / Gothic", icon: "💀", tagline: "Skulls, gothic art, dark typography", subtags: ["Skulls", "Gothic Art", "Dark Typography"], count: "16+ Cases", accentColor: "#71717a" },
+  { id: "floral", name: "Floral", icon: "🌸", tagline: "Flowers, botanical, watercolor", subtags: ["Flowers", "Botanical", "Watercolor"], count: "14+ Cases", accentColor: "#f43f5e" },
+  { id: "couples", name: "Couples", icon: "💕", tagline: "Initials, photos, matching covers", subtags: ["Initials", "Photos", "Matching Covers"], badge: "LOVE", count: "12+ Pairs", accentColor: "#fb7185", isCustom: true },
+  { id: "pets", name: "Pets", icon: "🐶", tagline: "Upload your dog/cat photo", subtags: ["Dog Photo", "Cat Portrait", "Paw Prints"], badge: "CUSTOM", count: "Customizer", accentColor: "#f97316", isCustom: true },
+  { id: "photo-custom", name: "Photo Custom", icon: "📸", tagline: "Your own photo + text", subtags: ["Personal Photo", "Text", "Polaroid"], badge: "CUSTOM", count: "Customizer", accentColor: "#6366f1", isCustom: true },
+  { id: "name-initials", name: "Name / Initials", icon: "✍️", tagline: "Name, initials, nickname", subtags: ["Name", "Initials", "Nickname"], badge: "CUSTOM", count: "Customizer", accentColor: "#eab308", isCustom: true },
+  { id: "trending", name: "Trending", icon: "🪩", tagline: "Viral memes, internet culture, current trends", subtags: ["Viral Memes", "Internet Culture", "Current Trends"], badge: "TRENDING", count: "19+ Cases", accentColor: "#8b5cf6" },
+  { id: "desi", name: "Desi", icon: "🇮🇳", tagline: "Bollywood, cricket, Indian aesthetics", subtags: ["Bollywood", "Cricket", "Indian Aesthetics"], badge: "DESI", count: "16+ Cases", accentColor: "#ea580c" },
+  { id: "quotes", name: "Quotes", icon: "✨", tagline: "Motivational, savage, romantic, funny", subtags: ["Motivational", "Savage", "Romantic", "Funny"], count: "18+ Cases", accentColor: "#eab308" },
+  { id: "luxury", name: "Luxury", icon: "🔥", tagline: "Designer-inspired, black/gold, premium looks", subtags: ["Designer-inspired", "Black/Gold", "Premium Looks"], badge: "LUXURY", count: "15+ Cases", accentColor: "#d97706" },
+  { id: "abstract-art", name: "Abstract Art", icon: "🎨", tagline: "Paint, gradients, 3D, psychedelic", subtags: ["Paint", "Gradients", "3D", "Psychedelic"], count: "17+ Cases", accentColor: "#a855f7" },
 ];
 
+// Export UNIVERSES as alias to CATEGORIES for backward compatibility
+export const UNIVERSES = CATEGORIES;
+
+
 export const PRODUCTS: Product[] = [
+  {
+    id: "porsche-911-gt3-case",
+    name: "Porsche 911 GT3 RS — German Engineering Glass Case",
+    franchise: "cars",
+    theme: "cars",
+    category: "case",
+    tag: "Track Weapon • 911 GT3",
+    price: 699,
+    originalPrice: 1399,
+    rating: 5.0,
+    reviewsCount: 382,
+    image: "/mockups/porsche_911.jpg",
+    formats: ["Ultra Impact MagSafe", "9H Tempered Glass Back", "Tough Armor Dual-Layer"],
+    description: "Stuttgart engineering blueprint artwork under liquid 9H tempered glass. Sleek silver aerodynamic GT3 RS with German typography.",
+    dropProtection: "12ft Drop Tested",
+  },
+  {
+    id: "gaming-cyber-controller-case",
+    name: "Cyber Esports Controller — Neon HUD Armor Case",
+    franchise: "gaming",
+    theme: "gaming",
+    category: "case",
+    tag: "Esports Edition",
+    price: 599,
+    originalPrice: 1199,
+    rating: 4.95,
+    reviewsCount: 290,
+    image: "/mockups/gaming_controller.jpg",
+    formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "Matte Slim EDC"],
+    description: "Cyberpunk competitive esports controller glowing with cyan and magenta neon circuits. Shockproof military bumper edge.",
+    dropProtection: "12ft Drop Tested",
+  },
+  {
+    id: "y2k-chrome-butterfly-case",
+    name: "Liquid Chrome Butterfly — Y2K Iridescent Case",
+    franchise: "y2k",
+    theme: "y2k",
+    category: "case",
+    tag: "Y2K Viral Drop",
+    price: 649,
+    originalPrice: 1299,
+    rating: 4.9,
+    reviewsCount: 314,
+    image: "/mockups/y2k_butterfly.jpg",
+    formats: ["Ultra Impact MagSafe", "9H Tempered Glass Back", "Cyber Clear Hologram"],
+    description: "2000s cyber aesthetic with molten chrome butterfly, dripping mercury and holographic stars on deep midnight black.",
+    dropProtection: "10ft Drop Certified",
+  },
+  {
+    id: "luxury-gold-marble-case",
+    name: "Royale 24K Gold & Nero Marble — Luxury Glass Case",
+    franchise: "luxury",
+    theme: "luxury",
+    category: "case",
+    tag: "VIP Luxury",
+    price: 799,
+    originalPrice: 1599,
+    rating: 5.0,
+    reviewsCount: 450,
+    image: "/mockups/luxury_gold.jpg",
+    formats: ["Ultra Impact MagSafe", "9H Tempered Glass Back", "Tough Armor Dual-Layer"],
+    description: "Ultra-luxury Nero Marquina black marble with genuine 24K gilded geometric Art Deco line art. Liquid mirror glass reflection.",
+    dropProtection: "12ft Drop Tested",
+  },
   {
     id: "guts-berserk-case",
     name: "Itachi Uchiha — Mangekyo Sharingan Armor Case",
     franchise: "naruto",
+    theme: "anime",
     category: "case",
     tag: "MIL-STD 810G • Akatsuki",
     price: 599,
@@ -161,7 +249,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1199,
     rating: 5.0,
     reviewsCount: 174,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1788283838/mockups/solo-leveling-poster-sung-jin-woo-shadow-monarch-anime-wall-art-paper-1.jpg",
+    image: "/mockups/solo_leveling.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "Matte Slim EDC"],
     description: "The Shadow Monarch summons his army. Deep neon violet energy lines with matte tactile grip edges and precision speaker grill cutouts.",
     dropProtection: "12ft Drop Tested",
@@ -176,7 +264,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1199,
     rating: 4.9,
     reviewsCount: 295,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787154245/mockups/roronoa-zoro-one-piece-poster-paper-1.jpg",
+    image: "/mockups/zoro.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "Matte Slim EDC"],
     description: "Conqueror's Haki infused with Enma's cursed flame. Heavy-duty TPU shock absorption corners for drop and bump protection.",
     dropProtection: "12ft Drop Tested",
@@ -191,7 +279,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1099,
     rating: 4.8,
     reviewsCount: 167,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/t_shinra_card/v1788284762/mockups/tanjiro-kamado-poster-demon-slayer-anime-wall-art-hinokami-kagura-paper-1.jpg",
+    image: "/mockups/tanjiro.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "Cyber Clear Hologram"],
     description: "Blazing solar dragon strikes wrapping around your phone. Dual-layer anti-slip frame engineered for secure one-handed smartphone gaming.",
     dropProtection: "10ft Drop Certified",
@@ -206,7 +294,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1099,
     rating: 4.8,
     reviewsCount: 133,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/t_shinra_card/v1788284646/mockups/pochita-poster-chainsaw-man-anime-wall-art-denji-paper-1.jpg",
+    image: "/mockups/chainsaw_man.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "Matte Slim EDC"],
     description: "High-voltage orange industrial aesthetic. Heavy-duty corner bumpers built to withstand skatepark drops and daily street hazards.",
     dropProtection: "10ft Drop Tested",
@@ -221,7 +309,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1299,
     rating: 5.0,
     reviewsCount: 310,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1788283307/mockups/itachi-uchiha-poster-naruto-anime-wall-art-crow-genjutsu-paper-1.jpg",
+    image: "/mockups/itachi_tsukuyomi.jpg",
     formats: ["Ultra Impact MagSafe", "9H Tempered Glass Back", "Tough Armor Dual-Layer"],
     description: "Murder of Crows dispersing into red Sharingan eyes. 9H toughened scratch-proof tempered glass back with impact-dampening polymer frame.",
     dropProtection: "12ft Drop Tested",
@@ -236,7 +324,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1199,
     rating: 4.9,
     reviewsCount: 220,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1788283104/mockups/akira-poster-kaneda-neo-tokyo-anime-wall-art-paper-1.jpg",
+    image: "/mockups/akira.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "Matte Slim EDC"],
     description: "Neo-Tokyo dystopian cyber art on high-durability polycarbonate. Laser-etched camera rim and tactile click power buttons.",
     dropProtection: "12ft Drop Tested",
@@ -251,7 +339,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1199,
     rating: 4.9,
     reviewsCount: 184,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/t_shinra_card/v1788284852/mockups/eren-yeager-poster-attack-on-titan-anime-wall-art-founding-titan-paper-1.jpg",
+    image: "/mockups/eren_titan.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "9H Tempered Glass Back"],
     description: "Colossal skeletal titan aesthetic with reinforced honeycomb shock dispersal channels on internal backplate.",
     dropProtection: "12ft Drop Tested",
@@ -266,7 +354,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1099,
     rating: 4.8,
     reviewsCount: 142,
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/t_shinra_card/v1788284960/mockups/sasuke-uchiha-poster-naruto-anime-wall-art-rinnegan-sharingan-paper-6.jpg",
+    image: "/mockups/sasuke_rinnegan.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "Matte Slim EDC"],
     description: "Dual-color Rinnegan & Sharingan illustration. Soft-touch matte finish resists oils, sweat, and fingerprints during heavy everyday carry.",
     dropProtection: "10ft Drop Certified",

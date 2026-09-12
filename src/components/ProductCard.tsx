@@ -57,13 +57,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         style={{
           position: "relative",
           width: "100%",
-          padding: "32px 20px 26px",
+          padding: "36px 20px 30px",
           backgroundColor: "#ffffff",
           borderBottom: "1px solid var(--surface-border)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          overflow: "hidden",
+          overflow: "visible",
           cursor: "pointer",
         }}
       >
@@ -121,120 +121,387 @@ export default function ProductCard({ product }: ProductCardProps) {
           </svg>
         </button>
 
-        {/* Realistic Phone Case Mockup Silhouette */}
+        {/* Realistic iPhone Pro Max Phone Case Mockup Silhouette with 3D Hover */}
         <div
           style={{
             position: "relative",
             width: "172px",
-            height: "305px",
-            borderRadius: "34px",
-            backgroundColor: "#18181b",
-            border: "3.5px solid #27272a",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.08)",
-            overflow: "hidden",
-            display: "block",
-            transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+            height: "350px",
+            perspective: "850px",
             cursor: "pointer",
           }}
-          className="case-silhouette"
         >
-          <style jsx>{`
-            .product-card:hover .case-silhouette {
-              transform: scale(1.04) translateY(-4px);
-              box-shadow: 0 24px 50px rgba(0,0,0,0.28), 0 0 25px var(--shinra-red-glow);
-              border-color: var(--shinra-red);
-            }
-          `}</style>
-
-          {/* Graphic Art */}
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            sizes="172px"
-            style={{ objectFit: "cover", pointerEvents: "none" }}
-          />
-
-          {/* Glassmorphism / Transparent Case Effect */}
+          {/* Dynamic Cast Shadow Beneath Phone */}
           <div
+            className="case-shadow-base"
             style={{
               position: "absolute",
-              inset: 0,
-              background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.0) 100%)",
-              boxShadow: "inset 0 0 15px rgba(255,255,255,0.15)",
+              inset: "8px",
+              borderRadius: "36px",
+              background: "rgba(0, 0, 0, 0.45)",
+              filter: "blur(12px)",
+              transform: "translateY(12px) scale(0.92)",
               pointerEvents: "none",
-              zIndex: 2,
+              zIndex: 0,
             }}
           />
 
-          {/* Camera Module Bump */}
+          {/* 3D Rotatable Phone Entity */}
           <div
+            className="case-silhouette"
             style={{
-              position: "absolute",
-              top: "12px",
-              left: "12px",
-              width: "50px",
-              height: "54px",
-              borderRadius: "13px",
-              backgroundColor: "rgba(12, 12, 14, 0.95)",
-              border: "1.5px solid rgba(255, 255, 255, 0.2)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "space-around",
-              padding: "4px",
-              zIndex: 3,
-              pointerEvents: "none",
+              position: "relative",
+              width: "100%",
+              height: "100%",
+              transformStyle: "preserve-3d",
+              zIndex: 1,
             }}
           >
-            <div style={{ display: "flex", width: "100%", justifyContent: "space-around" }}>
-              <div style={{ width: "11px", height: "11px", borderRadius: "50%", background: "#111", border: "1px solid #444" }} />
-              <div style={{ width: "11px", height: "11px", borderRadius: "50%", background: "#111", border: "1px solid #444" }} />
-            </div>
-            <div style={{ display: "flex", width: "100%", justifyContent: "space-around", alignItems: "center" }}>
-              <div style={{ width: "11px", height: "11px", borderRadius: "50%", background: "#111", border: "1px solid #444" }} />
-              <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#fbbf24" }} />
-            </div>
-          </div>
+            {/* Real iPhone Exterior Physical Buttons (Protruding from frame) */}
+            {/* Left Action Button */}
+            <div style={{ position: "absolute", left: "-3.5px", top: "72px", width: "4px", height: "16px", backgroundColor: "#27272a", borderRadius: "2px 0 0 2px", zIndex: 1 }} />
+            {/* Left Volume Up */}
+            <div style={{ position: "absolute", left: "-3.5px", top: "100px", width: "4px", height: "30px", backgroundColor: "#27272a", borderRadius: "2px 0 0 2px", zIndex: 1 }} />
+            {/* Left Volume Down */}
+            <div style={{ position: "absolute", left: "-3.5px", top: "140px", width: "4px", height: "30px", backgroundColor: "#27272a", borderRadius: "2px 0 0 2px", zIndex: 1 }} />
+            {/* Right Power / Side Button */}
+            <div style={{ position: "absolute", right: "-3.5px", top: "98px", width: "4px", height: "42px", backgroundColor: "#27272a", borderRadius: "0 2px 2px 0", zIndex: 1 }} />
 
-          {/* MagSafe Ring Visual Indicator */}
-          {selectedFormat === "Ultra Impact MagSafe" && (
+            {/* Back / 3D Extrusion Slices for Solid Gapless Depth */}
+            <div style={{ position: "absolute", inset: 0, borderRadius: "36px", backgroundColor: "#121214", border: "2px solid #27272a", transform: "translateZ(-20px)", boxShadow: "-12px 12px 28px rgba(0,0,0,0.55)" }} />
+            <div style={{ position: "absolute", inset: 0, borderRadius: "36px", backgroundColor: "#161618", transform: "translateZ(-16px)" }} />
+            <div style={{ position: "absolute", inset: 0, borderRadius: "36px", backgroundColor: "#18181b", transform: "translateZ(-12px)" }} />
+            <div style={{ position: "absolute", inset: 0, borderRadius: "36px", backgroundColor: "#1c1c20", transform: "translateZ(-8px)" }} />
+            <div style={{ position: "absolute", inset: 0, borderRadius: "36px", backgroundColor: "#202024", transform: "translateZ(-4px)" }} />
+
+            {/* 3D Right Bumper Face (Revealed dramatically when turned -46deg to the side) */}
             <div
+              className="case-side-face"
               style={{
                 position: "absolute",
-                top: "42%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: "74px",
-                height: "74px",
-                borderRadius: "50%",
-                border: "2px solid rgba(255, 255, 255, 0.85)",
-                boxShadow: "0 0 8px rgba(255,255,255,0.4), inset 0 0 8px rgba(255,255,255,0.4)",
-                pointerEvents: "none",
-                zIndex: 4,
+                top: "26px",
+                bottom: "26px",
+                right: "0px",
+                width: "22px",
+                backgroundColor: "#18181b",
+                backgroundImage: "linear-gradient(to right, #2c2c31 0%, #1c1c1f 40%, #0d0d0f 100%)",
+                transform: "rotateY(-90deg)",
+                transformOrigin: "right center",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "flex-start",
+                borderTop: "1px solid #3f3f46",
+                borderBottom: "1px solid #3f3f46",
+                boxShadow: "inset 2px 0 6px rgba(255,255,255,0.22)",
+                zIndex: 2,
               }}
             >
+              {/* iPhone Power Button on the bumper */}
               <div
                 style={{
-                  width: "4px",
-                  height: "16px",
-                  backgroundColor: "rgba(255, 255, 255, 0.85)",
-                  position: "absolute",
-                  bottom: "-22px",
-                  borderRadius: "2px",
-                  boxShadow: "0 0 5px rgba(255,255,255,0.4)",
+                  marginTop: "52px",
+                  width: "14px",
+                  height: "46px",
+                  backgroundColor: "#3f3f46",
+                  borderRadius: "3px",
+                  border: "1px solid #71717a",
+                  boxShadow: "0 0 4px rgba(0,0,0,0.9)",
                 }}
               />
+              {/* Antenna line */}
+              <div style={{ marginTop: "18px", width: "100%", height: "2px", backgroundColor: "#09090b" }} />
+              {/* Ribbed grip texture */}
+              <div style={{ marginTop: "auto", marginBottom: "40px", display: "flex", flexDirection: "column", gap: "4px", width: "14px" }}>
+                <div style={{ height: "2px", backgroundColor: "#27272a", borderRadius: "1px" }} />
+                <div style={{ height: "2px", backgroundColor: "#27272a", borderRadius: "1px" }} />
+                <div style={{ height: "2px", backgroundColor: "#27272a", borderRadius: "1px" }} />
+                <div style={{ height: "2px", backgroundColor: "#27272a", borderRadius: "1px" }} />
+                <div style={{ height: "2px", backgroundColor: "#27272a", borderRadius: "1px" }} />
+              </div>
             </div>
-          )}
 
-          {/* Corner Shock Bumper Details */}
-          <div style={{ position: "absolute", top: "4px", right: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: "4px", left: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: "4px", right: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", pointerEvents: "none" }} />
+            {/* Front Face: The Authentic iPhone 15/16 Pro Max Case */}
+            <div
+              className="case-front"
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: "36px",
+                backgroundColor: "#121214",
+                border: "3px solid #1c1c1e",
+                overflow: "hidden",
+                transform: "translateZ(0px)",
+                transformStyle: "preserve-3d",
+                transition: "border-color 0.4s ease, box-shadow 0.4s ease",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.12)",
+              }}
+            >
+              {/* Case Artwork Image */}
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="172px"
+                style={{ objectFit: "cover", pointerEvents: "none" }}
+              />
+
+              {/* Tempered Glass High-Gloss Diagonal Reflection Streak (like in user screenshot) */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(124deg, transparent 0%, transparent 34%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0.26) 48%, rgba(255,255,255,0.06) 55%, transparent 68%)",
+                  pointerEvents: "none",
+                  zIndex: 4,
+                }}
+              />
+
+              {/* Outer Case Protective Bumper Inner Shadow */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: "33px",
+                  boxShadow: "inset 0 0 10px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2)",
+                  pointerEvents: "none",
+                  zIndex: 3,
+                }}
+              />
+
+              {/* Authentic iPhone 15/16 Pro Max Camera Island Module */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "13px",
+                  left: "13px",
+                  width: "66px",
+                  height: "72px",
+                  borderRadius: "19px",
+                  backgroundColor: "rgba(18, 18, 22, 0.94)",
+                  backdropFilter: "blur(8px)",
+                  border: "2px solid rgba(255, 255, 255, 0.22)",
+                  boxShadow: "2px 4px 12px rgba(0, 0, 0, 0.65), inset 0 1px 2px rgba(255, 255, 255, 0.3)",
+                  zIndex: 6,
+                  pointerEvents: "none",
+                  transform: "translateZ(5px)",
+                }}
+              >
+                {/* Lens 1: Top-Left (Large Triple-Lens with Titanium Concentric Rings) */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "7px",
+                    left: "7px",
+                    width: "25px",
+                    height: "25px",
+                    borderRadius: "50%",
+                    background: "conic-gradient(from 45deg, #71717a, #e4e4e7, #52525b, #a1a1aa, #3f3f46, #e4e4e7, #71717a)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "21px",
+                      height: "21px",
+                      borderRadius: "50%",
+                      background: "#09090b",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "1px solid #27272a",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
+                        boxShadow: "inset 0 0 3px rgba(56, 189, 248, 0.5)",
+                      }}
+                    >
+                      {/* Specular Glint */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "3px",
+                          left: "4px",
+                          width: "3.5px",
+                          height: "3.5px",
+                          borderRadius: "50%",
+                          backgroundColor: "#ffffff",
+                          opacity: 0.9,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lens 2: Bottom-Left */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "7px",
+                    left: "7px",
+                    width: "25px",
+                    height: "25px",
+                    borderRadius: "50%",
+                    background: "conic-gradient(from 45deg, #71717a, #e4e4e7, #52525b, #a1a1aa, #3f3f46, #e4e4e7, #71717a)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "21px",
+                      height: "21px",
+                      borderRadius: "50%",
+                      background: "#09090b",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "1px solid #27272a",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
+                        boxShadow: "inset 0 0 3px rgba(56, 189, 248, 0.5)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "3px",
+                          left: "4px",
+                          width: "3.5px",
+                          height: "3.5px",
+                          borderRadius: "50%",
+                          backgroundColor: "#ffffff",
+                          opacity: 0.9,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lens 3: Right-Center */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "23.5px",
+                    right: "6.5px",
+                    width: "25px",
+                    height: "25px",
+                    borderRadius: "50%",
+                    background: "conic-gradient(from 45deg, #71717a, #e4e4e7, #52525b, #a1a1aa, #3f3f46, #e4e4e7, #71717a)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "21px",
+                      height: "21px",
+                      borderRadius: "50%",
+                      background: "#09090b",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "1px solid #27272a",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
+                        boxShadow: "inset 0 0 3px rgba(56, 189, 248, 0.5)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "3px",
+                          left: "4px",
+                          width: "3.5px",
+                          height: "3.5px",
+                          borderRadius: "50%",
+                          backgroundColor: "#ffffff",
+                          opacity: 0.9,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* True Tone Amber Flash */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "8.5px",
+                    right: "13px",
+                    width: "11px",
+                    height: "11px",
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle, #fffbeb 20%, #fbbf24 65%, #b45309 100%)",
+                    border: "1px solid rgba(255, 255, 255, 0.35)",
+                    boxShadow: "0 0 3px rgba(251, 191, 36, 0.5)",
+                  }}
+                />
+
+                {/* LiDAR Sensor */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "9px",
+                    right: "14px",
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "50%",
+                    backgroundColor: "#050507",
+                    border: "1px solid #27272a",
+                    boxShadow: "inset 0 0 2px #000000",
+                  }}
+                />
+
+                {/* Mic hole */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "35px",
+                    right: "2.5px",
+                    width: "2.5px",
+                    height: "2.5px",
+                    borderRadius: "50%",
+                    backgroundColor: "#000000",
+                  }}
+                />
+              </div>
+
+
+              {/* Corner Shock Bumper Air-Cushions */}
+              <div style={{ position: "absolute", top: "5px", right: "5px", width: "9px", height: "9px", borderRadius: "50%", background: "rgba(255,255,255,0.12)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", bottom: "5px", left: "5px", width: "9px", height: "9px", borderRadius: "50%", background: "rgba(255,255,255,0.12)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", bottom: "5px", right: "5px", width: "9px", height: "9px", borderRadius: "50%", background: "rgba(255,255,255,0.12)", pointerEvents: "none" }} />
+            </div>
+          </div>
         </div>
 
         {/* Drop Protection badge */}
@@ -264,31 +531,59 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Info Container */}
-      <div style={{ padding: "1.35rem 1.35rem 1.2rem", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
+      <div style={{ padding: "1.2rem 1.25rem 1.1rem", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
         <div>
-          {/* Top Row: Franchise Badge & Reviews */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+          {/* Tagline: CHOOSE YOUR MODEL INSIDE (Matching user screenshot) */}
+          <div style={{ marginBottom: "6px" }}>
             <span
               style={{
-                fontSize: "0.7rem",
+                fontSize: "0.68rem",
                 fontWeight: 900,
-                letterSpacing: "0.12em",
+                letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: "var(--shinra-red)",
-                backgroundColor: "rgba(229, 9, 20, 0.1)",
-                padding: "3px 8px",
-                borderRadius: "4px",
               }}
             >
-              {product.franchise.replace("-", " ")}
+              CHOOSE YOUR MODEL INSIDE
             </span>
+          </div>
 
-            {/* Stars & Reviews */}
-            <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.74rem" }}>
-              <span style={{ color: "#fbbf24", fontSize: "0.75rem" }}>★</span>
-              <span style={{ fontWeight: 800, color: "var(--foreground)" }}>{product.rating || 4.9}</span>
-              <span style={{ color: "var(--foreground-muted)", fontSize: "0.68rem" }}>({product.reviewsCount || 350}+)</span>
-            </div>
+          {/* Feature Badge Pills: ✨ Glossy Hard & 🛡️ Scratch Proof */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+            <span
+              style={{
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                color: "var(--foreground)",
+                backgroundColor: "var(--accent-glow)",
+                border: "1px solid var(--surface-border)",
+                padding: "2px 8px",
+                borderRadius: "999px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <span>✨</span>
+              <span>Glossy Hard</span>
+            </span>
+            <span
+              style={{
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                color: "var(--foreground)",
+                backgroundColor: "var(--accent-glow)",
+                border: "1px solid var(--surface-border)",
+                padding: "2px 8px",
+                borderRadius: "999px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <span>🛡️</span>
+              <span>Scratch Proof</span>
+            </span>
           </div>
 
           {/* Product Title */}
