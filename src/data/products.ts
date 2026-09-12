@@ -451,62 +451,15 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
-export const PHONE_MODELS = [
-  {
-    brand: "Apple iPhone",
-    models: [
-      "iPhone 16 Pro Max",
-      "iPhone 16 Pro",
-      "iPhone 16 Plus",
-      "iPhone 16",
-      "iPhone 15 Pro Max",
-      "iPhone 15 Pro",
-      "iPhone 15",
-      "iPhone 14 Pro Max",
-      "iPhone 14 Pro",
-      "iPhone 13",
-      "iPhone 12",
-    ],
-  },
-  {
-    brand: "Samsung Galaxy",
-    models: [
-      "Galaxy S25 Ultra",
-      "Galaxy S24 Ultra",
-      "Galaxy S24+",
-      "Galaxy S24",
-      "Galaxy S23 Ultra",
-      "Galaxy S23 FE",
-      "Galaxy Z Flip 5 / 6",
-      "Galaxy A55 5G",
-    ],
-  },
-  {
-    brand: "OnePlus",
-    models: [
-      "OnePlus 12",
-      "OnePlus 12R",
-      "OnePlus 11 5G",
-      "OnePlus Nord 4",
-      "OnePlus Open",
-    ],
-  },
-  {
-    brand: "Google Pixel",
-    models: [
-      "Pixel 9 Pro XL",
-      "Pixel 9 Pro",
-      "Pixel 9",
-      "Pixel 8 Pro",
-      "Pixel 8a",
-      "Pixel 7 Pro",
-    ],
-  },
-  {
-    brand: "Nothing Phone",
-    models: ["Nothing Phone (2)", "Nothing Phone (2a)", "Nothing Phone (1)"],
-  },
-];
+export {
+  ALL_PHONE_MODELS,
+  BRAND_GROUPS,
+  PHONE_MODELS,
+  getPhoneModelDetails,
+  type PhoneModelItem,
+  type BrandGroup,
+  type CameraArchetype,
+} from "./phoneModels";
 
 export const CASE_ANATOMY = [
   {

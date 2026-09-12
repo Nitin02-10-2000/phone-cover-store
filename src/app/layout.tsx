@@ -3,6 +3,8 @@ import { Space_Grotesk, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { CartProvider } from "@/lib/cartContext";
+import { DeviceProvider } from "@/lib/deviceContext";
+import DevicePickerModal from "@/components/DevicePickerModal";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-heading",
@@ -52,7 +54,12 @@ export default function RootLayout({
             `,
           }}
         />
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          <DeviceProvider>
+            {children}
+            <DevicePickerModal />
+          </DeviceProvider>
+        </CartProvider>
       </body>
     </html>
   );

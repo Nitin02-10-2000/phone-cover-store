@@ -3,11 +3,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cartContext";
+import { useDevice } from "@/lib/deviceContext";
 import { CATEGORIES } from "@/data/products";
 
 
 export default function Navbar() {
   const { totalItems, setIsCartOpen, setIsSearchOpen, theme, toggleTheme, user, logout } = useCart();
+  const { selectedModel, openDevicePicker } = useDevice();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
@@ -1167,6 +1169,42 @@ export default function Navbar() {
                 </div>
               </div>
 
+              {/* Global Device Selector Pill Button */}
+              <button
+                onClick={() => openDevicePicker()}
+                title={`Currently Selected Phone: ${selectedModel}. Click to change model.`}
+                className="navbar-device-btn"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  backgroundColor: "var(--surface)",
+                  border: "1px solid var(--surface-border)",
+                  borderRadius: "8px",
+                  height: "38px",
+                  padding: "0 10px",
+                  color: "var(--foreground)",
+                  cursor: "pointer",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--main-accent)";
+                  e.currentTarget.style.backgroundColor = "var(--surface-raised)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--surface-border)";
+                  e.currentTarget.style.backgroundColor = "var(--surface)";
+                }}
+              >
+                <span style={{ fontSize: "0.95rem" }}>📱</span>
+                <span style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {selectedModel}
+                </span>
+                <span style={{ fontSize: "0.65rem", color: "var(--foreground-muted)", marginLeft: "2px" }}>▾</span>
+              </button>
+
               {/* Cart Drawer Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
@@ -1317,6 +1355,39 @@ export default function Navbar() {
                 >
                   {user ? "Dashboard" : "Login"}
                 </Link>
+              </div>
+
+              {/* Mobile Device Selector Card */}
+              <div
+                onClick={() => {
+                  openDevicePicker();
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  padding: "0.85rem 1rem",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(124, 58, 237, 0.1)",
+                  border: "1px solid rgba(124, 58, 237, 0.4)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "1.3rem" }}>📱</span>
+                  <div>
+                    <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--main-accent)", textTransform: "uppercase" }}>
+                      Active Phone Model
+                    </div>
+                    <div style={{ fontSize: "0.92rem", fontWeight: 900, color: "var(--foreground)" }}>
+                      {selectedModel}
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--main-accent)" }}>
+                  Change →
+                </span>
               </div>
 
               {/* Mobile Quick Action Buttons */}

@@ -5,12 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { PRODUCTS, PHONE_MODELS } from "@/data/products";
 import { useCart } from "@/lib/cartContext";
+import { useDevice } from "@/lib/deviceContext";
 
 export default function HeroBanner() {
   const { addToCart } = useCart();
+  const { selectedModel: globalModel, setDevice } = useDevice();
   const [activeCardIndex, setActiveCardIndex] = useState(0); // Active front phone case
   const [selectedBrandIndex, setSelectedBrandIndex] = useState(0);
-  const [selectedModel, setSelectedModel] = useState(PHONE_MODELS[0].models[0]);
+  const [selectedModel, setSelectedModel] = useState(() => globalModel || PHONE_MODELS[0].models[0]);
   const [isPaused, setIsPaused] = useState(false);
 
   const showcaseProducts = [
@@ -204,7 +206,9 @@ export default function HeroBanner() {
                   onChange={(e) => {
                     const idx = Number(e.target.value);
                     setSelectedBrandIndex(idx);
-                    setSelectedModel(PHONE_MODELS[idx].models[0]);
+                    const newModel = PHONE_MODELS[idx].models[0];
+                    setSelectedModel(newModel);
+                    setDevice(PHONE_MODELS[idx].brand, newModel);
                   }}
                   style={{
                     flex: "1 1 150px",
@@ -228,7 +232,11 @@ export default function HeroBanner() {
                 {/* Model select */}
                 <select
                   value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
+                  onChange={(e) => {
+                    const newModel = e.target.value;
+                    setSelectedModel(newModel);
+                    setDevice(PHONE_MODELS[selectedBrandIndex].brand, newModel);
+                  }}
                   style={{
                     flex: "1 1 220px",
                     padding: "12px 16px",

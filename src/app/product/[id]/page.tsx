@@ -9,8 +9,11 @@ import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
 import ProductCard from "@/components/ProductCard";
-import { PRODUCTS, PHONE_MODELS, CASE_TYPES, CASE_ANATOMY } from "@/data/products";
+import { PRODUCTS, CASE_TYPES, CASE_ANATOMY } from "@/data/products";
+import { BRAND_GROUPS, getPhoneModelDetails } from "@/data/phoneModels";
 import { useCart } from "@/lib/cartContext";
+import { useDevice } from "@/lib/deviceContext";
+import DynamicPhoneCase from "@/components/DynamicPhoneCase";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,12 +23,13 @@ export default function ProductDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
   const { addToCart } = useCart();
+  const { selectedModel: globalModel, setDevice } = useDevice();
 
   const product = PRODUCTS.find((p) => p.id === id) || PRODUCTS[0];
 
   const [selectedCaseType, setSelectedCaseType] = useState(CASE_TYPES[0].name);
-  const [selectedBrand, setSelectedBrand] = useState("Apple iPhone");
-  const [selectedModel, setSelectedModel] = useState("iPhone 16 Pro Max");
+  const [selectedBrand, setSelectedBrand] = useState(() => getPhoneModelDetails(globalModel).brand);
+  const [selectedModel, setSelectedModel] = useState(globalModel);
   const [lensProtectorAddon, setLensProtectorAddon] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"specs" | "compatibility" | "reviews">("specs");
@@ -127,105 +131,16 @@ export default function ProductDetailPage({ params }: PageProps) {
                   padding: "48px 32px",
                 }}
               >
-                {/* 3D Phone Case Frame Silhouette */}
-                <div
-                  style={{
-                    position: "relative",
-                    width: "260px",
-                    height: "470px",
-                    borderRadius: "40px",
-                    backgroundColor: "#18181b",
-                    border: "4.5px solid #27272a",
-                    boxShadow: "0 25px 60px rgba(0,0,0,0.95), inset 0 0 0 1.5px rgba(255,255,255,0.18)",
-                    overflow: "hidden",
-                    transition: "transform 0.3s ease",
-                  }}
-                >
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    sizes="260px"
-                    style={{ objectFit: "cover" }}
-                    priority
-                  />
-
-                  {/* Glassmorphism / Transparent Case Effect */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.0) 100%)",
-                      boxShadow: "inset 0 0 25px rgba(255,255,255,0.15)",
-                      pointerEvents: "none",
-                      zIndex: 2,
-                    }}
-                  />
-
-                  {/* Camera Bump Cutout */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "16px",
-                      left: "16px",
-                      width: "68px",
-                      height: "74px",
-                      borderRadius: "16px",
-                      backgroundColor: "rgba(10, 10, 12, 0.95)",
-                      border: lensProtectorAddon ? "2px solid #22c55e" : "1.5px solid rgba(255, 255, 255, 0.25)",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "space-around",
-                      padding: "6px",
-                      zIndex: 3,
-                      boxShadow: "0 6px 16px rgba(0,0,0,0.7)",
-                    }}
-                  >
-                    <div style={{ display: "flex", width: "100%", justifyContent: "space-around" }}>
-                      <div style={{ width: "15px", height: "15px", borderRadius: "50%", background: "radial-gradient(circle, #2563eb, #000)", border: "1px solid #444" }} />
-                      <div style={{ width: "15px", height: "15px", borderRadius: "50%", background: "radial-gradient(circle, #2563eb, #000)", border: "1px solid #444" }} />
-                    </div>
-                    <div style={{ display: "flex", width: "100%", justifyContent: "space-around", alignItems: "center" }}>
-                      <div style={{ width: "15px", height: "15px", borderRadius: "50%", background: "radial-gradient(circle, #2563eb, #000)", border: "1px solid #444" }} />
-                      <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#fbbf24" }} />
-                    </div>
-                  </div>
-
-                  {/* MagSafe Ring Highlight when Ultra MagSafe active */}
-                  {selectedCaseType.toLowerCase().includes("magsafe") && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "44%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "50%",
-                        border: "3px solid rgba(255, 255, 255, 0.85)",
-                        boxShadow: "0 0 12px rgba(255,255,255,0.4), inset 0 0 12px rgba(255,255,255,0.4)",
-                        pointerEvents: "none",
-                        zIndex: 4,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "6px",
-                          height: "26px",
-                          backgroundColor: "rgba(255, 255, 255, 0.85)",
-                          position: "absolute",
-                          bottom: "-34px",
-                          borderRadius: "3px",
-                          boxShadow: "0 0 8px rgba(255,255,255,0.4)",
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
+                {/* Dynamic 3D Phone Case Entity */}
+                <DynamicPhoneCase
+                  artworkUrl={product.image}
+                  phoneModel={selectedModel}
+                  caseType={selectedCaseType}
+                  lensProtectorAddon={lensProtectorAddon}
+                  width={270}
+                  height={500}
+                  interactive={true}
+                />
 
                 {/* Drop Rating Pill */}
                 <div
@@ -531,32 +446,37 @@ export default function ProductDetailPage({ params }: PageProps) {
                   }}
                 >
                   <span>1. SELECT YOUR PHONE DEVICE:</span>
-                  <span style={{ color: "var(--shinra-red)" }}>{selectedModel}</span>
+                  <span style={{ color: "var(--main-accent)", fontWeight: 900 }}>{selectedModel}</span>
                 </div>
 
                 {/* Brand tabs */}
-                <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1rem", flexWrap: "wrap" }}>
-                  {PHONE_MODELS.map((b) => (
+                <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                  {BRAND_GROUPS.map((b) => (
                     <button
                       key={b.brand}
                       type="button"
                       onClick={() => {
                         setSelectedBrand(b.brand);
                         setSelectedModel(b.models[0]);
+                        setDevice(b.brand, b.models[0]);
                       }}
                       style={{
-                        backgroundColor: selectedBrand === b.brand ? "var(--shinra-red)" : "var(--surface)",
+                        backgroundColor: selectedBrand === b.brand ? "var(--main-accent)" : "var(--surface)",
                         color: selectedBrand === b.brand ? "#ffffff" : "var(--foreground)",
-                        border: selectedBrand === b.brand ? "1px solid var(--shinra-red)" : "1px solid var(--surface-border)",
+                        border: selectedBrand === b.brand ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
                         borderRadius: "8px",
-                        padding: "8px 18px",
-                        fontSize: "0.8rem",
+                        padding: "7px 14px",
+                        fontSize: "0.78rem",
                         fontWeight: 700,
                         cursor: "pointer",
-                        transition: "all 0.2s",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        transition: "all 0.15s",
                       }}
                     >
-                      {b.brand}
+                      <span>{b.icon}</span>
+                      <span>{b.brand}</span>
                     </button>
                   ))}
                 </div>
@@ -564,7 +484,11 @@ export default function ProductDetailPage({ params }: PageProps) {
                 {/* Model dropdown */}
                 <select
                   value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
+                  onChange={(e) => {
+                    const newModel = e.target.value;
+                    setSelectedModel(newModel);
+                    setDevice(selectedBrand, newModel);
+                  }}
                   style={{
                     width: "100%",
                     backgroundColor: "var(--surface)",
@@ -578,12 +502,26 @@ export default function ProductDetailPage({ params }: PageProps) {
                     cursor: "pointer",
                   }}
                 >
-                  {PHONE_MODELS.find((b) => b.brand === selectedBrand)?.models.map((m) => (
+                  {BRAND_GROUPS.find((b) => b.brand === selectedBrand)?.models.map((m) => (
                     <option key={m} value={m}>
                       {m}
                     </option>
                   ))}
                 </select>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "8px",
+                    fontSize: "0.75rem",
+                    color: "var(--foreground-muted)",
+                  }}
+                >
+                  <span style={{ color: "#22c55e", fontWeight: 800 }}>✓ Precision Mold:</span>
+                  <span>100% Guaranteed custom cutout & camera fit for {selectedModel}</span>
+                </div>
               </div>
 
               {/* Step 2: Case Protection Finish Selector */}
@@ -846,16 +784,17 @@ export default function ProductDetailPage({ params }: PageProps) {
               }}
             >
               <h3 style={{ fontSize: "1.35rem", fontWeight: 800, marginBottom: "1rem" }}>
-                Precision Molded for 25+ Flagship Smartphones
+                Precision Molded for 100+ Flagship Smartphones
               </h3>
               <p style={{ color: "var(--foreground-muted)", fontSize: "0.95rem", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "750px" }}>
                 Each phone case is precision CNC-molded to match your phone’s exact camera bump curvature, mic pinholes, stereo speakers, and tactile button feedback.
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "2rem" }}>
-                {PHONE_MODELS.map((brand) => (
+                {BRAND_GROUPS.map((brand) => (
                   <div key={brand.brand}>
-                    <h4 style={{ color: "var(--shinra-red)", fontWeight: 800, fontSize: "0.95rem", marginBottom: "10px" }}>
-                      {brand.brand}
+                    <h4 style={{ color: "var(--main-accent)", fontWeight: 800, fontSize: "0.95rem", marginBottom: "10px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span>{brand.icon}</span>
+                      <span>{brand.brand}</span>
                     </h4>
                     <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
                       {brand.models.map((m) => (

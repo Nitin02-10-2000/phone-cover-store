@@ -7,16 +7,18 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
-import { PRODUCTS, UNIVERSES, CASE_TYPES, PHONE_MODELS } from "@/data/products";
+import { PRODUCTS, UNIVERSES, CASE_TYPES, PHONE_MODELS, BRAND_GROUPS } from "@/data/products";
+import { useDevice } from "@/lib/deviceContext";
 
 function ShopContent() {
   const searchParams = useSearchParams();
-  const initialDevice = searchParams.get("device") || "all";
+  const initialDevice = searchParams.get("device") || "";
+  const { selectedModel: globalModel, setDeviceByModel } = useDevice();
 
   const [selectedUniverse, setSelectedUniverse] = useState("all");
   const [selectedCaseType, setSelectedCaseType] = useState("all");
   const [selectedBrand, setSelectedBrand] = useState("all");
-  const [selectedDevice, setSelectedDevice] = useState(initialDevice);
+  const [selectedDevice, setSelectedDevice] = useState(() => initialDevice || globalModel);
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "rating">("featured");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -168,19 +170,28 @@ function ShopContent() {
             gap: "1rem",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--shinra-red)" }}>PHONE BRAND:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--main-accent)" }}>PHONE BRAND:</span>
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-              {["all", "Apple iPhone", "Samsung Galaxy", "OnePlus", "Google Pixel"].map((brand) => (
+              {["all", ...BRAND_GROUPS.map((b) => b.brand)].map((brand) => (
                 <button
                   key={brand}
-                  onClick={() => setSelectedBrand(brand)}
+                  onClick={() => {
+                    setSelectedBrand(brand);
+                    if (brand !== "all") {
+                      const firstModel = BRAND_GROUPS.find((b) => b.brand === brand)?.models[0];
+                      if (firstModel) {
+                        setSelectedDevice(firstModel);
+                        setDeviceByModel(firstModel);
+                      }
+                    }
+                  }}
                   style={{
-                    backgroundColor: selectedBrand === brand ? "var(--shinra-red)" : "var(--background)",
+                    backgroundColor: selectedBrand === brand ? "var(--main-accent)" : "var(--background)",
                     color: selectedBrand === brand ? "#ffffff" : "var(--foreground-muted)",
-                    border: "1px solid var(--surface-border)",
+                    border: selectedBrand === brand ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
                     borderRadius: "6px",
-                    padding: "4px 12px",
+                    padding: "5px 12px",
                     fontSize: "0.75rem",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -197,20 +208,29 @@ function ShopContent() {
             <span style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>Target Model:</span>
             <select
               value={selectedDevice}
-              onChange={(e) => setSelectedDevice(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedDevice(val);
+                if (val !== "all") {
+                  setDeviceByModel(val);
+                }
+              }}
               style={{
                 backgroundColor: "var(--background)",
                 color: "var(--foreground)",
                 border: "1px solid var(--surface-border)",
                 borderRadius: "6px",
-                padding: "6px 12px",
-                fontSize: "0.78rem",
-                fontWeight: 600,
+                padding: "8px 14px",
+                fontSize: "0.82rem",
+                fontWeight: 700,
                 cursor: "pointer",
               }}
             >
               <option value="all">Any Flagship Model</option>
-              {PHONE_MODELS.flatMap((b) => b.models).map((m) => (
+              {(selectedBrand === "all"
+                ? BRAND_GROUPS.flatMap((b) => b.models)
+                : BRAND_GROUPS.find((b) => b.brand === selectedBrand)?.models || []
+              ).map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>

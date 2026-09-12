@@ -7,8 +7,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
-import { PHONE_MODELS } from "@/data/products";
+import { BRAND_GROUPS, getPhoneModelDetails } from "@/data/phoneModels";
 import { useCart } from "@/lib/cartContext";
+import { useDevice } from "@/lib/deviceContext";
+import DynamicPhoneCase from "@/components/DynamicPhoneCase";
 
 const PRESET_ARTWORKS = [
   {
@@ -68,11 +70,12 @@ const STICKERS = ["⚡ HACHIMAN CORPS", "👁️ HONORED ONE", "🔥 GEAR 5 NIKA
 export default function CustomizePage() {
   const router = useRouter();
   const { addToCart, saveDesign } = useCart();
+  const { selectedModel: globalModel, setDevice } = useDevice();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [productType, setProductType] = useState<"phone_case" | "poster">("phone_case");
-  const [selectedBrand, setSelectedBrand] = useState("Apple");
-  const [selectedModel, setSelectedModel] = useState("iPhone 16 Pro Max");
+  const [selectedBrand, setSelectedBrand] = useState(() => getPhoneModelDetails(globalModel).brand);
+  const [selectedModel, setSelectedModel] = useState(globalModel);
   const [selectedArtUrl, setSelectedArtUrl] = useState(PRESET_ARTWORKS[0].url);
   const [customText, setCustomText] = useState("HACHIMAN-01");
   const [textColor, setTextColor] = useState("#ffffff");
@@ -209,124 +212,142 @@ export default function CustomizePage() {
               }}
             >
               {/* Phone Case Silhouette Container */}
-              <div
-                style={{
-                  position: "relative",
-                  width: productType === "phone_case" ? "270px" : "320px",
-                  height: productType === "phone_case" ? "540px" : "460px",
-                  borderRadius: productType === "phone_case" ? "42px" : "8px",
-                  border: productType === "phone_case" ? "10px solid #1a1a1f" : "12px solid #111113",
-                  overflow: "hidden",
-                  boxShadow:
-                    productType === "phone_case"
-                      ? "0 0 0 2px #2d2d35, 0 25px 50px rgba(0,0,0,0.9), 0 0 30px rgba(229,9,20,0.15)"
-                      : "0 25px 50px rgba(0,0,0,0.9)",
-                  backgroundColor: "#050507",
-                }}
-              >
-                {/* Background Image with Zoom */}
+              {/* Phone Case Dynamic Mockup or Poster Frame */}
+              {productType === "phone_case" ? (
+                <DynamicPhoneCase
+                  artworkUrl={selectedArtUrl}
+                  phoneModel={selectedModel}
+                  caseType={caseFinish === "tempered" ? "9H Tempered Glass" : "Matte Slim"}
+                  width={270}
+                  height={540}
+                  interactive={false}
+                  customOverlay={
+                    <>
+                      {/* Custom Overlay Typography */}
+                      {customText && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "34px",
+                            left: "20px",
+                            right: "20px",
+                            textAlign: "center",
+                            color: textColor,
+                            fontFamily: "var(--font-heading)",
+                            fontSize: "1.1rem",
+                            fontWeight: 900,
+                            letterSpacing: "0.15em",
+                            textTransform: "uppercase",
+                            textShadow: "0 2px 10px rgba(0,0,0,0.9)",
+                            backgroundColor: "rgba(0,0,0,0.45)",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            backdropFilter: "blur(4px)",
+                          }}
+                        >
+                          {customText}
+                        </div>
+                      )}
+
+                      {/* Sticker Badge Overlay */}
+                      {activeSticker && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "130px",
+                            right: "16px",
+                            backgroundColor: "var(--shinra-red)",
+                            color: "#ffffff",
+                            fontFamily: "var(--font-heading)",
+                            fontSize: "0.68rem",
+                            fontWeight: 900,
+                            padding: "4px 8px",
+                            borderRadius: "3px",
+                            letterSpacing: "0.08em",
+                            boxShadow: "0 4px 10px rgba(0,0,0,0.8)",
+                          }}
+                          className="shinra-badge"
+                        >
+                          {activeSticker}
+                        </div>
+                      )}
+                    </>
+                  }
+                />
+              ) : (
                 <div
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundImage: `url(${selectedArtUrl})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    transform: `scale(${zoomLevel / 100})`,
-                    transition: "transform 0.15s ease",
-                    zIndex: 1,
+                    position: "relative",
+                    width: "320px",
+                    height: "460px",
+                    borderRadius: "8px",
+                    border: "12px solid #111113",
+                    overflow: "hidden",
+                    boxShadow: "0 25px 50px rgba(0,0,0,0.9)",
+                    backgroundColor: "#050507",
                   }}
-                />
-
-                {/* Glass / Finish Gradient Overlay */}
-                {caseFinish === "tempered" && (
+                >
                   <div
                     style={{
                       position: "absolute",
                       inset: 0,
-                      background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.02) 40%, rgba(0,0,0,0.3) 100%)",
-                      pointerEvents: "none",
-                      zIndex: 3,
+                      backgroundImage: `url(${selectedArtUrl})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      transform: `scale(${zoomLevel / 100})`,
+                      transition: "transform 0.15s ease",
+                      zIndex: 1,
                     }}
                   />
-                )}
-
-                {/* Camera Cutout for Phone Cases */}
-                {productType === "phone_case" && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "14px",
-                      left: "14px",
-                      width: "80px",
-                      height: "85px",
-                      borderRadius: "22px",
-                      backgroundColor: "rgba(10, 10, 14, 0.95)",
-                      border: "2px solid #2d2d35",
-                      zIndex: 10,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "space-around",
-                      padding: "8px 0",
-                    }}
-                  >
-                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", backgroundColor: "#000000", border: "2px solid #3d3d48" }} />
-                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", backgroundColor: "#000000", border: "2px solid #3d3d48" }} />
-                  </div>
-                )}
-
-                {/* Custom Overlay Typography */}
-                {customText && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: productType === "phone_case" ? "32px" : "20px",
-                      left: "20px",
-                      right: "20px",
-                      textAlign: "center",
-                      color: textColor,
-                      fontFamily: "var(--font-heading)",
-                      fontSize: "1.1rem",
-                      fontWeight: 900,
-                      letterSpacing: "0.15em",
-                      textTransform: "uppercase",
-                      textShadow: "0 2px 10px rgba(0,0,0,0.9)",
-                      zIndex: 10,
-                      backgroundColor: "rgba(0,0,0,0.4)",
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      backdropFilter: "blur(4px)",
-                    }}
-                  >
-                    {customText}
-                  </div>
-                )}
-
-                {/* Sticker Badge Overlay */}
-                {activeSticker && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: productType === "phone_case" ? "120px" : "20px",
-                      right: "16px",
-                      zIndex: 10,
-                      backgroundColor: "var(--shinra-red)",
-                      color: "#ffffff",
-                      fontFamily: "var(--font-heading)",
-                      fontSize: "0.68rem",
-                      fontWeight: 900,
-                      padding: "4px 8px",
-                      borderRadius: "3px",
-                      letterSpacing: "0.08em",
-                      boxShadow: "0 4px 10px rgba(0,0,0,0.8)",
-                    }}
-                    className="shinra-badge"
-                  >
-                    {activeSticker}
-                  </div>
-                )}
-              </div>
+                  {customText && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "20px",
+                        left: "20px",
+                        right: "20px",
+                        textAlign: "center",
+                        color: textColor,
+                        fontFamily: "var(--font-heading)",
+                        fontSize: "1.1rem",
+                        fontWeight: 900,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        textShadow: "0 2px 10px rgba(0,0,0,0.9)",
+                        zIndex: 10,
+                        backgroundColor: "rgba(0,0,0,0.4)",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        backdropFilter: "blur(4px)",
+                      }}
+                    >
+                      {customText}
+                    </div>
+                  )}
+                  {activeSticker && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "20px",
+                        right: "16px",
+                        zIndex: 10,
+                        backgroundColor: "var(--shinra-red)",
+                        color: "#ffffff",
+                        fontFamily: "var(--font-heading)",
+                        fontSize: "0.68rem",
+                        fontWeight: 900,
+                        padding: "4px 8px",
+                        borderRadius: "3px",
+                        letterSpacing: "0.08em",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.8)",
+                      }}
+                      className="shinra-badge"
+                    >
+                      {activeSticker}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Zoom slider control */}
               <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "1.5rem", width: "100%", maxWidth: "300px" }}>
@@ -408,27 +429,33 @@ export default function CustomizePage() {
                   </div>
 
                   {/* Brand chips */}
-                  <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem" }}>
-                    {PHONE_MODELS.map((b) => (
+                  <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.8rem", flexWrap: "wrap" }}>
+                    {BRAND_GROUPS.map((b) => (
                       <button
                         key={b.brand}
                         type="button"
                         onClick={() => {
                           setSelectedBrand(b.brand);
                           setSelectedModel(b.models[0]);
+                          setDevice(b.brand, b.models[0]);
                         }}
                         style={{
-                          backgroundColor: selectedBrand === b.brand ? "#ffffff" : "var(--surface)",
-                          color: selectedBrand === b.brand ? "#000000" : "#ffffff",
-                          border: "1px solid var(--surface-border)",
-                          borderRadius: "4px",
-                          padding: "5px 12px",
+                          backgroundColor: selectedBrand === b.brand ? "var(--main-accent)" : "var(--surface)",
+                          color: selectedBrand === b.brand ? "#ffffff" : "var(--foreground-muted)",
+                          border: selectedBrand === b.brand ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
+                          borderRadius: "6px",
+                          padding: "6px 12px",
                           fontSize: "0.75rem",
                           fontWeight: 700,
                           cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          transition: "all 0.15s",
                         }}
                       >
-                        {b.brand}
+                        <span>{b.icon}</span>
+                        <span>{b.brand}</span>
                       </button>
                     ))}
                   </div>
@@ -436,7 +463,11 @@ export default function CustomizePage() {
                   {/* Dropdown */}
                   <select
                     value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
+                    onChange={(e) => {
+                      const newModel = e.target.value;
+                      setSelectedModel(newModel);
+                      setDevice(selectedBrand, newModel);
+                    }}
                     style={{
                       width: "100%",
                       backgroundColor: "var(--surface)",
@@ -450,7 +481,7 @@ export default function CustomizePage() {
                       cursor: "pointer",
                     }}
                   >
-                    {PHONE_MODELS.find((b) => b.brand === selectedBrand)?.models.map((m) => (
+                    {BRAND_GROUPS.find((b) => b.brand === selectedBrand)?.models.map((m) => (
                       <option key={m} value={m}>
                         {m}
                       </option>
