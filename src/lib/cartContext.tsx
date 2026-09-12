@@ -318,14 +318,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeFromCart = (productId: string, format: string, phoneModel?: string) => {
     setCart((prev) =>
-      prev.filter(
-        (item) =>
-          !(
-            item.product.id === productId &&
-            item.format === format &&
-            item.phoneModel === phoneModel
-          )
-      )
+      prev.filter((item) => {
+        const matchesProduct = item.product.id === productId;
+        const matchesFormat = item.format === format;
+        const matchesModel = phoneModel !== undefined ? item.phoneModel === phoneModel : true;
+        return !(matchesProduct && matchesFormat && matchesModel);
+      })
     );
   };
 
@@ -339,15 +337,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeFromCart(productId, format, phoneModel);
       return;
     }
-    setCart((prev) =>
-      prev.map((item) =>
-        item.product.id === productId &&
-        item.format === format &&
-        item.phoneModel === phoneModel
-          ? { ...item, quantity: qty }
-          : item
-      )
-    );
+    setCart((prev) => {
+      let matched = false;
+      return prev.map((item) => {
+        if (!matched) {
+          const matchesProduct = item.product.id === productId;
+          const matchesFormat = item.format === format;
+          const matchesModel = phoneModel !== undefined ? item.phoneModel === phoneModel : true;
+          if (matchesProduct && matchesFormat && matchesModel) {
+            matched = true;
+            return { ...item, quantity: qty };
+          }
+        }
+        return item;
+      });
+    });
   };
 
   const clearCart = () => setCart([]);

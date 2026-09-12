@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PRODUCTS, PHONE_MODELS } from "@/data/products";
@@ -8,42 +8,28 @@ import { useCart } from "@/lib/cartContext";
 
 export default function HeroBanner() {
   const { addToCart } = useCart();
-  const [activeCardIndex, setActiveCardIndex] = useState(2); // Center phone case
+  const [activeCardIndex, setActiveCardIndex] = useState(0); // Active front phone case
   const [selectedBrandIndex, setSelectedBrandIndex] = useState(0);
   const [selectedModel, setSelectedModel] = useState(PHONE_MODELS[0].models[0]);
+  const [isPaused, setIsPaused] = useState(false);
 
   const showcaseProducts = [
-    {
-      product: PRODUCTS[0], // Guts
-      rotation: -24,
-      translateX: -130,
-      zIndex: 10,
-    },
-    {
-      product: PRODUCTS[3], // Sukuna
-      rotation: -12,
-      translateX: -65,
-      zIndex: 20,
-    },
-    {
-      product: PRODUCTS[1], // Luffy Gear 5
-      rotation: 0,
-      translateX: 0,
-      zIndex: 30,
-    },
-    {
-      product: PRODUCTS[2], // Gojo
-      rotation: 12,
-      translateX: 65,
-      zIndex: 20,
-    },
-    {
-      product: PRODUCTS[4], // Sung Jin-Woo
-      rotation: 24,
-      translateX: 130,
-      zIndex: 10,
-    },
+    { product: PRODUCTS[0] }, // Cover 1: Cyber Anime
+    { product: PRODUCTS[1] }, // Cover 2: Streetwear Anime Boy
+    { product: PRODUCTS[2] }, // Cover 3: Miya Moonlight Archer
+    { product: PRODUCTS[3] }, // Cover 4: Dark Ninja Crimson Eye
   ];
+
+  // Auto-cycle through covers every 3.5 seconds
+  useEffect(() => {
+    if (isPaused) return;
+
+    const interval = setInterval(() => {
+      setActiveCardIndex((prev) => (prev + 1) % showcaseProducts.length);
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [isPaused, showcaseProducts.length]);
 
   return (
     <section
@@ -380,214 +366,442 @@ export default function HeroBanner() {
             </p>
           </div>
 
-          {/* Right Showcase: 3D Phone Cases Fan Stack */}
+          {/* Right Showcase: 3D Phone Cases Fan Stack with Auto-Rotation */}
           <div
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
             style={{
               position: "relative",
-              height: "470px",
+              minHeight: "490px",
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
               userSelect: "none",
             }}
           >
-            {showcaseProducts.map((item, index) => {
-              const isCenter = index === activeCardIndex;
-              return (
-                <div
-                  key={item.product.id}
-                  onClick={() => {
-                    setActiveCardIndex(index);
-                    addToCart(item.product, "Ultra Impact MagSafe", selectedModel);
-                  }}
-                  title={`Click to inspect ${item.product.name}`}
-                  style={{
-                    position: "absolute",
-                    width: isCenter ? "220px" : "180px",
-                    height: isCenter ? "400px" : "330px",
-                    borderRadius: "34px",
-                    backgroundColor: "#121214",
-                    border: isCenter ? "3.5px solid var(--shinra-red)" : "3px solid #27272a",
-                    boxShadow: isCenter
-                      ? "0 30px 60px rgba(0, 0, 0, 0.95), 0 0 35px var(--shinra-red-glow)"
-                      : "0 20px 40px rgba(0, 0, 0, 0.8)",
-                    transform: `translateX(${item.translateX}px) rotate(${item.rotation}deg) translateY(${
-                      isCenter ? "-24px" : "0"
-                    })`,
-                    zIndex: isCenter ? 40 : item.zIndex,
-                    transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-                    cursor: "pointer",
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  {/* Outer Bumper Frame Simulation */}
-                  <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                    <Image
-                      src={item.product.image}
-                      alt={item.product.name}
-                      fill
-                      sizes="(max-width: 768px) 180px, 220px"
-                      style={{ objectFit: "cover" }}
-                      priority={isCenter}
-                    />
+            {/* 3D Stage Container */}
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                height: "450px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                perspective: "1300px",
+                transformStyle: "preserve-3d",
+              }}
+            >
+              {showcaseProducts.map((item, index) => {
+                const total = showcaseProducts.length;
+                let diff = (index - activeCardIndex + total) % total;
+                if (diff > total / 2) {
+                  diff -= total; // values: [-1, 0, 1, 2]
+                }
 
-                    {/* Camera Island Cutout simulation */}
+                const isCenter = diff === 0;
+
+                let translateX = 0;
+                let translateY = 0;
+                let translateZ = 0;
+                let rotateY = 0;
+                let rotateZ = 0;
+                let scale = 1;
+                let zIndex = 10;
+                let opacity = 1;
+
+                if (isCenter) {
+                  translateX = 0;
+                  translateY = -28;
+                  translateZ = 60;
+                  rotateY = -3;
+                  rotateZ = -1;
+                  scale = 1.06;
+                  zIndex = 50;
+                  opacity = 1;
+                } else if (diff === 1) {
+                  translateX = 100;
+                  translateY = -2;
+                  translateZ = 15;
+                  rotateY = -18;
+                  rotateZ = 10;
+                  scale = 0.94;
+                  zIndex = 35;
+                  opacity = 0.92;
+                } else if (diff === -1) {
+                  translateX = -100;
+                  translateY = -2;
+                  translateZ = 15;
+                  rotateY = 18;
+                  rotateZ = -10;
+                  scale = 0.94;
+                  zIndex = 35;
+                  opacity = 0.92;
+                } else {
+                  // diff === 2
+                  translateX = 175;
+                  translateY = 14;
+                  translateZ = -35;
+                  rotateY = -25;
+                  rotateZ = 18;
+                  scale = 0.86;
+                  zIndex = 20;
+                  opacity = 0.8;
+                }
+
+                return (
+                  <div
+                    key={item.product.id}
+                    onClick={() => {
+                      setActiveCardIndex(index);
+                    }}
+                    title={`Click to bring ${item.product.name} to front`}
+                    style={{
+                      position: "absolute",
+                      width: isCenter ? "228px" : "194px",
+                      height: isCenter ? "410px" : "350px",
+                      borderRadius: "38px",
+                      backgroundColor: "#0d0d10",
+                      border: isCenter ? "3px solid var(--main-accent)" : "2px solid rgba(255, 255, 255, 0.2)",
+                      boxShadow: isCenter
+                        ? "0 35px 70px -10px rgba(0, 0, 0, 0.95), 0 15px 30px rgba(0,0,0,0.8), 0 0 35px var(--hachiman-purple-glow), inset 0 0 0 1.5px rgba(255,255,255,0.2)"
+                        : "0 25px 50px -10px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255,255,255,0.12)",
+                      transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
+                      zIndex,
+                      opacity,
+                      transition: "all 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    {/* Realistic Physical Side Buttons (Modeled on phone case edge) */}
+                    {/* Right: Power / Lock Button */}
                     <div
                       style={{
                         position: "absolute",
-                        top: "14px",
-                        left: "14px",
-                        width: isCenter ? "56px" : "46px",
-                        height: isCenter ? "60px" : "50px",
-                        borderRadius: "14px",
-                        backgroundColor: "rgba(10, 10, 12, 0.92)",
-                        border: "1.5px solid rgba(255, 255, 255, 0.25)",
-                        boxShadow: "0 4px 10px rgba(0,0,0,0.6)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "space-around",
-                        padding: "4px",
-                        zIndex: 2,
+                        right: "-4px",
+                        top: isCenter ? "115px" : "95px",
+                        width: "4px",
+                        height: isCenter ? "46px" : "38px",
+                        backgroundColor: "#3f3f46",
+                        borderRadius: "0 3px 3px 0",
+                        boxShadow: "1px 0 3px rgba(0,0,0,0.6)",
+                        pointerEvents: "none",
+                        zIndex: 1,
+                      }}
+                    />
+
+                    {/* Left: Action Button */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "-4px",
+                        top: isCenter ? "75px" : "62px",
+                        width: "4px",
+                        height: isCenter ? "22px" : "18px",
+                        backgroundColor: "#3f3f46",
+                        borderRadius: "3px 0 0 3px",
+                        boxShadow: "-1px 0 3px rgba(0,0,0,0.6)",
+                        pointerEvents: "none",
+                        zIndex: 1,
+                      }}
+                    />
+
+                    {/* Left: Volume Up Button */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "-4px",
+                        top: isCenter ? "112px" : "92px",
+                        width: "4px",
+                        height: isCenter ? "36px" : "30px",
+                        backgroundColor: "#3f3f46",
+                        borderRadius: "3px 0 0 3px",
+                        boxShadow: "-1px 0 3px rgba(0,0,0,0.6)",
+                        pointerEvents: "none",
+                        zIndex: 1,
+                      }}
+                    />
+
+                    {/* Left: Volume Down Button */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "-4px",
+                        top: isCenter ? "156px" : "130px",
+                        width: "4px",
+                        height: isCenter ? "36px" : "30px",
+                        backgroundColor: "#3f3f46",
+                        borderRadius: "3px 0 0 3px",
+                        boxShadow: "-1px 0 3px rgba(0,0,0,0.6)",
+                        pointerEvents: "none",
+                        zIndex: 1,
+                      }}
+                    />
+
+                    {/* Outer Bumper Frame & Inner Bevel Shadow */}
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "34px",
+                        overflow: "hidden",
+                        backgroundColor: "#111114",
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          width: "100%",
-                          justifyContent: "space-around",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            background: "radial-gradient(circle, #2563eb, #000)",
-                            border: "1px solid #444",
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            background: "radial-gradient(circle, #2563eb, #000)",
-                            border: "1px solid #444",
-                          }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          width: "100%",
-                          justifyContent: "space-around",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            background: "radial-gradient(circle, #2563eb, #000)",
-                            border: "1px solid #444",
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "50%",
-                            background: "#fbbf24",
-                          }}
-                        />
-                      </div>
-                    </div>
+                      {/* High Resolution Case Artwork */}
+                      <Image
+                        src={item.product.image}
+                        alt={item.product.name}
+                        fill
+                        sizes="(max-width: 768px) 194px, 228px"
+                        style={{ objectFit: "cover" }}
+                        priority={isCenter}
+                      />
 
-                    {/* MagSafe Ring Visual Accent on Center Phone Case */}
-                    {isCenter && (
+                      {/* Specular Liquid Glass Sheen & Reflection Glint */}
                       <div
                         style={{
                           position: "absolute",
-                          top: "42%",
-                          left: "50%",
-                          transform: "translate(-50%, -50%)",
-                          width: "90px",
-                          height: "90px",
-                          borderRadius: "50%",
-                          border: "2px dashed rgba(255, 255, 255, 0.4)",
+                          inset: 0,
+                          background:
+                            "linear-gradient(130deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.12) 22%, transparent 44%, rgba(255,255,255,0.03) 68%, rgba(255,255,255,0.18) 100%)",
                           pointerEvents: "none",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          opacity: 0.65,
+                          zIndex: 4,
+                          borderRadius: "34px",
                         }}
-                      >
-                        <div
-                          style={{
-                            width: "6px",
-                            height: "22px",
-                            backgroundColor: "rgba(255, 255, 255, 0.5)",
-                            position: "absolute",
-                            bottom: "-26px",
-                            borderRadius: "3px",
-                          }}
-                        />
-                      </div>
-                    )}
+                      />
 
-                    {/* Quick Add Overlay on active center card */}
-                    {isCenter && (
+                      {/* Protective Raised Lip & Inner Bezel Shadow */}
                       <div
                         style={{
                           position: "absolute",
-                          bottom: 0,
-                          insetInline: 0,
-                          background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 70%, transparent 100%)",
-                          padding: "20px 12px 14px",
-                          textAlign: "center",
-                          zIndex: 3,
+                          inset: 0,
+                          boxShadow: "inset 0 0 0 2px rgba(18, 18, 22, 0.9), inset 0 0 10px rgba(0, 0, 0, 0.7)",
+                          borderRadius: "34px",
+                          pointerEvents: "none",
+                          zIndex: 5,
+                        }}
+                      />
+
+                      {/* Ultra-Realistic Flagship Pro Camera Plateau Island */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: isCenter ? "14px" : "12px",
+                          left: isCenter ? "14px" : "12px",
+                          width: isCenter ? "72px" : "62px",
+                          height: isCenter ? "76px" : "66px",
+                          borderRadius: "22px",
+                          background: "linear-gradient(145deg, rgba(24, 24, 28, 0.96), rgba(10, 10, 12, 0.98))",
+                          border: "1.5px solid rgba(255, 255, 255, 0.22)",
+                          boxShadow: "0 8px 18px rgba(0, 0, 0, 0.65), inset 0 1px 1.5px rgba(255, 255, 255, 0.35)",
+                          zIndex: 6,
                         }}
                       >
-                        <span
+                        {/* Lens 1 (Top-Left Main Camera) */}
+                        <div
                           style={{
-                            fontSize: "0.72rem",
-                            fontWeight: 800,
-                            letterSpacing: "0.08em",
-                            color: "#ffffff",
-                            textTransform: "uppercase",
-                            display: "block",
-                            marginBottom: "2px",
+                            position: "absolute",
+                            top: isCenter ? "9px" : "8px",
+                            left: isCenter ? "9px" : "8px",
+                            width: isCenter ? "23px" : "20px",
+                            height: isCenter ? "23px" : "20px",
+                            borderRadius: "50%",
+                            border: "2px solid #52525b",
+                            background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.8), inset 0 1px 1.5px rgba(255,255,255,0.4)",
                           }}
                         >
-                          {item.product.name}
-                        </span>
-                        <span style={{ fontSize: "0.65rem", color: "#a1a1aa", display: "block", marginBottom: "6px" }}>
-                          for {selectedModel}
-                        </span>
-                        <span
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "3px",
+                              left: "3px",
+                              width: "4px",
+                              height: "4px",
+                              borderRadius: "50%",
+                              backgroundColor: "#ffffff",
+                              opacity: 0.85,
+                            }}
+                          />
+                        </div>
+
+                        {/* Lens 2 (Bottom-Left Ultra-Wide Camera) */}
+                        <div
                           style={{
-                            backgroundColor: "var(--shinra-red)",
-                            color: "#ffffff",
-                            fontSize: "0.68rem",
-                            fontWeight: 800,
-                            padding: "4px 10px",
-                            borderRadius: "4px",
-                            letterSpacing: "0.1em",
-                            display: "inline-block",
+                            position: "absolute",
+                            bottom: isCenter ? "9px" : "8px",
+                            left: isCenter ? "9px" : "8px",
+                            width: isCenter ? "23px" : "20px",
+                            height: isCenter ? "23px" : "20px",
+                            borderRadius: "50%",
+                            border: "2px solid #52525b",
+                            background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.8), inset 0 1px 1.5px rgba(255,255,255,0.4)",
                           }}
                         >
-                          + QUICK ADD CASE ₹{item.product.price}
-                        </span>
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "3px",
+                              left: "3px",
+                              width: "4px",
+                              height: "4px",
+                              borderRadius: "50%",
+                              backgroundColor: "#ffffff",
+                              opacity: 0.85,
+                            }}
+                          />
+                        </div>
+
+                        {/* Lens 3 (Center-Right Telephoto Periscope Camera) */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: isCenter ? "26px" : "23px",
+                            right: isCenter ? "9px" : "8px",
+                            width: isCenter ? "23px" : "20px",
+                            height: isCenter ? "23px" : "20px",
+                            borderRadius: "50%",
+                            border: "2px solid #52525b",
+                            background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.8), inset 0 1px 1.5px rgba(255,255,255,0.4)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "3px",
+                              left: "3px",
+                              width: "4px",
+                              height: "4px",
+                              borderRadius: "50%",
+                              backgroundColor: "#ffffff",
+                              opacity: 0.85,
+                            }}
+                          />
+                        </div>
+
+                        {/* Quad-LED True Tone Flash (Top-Right) */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: isCenter ? "11px" : "9px",
+                            right: isCenter ? "14px" : "12px",
+                            width: isCenter ? "11px" : "9px",
+                            height: isCenter ? "11px" : "9px",
+                            borderRadius: "50%",
+                            background: "radial-gradient(circle, #fef08a 25%, #d97706 80%, #78350f 100%)",
+                            border: "1px solid rgba(0,0,0,0.6)",
+                            boxShadow: "0 0 6px rgba(254, 240, 138, 0.4)",
+                          }}
+                        />
+
+                        {/* LiDAR Scanner Sensor (Bottom-Right) */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: isCenter ? "12px" : "10px",
+                            right: isCenter ? "14px" : "12px",
+                            width: isCenter ? "10px" : "8px",
+                            height: isCenter ? "10px" : "8px",
+                            borderRadius: "50%",
+                            background: "radial-gradient(circle, #09090b 60%, #27272a 100%)",
+                            border: "1px solid #3f3f46",
+                          }}
+                        />
+
+                        {/* Audio Microphone Hole */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: isCenter ? "37px" : "32px",
+                            right: isCenter ? "36px" : "31px",
+                            width: "3px",
+                            height: "3px",
+                            borderRadius: "50%",
+                            backgroundColor: "#09090b",
+                          }}
+                        />
                       </div>
-                    )}
+
+                      {/* MagSafe Magnetic Array Visual on Active Phone Case */}
+                      {isCenter && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "43%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            width: "96px",
+                            height: "96px",
+                            borderRadius: "50%",
+                            border: "2px solid rgba(255, 255, 255, 0.45)",
+                            boxShadow: "0 0 14px rgba(255,255,255,0.2), inset 0 0 8px rgba(255,255,255,0.12)",
+                            pointerEvents: "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: 0.7,
+                            zIndex: 4,
+                          }}
+                        >
+                          {/* Magnetic Alignment Bar */}
+                          <div
+                            style={{
+                              width: "5px",
+                              height: "22px",
+                              backgroundColor: "rgba(255, 255, 255, 0.55)",
+                              position: "absolute",
+                              bottom: "-27px",
+                              borderRadius: "3px",
+                              boxShadow: "0 0 8px rgba(255,255,255,0.3)",
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            {/* Carousel Navigation Indicator Dots */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                marginTop: "18px",
+                zIndex: 10,
+              }}
+            >
+              {showcaseProducts.map((_, dotIdx) => {
+                const isActive = dotIdx === activeCardIndex;
+                return (
+                  <button
+                    key={dotIdx}
+                    onClick={() => setActiveCardIndex(dotIdx)}
+                    aria-label={`Show cover ${dotIdx + 1}`}
+                    style={{
+                      width: isActive ? "24px" : "8px",
+                      height: "8px",
+                      borderRadius: "999px",
+                      backgroundColor: isActive ? "var(--main-accent)" : "rgba(124, 58, 237, 0.25)",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                      boxShadow: isActive ? "0 0 10px var(--main-accent)" : "none",
+                    }}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

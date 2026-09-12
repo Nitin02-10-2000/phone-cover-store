@@ -2,10 +2,43 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCart, OrderRecord } from "@/lib/cartContext";
 import { PRODUCTS } from "@/data/products";
 
+const NAV_SECTIONS = [
+  {
+    label: "STORE FRONT",
+    links: [
+      { href: "/", label: "Home", icon: "🏠" },
+      { href: "/shop", label: "Phone Cases Shop", icon: "📱" },
+      { href: "/categories", label: "Case Categories", icon: "📂" },
+      { href: "/product/luffy-gear5-case", label: "Product Detail", icon: "🛍️" },
+      { href: "/customize", label: "Custom Studio", icon: "⚡" },
+    ],
+  },
+  {
+    label: "CUSTOMER PAGES",
+    links: [
+      { href: "/login", label: "Login / Sign In", icon: "🔐" },
+      { href: "/account", label: "My Account", icon: "👤" },
+      { href: "/cart", label: "Cart", icon: "🛒" },
+      { href: "/checkout", label: "Checkout", icon: "💳" },
+      { href: "/order-confirmation", label: "Order Confirmation", icon: "✅" },
+      { href: "/track-order", label: "Track Order", icon: "📦" },
+      { href: "/saved-designs", label: "Saved Designs", icon: "💾" },
+    ],
+  },
+  {
+    label: "ADMIN",
+    links: [
+      { href: "/admin", label: "Admin Dashboard", icon: "⚙️" },
+    ],
+  },
+];
+
 export default function AdminPage() {
+  const pathname = usePathname();
   const { orders, updateOrderStatus } = useCart();
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -28,8 +61,84 @@ export default function AdminPage() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--background)", color: "var(--foreground)", padding: "100px 24px 80px" }}>
-      <div style={{ maxWidth: "1350px", margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--background)", color: "var(--foreground)", display: "flex" }}>
+      {/* ─── SIDEBAR ─────────────────────────────────────── */}
+      <aside
+        style={{
+          width: "260px",
+          flexShrink: 0,
+          backgroundColor: "var(--surface)",
+          borderRight: "1px solid var(--surface-border)",
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          position: "sticky",
+          top: 0,
+          overflowY: "auto",
+          paddingTop: "80px",
+        }}
+      >
+        {/* Brand */}
+        <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid var(--surface-border)" }}>
+          <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.2em", color: "var(--shinra-red)", textTransform: "uppercase", marginBottom: "4px" }}>HACHIMAN</div>
+          <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--foreground)" }}>Admin Panel</div>
+        </div>
+
+        {/* Nav sections */}
+        <nav style={{ flex: 1, padding: "12px 0" }}>
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.label} style={{ marginBottom: "8px" }}>
+              <div style={{
+                fontSize: "0.62rem",
+                fontWeight: 800,
+                letterSpacing: "0.18em",
+                color: "var(--foreground-muted)",
+                textTransform: "uppercase",
+                padding: "10px 20px 4px",
+              }}>
+                {section.label}
+              </div>
+              {section.links.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "9px 20px",
+                      fontSize: "0.85rem",
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive ? "var(--shinra-red)" : "var(--foreground)",
+                      backgroundColor: isActive ? "rgba(230, 57, 70, 0.08)" : "transparent",
+                      borderLeft: isActive ? "3px solid var(--shinra-red)" : "3px solid transparent",
+                      textDecoration: "none",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{ fontSize: "1rem" }}>{link.icon}</span>
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer */}
+        <div style={{ padding: "16px 20px", borderTop: "1px solid var(--surface-border)", fontSize: "0.75rem", color: "var(--foreground-muted)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: "7px", height: "7px", borderRadius: "50%", backgroundColor: "#2ed573", boxShadow: "0 0 6px #2ed573", flexShrink: 0 }} />
+            <span>UV DTF Press: <strong style={{ color: "#2ed573" }}>ONLINE</strong></span>
+          </div>
+        </div>
+      </aside>
+
+      {/* ─── MAIN CONTENT ─────────────────────────────────── */}
+      <div style={{ flex: 1, overflowX: "hidden", padding: "100px 32px 80px" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         
         {/* Top Operational Status Bar */}
         <div
@@ -543,7 +652,7 @@ export default function AdminPage() {
             ))}
           </div>
         )}
-
+      </div>
       </div>
     </div>
   );

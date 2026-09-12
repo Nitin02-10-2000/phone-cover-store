@@ -3,17 +3,16 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Product, PHONE_MODELS } from "@/data/products";
-import { useCart } from "@/lib/cartContext";
+import { useRouter } from "next/navigation";
+import { Product } from "@/data/products";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useCart();
+  const router = useRouter();
   const [selectedFormat, setSelectedFormat] = useState(product.formats[0] || "Ultra Impact MagSafe");
-  const [selectedModel, setSelectedModel] = useState("iPhone 16 Pro Max");
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   // Format price adjustments
@@ -33,9 +32,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     ((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100
   );
 
+  const handleCardClick = () => {
+    router.push(`/product/${product.id}`);
+  };
+
   return (
     <div
       className="product-card"
+      onClick={handleCardClick}
       style={{
         borderRadius: "14px",
         backgroundColor: "var(--surface)",
@@ -44,19 +48,23 @@ export default function ProductCard({ product }: ProductCardProps) {
         display: "flex",
         flexDirection: "column",
         transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        cursor: "pointer",
       }}
     >
-      {/* Top Phone Case Showcase Container */}
+      {/* Top Phone Case Showcase Container - Full Click Target to Product Detail Page */}
       <div
+        onClick={handleCardClick}
         style={{
           position: "relative",
           width: "100%",
           padding: "32px 20px 26px",
-          backgroundColor: "#07070a",
+          backgroundColor: "#ffffff",
+          borderBottom: "1px solid var(--surface-border)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           overflow: "hidden",
+          cursor: "pointer",
         }}
       >
         {/* Slanted Tag Badge */}
@@ -67,6 +75,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               top: "14px",
               left: "14px",
               zIndex: 15,
+              pointerEvents: "none",
             }}
           >
             <div className="shinra-badge shinra-badge-red" style={{ fontSize: "0.68rem" }}>
@@ -113,8 +122,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </button>
 
         {/* Realistic Phone Case Mockup Silhouette */}
-        <Link
-          href={`/product/${product.id}`}
+        <div
           style={{
             position: "relative",
             width: "172px",
@@ -122,18 +130,18 @@ export default function ProductCard({ product }: ProductCardProps) {
             borderRadius: "34px",
             backgroundColor: "#18181b",
             border: "3.5px solid #27272a",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.12)",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.08)",
             overflow: "hidden",
             display: "block",
-            textDecoration: "none",
             transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+            cursor: "pointer",
           }}
           className="case-silhouette"
         >
           <style jsx>{`
             .product-card:hover .case-silhouette {
               transform: scale(1.04) translateY(-4px);
-              box-shadow: 0 22px 50px rgba(0,0,0,0.95), 0 0 25px var(--shinra-red-glow);
+              box-shadow: 0 24px 50px rgba(0,0,0,0.28), 0 0 25px var(--shinra-red-glow);
               border-color: var(--shinra-red);
             }
           `}</style>
@@ -144,7 +152,19 @@ export default function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             fill
             sizes="172px"
-            style={{ objectFit: "cover" }}
+            style={{ objectFit: "cover", pointerEvents: "none" }}
+          />
+
+          {/* Glassmorphism / Transparent Case Effect */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.0) 100%)",
+              boxShadow: "inset 0 0 15px rgba(255,255,255,0.15)",
+              pointerEvents: "none",
+              zIndex: 2,
+            }}
           />
 
           {/* Camera Module Bump */}
@@ -164,6 +184,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               justifyContent: "space-around",
               padding: "4px",
               zIndex: 3,
+              pointerEvents: "none",
             }}
           >
             <div style={{ display: "flex", width: "100%", justifyContent: "space-around" }}>
@@ -187,17 +208,34 @@ export default function ProductCard({ product }: ProductCardProps) {
                 width: "74px",
                 height: "74px",
                 borderRadius: "50%",
-                border: "1.5px dashed rgba(255, 255, 255, 0.35)",
+                border: "2px solid rgba(255, 255, 255, 0.85)",
+                boxShadow: "0 0 8px rgba(255,255,255,0.4), inset 0 0 8px rgba(255,255,255,0.4)",
                 pointerEvents: "none",
+                zIndex: 4,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-            />
+            >
+              <div
+                style={{
+                  width: "4px",
+                  height: "16px",
+                  backgroundColor: "rgba(255, 255, 255, 0.85)",
+                  position: "absolute",
+                  bottom: "-22px",
+                  borderRadius: "2px",
+                  boxShadow: "0 0 5px rgba(255,255,255,0.4)",
+                }}
+              />
+            </div>
           )}
 
           {/* Corner Shock Bumper Details */}
-          <div style={{ position: "absolute", top: "4px", right: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-          <div style={{ position: "absolute", bottom: "4px", left: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-          <div style={{ position: "absolute", bottom: "4px", right: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-        </Link>
+          <div style={{ position: "absolute", top: "4px", right: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "4px", left: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "4px", right: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", pointerEvents: "none" }} />
+        </div>
 
         {/* Drop Protection badge */}
         <div
@@ -216,6 +254,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             gap: "5px",
             color: "#ffffff",
             border: "1px solid rgba(255, 255, 255, 0.12)",
+            pointerEvents: "none",
+            zIndex: 10,
           }}
         >
           <span style={{ color: "#22c55e" }}>🛡️</span>
@@ -224,20 +264,31 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Info Container */}
-      <div style={{ padding: "1.4rem 1.35rem 1.35rem", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
+      <div style={{ padding: "1.35rem 1.35rem 1.2rem", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
         <div>
-          {/* Franchise tag */}
-          <div
-            style={{
-              fontSize: "0.72rem",
-              fontWeight: 800,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "var(--shinra-red)",
-              marginBottom: "6px",
-            }}
-          >
-            {product.franchise.replace("-", " ")}
+          {/* Top Row: Franchise Badge & Reviews */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+            <span
+              style={{
+                fontSize: "0.7rem",
+                fontWeight: 900,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--shinra-red)",
+                backgroundColor: "rgba(229, 9, 20, 0.1)",
+                padding: "3px 8px",
+                borderRadius: "4px",
+              }}
+            >
+              {product.franchise.replace("-", " ")}
+            </span>
+
+            {/* Stars & Reviews */}
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.74rem" }}>
+              <span style={{ color: "#fbbf24", fontSize: "0.75rem" }}>★</span>
+              <span style={{ fontWeight: 800, color: "var(--foreground)" }}>{product.rating || 4.9}</span>
+              <span style={{ color: "var(--foreground-muted)", fontSize: "0.68rem" }}>({product.reviewsCount || 350}+)</span>
+            </div>
           </div>
 
           {/* Product Title */}
@@ -248,16 +299,17 @@ export default function ProductCard({ product }: ProductCardProps) {
             <h3
               style={{
                 fontFamily: "var(--font-heading)",
-                fontSize: "1.1rem",
+                fontSize: "1.08rem",
                 fontWeight: 800,
                 color: "var(--foreground)",
-                marginBottom: "0.75rem",
+                marginBottom: "0.5rem",
                 lineHeight: 1.35,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 display: "-webkit-box",
                 WebkitLineClamp: 1,
                 WebkitBoxOrient: "vertical",
+                cursor: "pointer",
               }}
               title={product.name}
             >
@@ -265,92 +317,22 @@ export default function ProductCard({ product }: ProductCardProps) {
             </h3>
           </Link>
 
-          {/* Device Model Dropdown */}
-          <div style={{ marginBottom: "0.9rem" }}>
-            <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", marginBottom: "5px", fontWeight: 700 }}>
-              COMPATIBLE DEVICE:
-            </div>
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                borderRadius: "8px",
-                backgroundColor: "#0d0d10",
-                border: "1px solid var(--surface-border)",
-                color: "#ffffff",
-                fontSize: "0.82rem",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              <optgroup label="Apple iPhone">
-                {PHONE_MODELS[0].models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Samsung Galaxy">
-                {PHONE_MODELS[1].models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="OnePlus">
-                {PHONE_MODELS[2].models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Google Pixel">
-                {PHONE_MODELS[3].models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          </div>
-
-          {/* Case Type Selector Pills */}
-          <div
+          {/* Story / Description snippet */}
+          <p
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "6px",
+              fontSize: "0.78rem",
+              color: "var(--foreground-muted)",
+              lineHeight: 1.45,
               marginBottom: "1rem",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
             }}
           >
-            {product.formats.map((fmt) => {
-              const isSelected = selectedFormat === fmt;
-              return (
-                <button
-                  key={fmt}
-                  onClick={() => setSelectedFormat(fmt)}
-                  style={{
-                    fontSize: "0.68rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.04em",
-                    padding: "4px 10px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    border: isSelected
-                      ? "1px solid var(--shinra-red)"
-                      : "1px solid var(--surface-border)",
-                    backgroundColor: isSelected ? "var(--shinra-red-glow)" : "var(--surface-raised)",
-                    color: isSelected ? "var(--shinra-red-bright)" : "var(--foreground-muted)",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {fmt}
-                </button>
-              );
-            })}
-          </div>
+            {product.description}
+          </p>
         </div>
 
         <div>
@@ -360,7 +342,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               display: "flex",
               alignItems: "baseline",
               gap: "10px",
-              marginBottom: "1rem",
+              marginBottom: "0.75rem",
             }}
           >
             <span
@@ -368,7 +350,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 fontFamily: "var(--font-heading)",
                 fontSize: "1.35rem",
                 fontWeight: 900,
-                color: "#ffffff",
+                color: "var(--foreground)",
               }}
             >
               ₹{currentPrice}
@@ -388,7 +370,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 fontSize: "0.75rem",
                 fontWeight: 800,
                 color: "#22c55e",
-                backgroundColor: "rgba(34, 197, 94, 0.1)",
+                backgroundColor: "rgba(34, 197, 94, 0.12)",
                 padding: "3px 7px",
                 borderRadius: "4px",
               }}
@@ -397,28 +379,35 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
 
-          {/* Add Case to Cart Button */}
-          <button
-            onClick={() => addToCart(product, selectedFormat, selectedModel)}
-            className="shinra-btn shinra-btn-primary"
+          {/* Card Footer: Shipping & Interactive CTA prompt */}
+          <div
             style={{
-              width: "100%",
-              padding: "0.85rem 1.25rem",
-              fontSize: "0.82rem",
-              borderRadius: "8px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
+              justifyContent: "space-between",
+              paddingTop: "0.75rem",
+              borderTop: "1px solid var(--surface-border)",
+              fontSize: "0.72rem",
+              color: "var(--foreground-muted)",
             }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-            <span>ADD CASE TO CART</span>
-          </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <span>🚚</span>
+              <span>Free Pan-India Delivery</span>
+            </div>
+            <div
+              style={{
+                color: "var(--shinra-red)",
+                fontWeight: 800,
+                display: "flex",
+                alignItems: "center",
+                gap: "3px",
+              }}
+            >
+              <span>Customize</span>
+              <span>→</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

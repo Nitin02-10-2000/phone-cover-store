@@ -150,6 +150,18 @@ export default function ProductDetailPage({ params }: PageProps) {
                     priority
                   />
 
+                  {/* Glassmorphism / Transparent Case Effect */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.0) 100%)",
+                      boxShadow: "inset 0 0 25px rgba(255,255,255,0.15)",
+                      pointerEvents: "none",
+                      zIndex: 2,
+                    }}
+                  />
+
                   {/* Camera Bump Cutout */}
                   <div
                     style={{
@@ -191,8 +203,10 @@ export default function ProductDetailPage({ params }: PageProps) {
                         width: "100px",
                         height: "100px",
                         borderRadius: "50%",
-                        border: "2.5px dashed rgba(255, 255, 255, 0.45)",
+                        border: "3px solid rgba(255, 255, 255, 0.85)",
+                        boxShadow: "0 0 12px rgba(255,255,255,0.4), inset 0 0 12px rgba(255,255,255,0.4)",
                         pointerEvents: "none",
+                        zIndex: 4,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -202,10 +216,11 @@ export default function ProductDetailPage({ params }: PageProps) {
                         style={{
                           width: "6px",
                           height: "26px",
-                          backgroundColor: "rgba(255, 255, 255, 0.5)",
+                          backgroundColor: "rgba(255, 255, 255, 0.85)",
                           position: "absolute",
-                          bottom: "-30px",
+                          bottom: "-34px",
                           borderRadius: "3px",
+                          boxShadow: "0 0 8px rgba(255,255,255,0.4)",
                         }}
                       />
                     </div>
@@ -339,13 +354,95 @@ export default function ProductDetailPage({ params }: PageProps) {
                   display: "flex",
                   alignItems: "center",
                   gap: "0.6rem",
-                  marginBottom: "1.75rem",
+                  marginBottom: "1.25rem",
                   fontSize: "0.88rem",
                 }}
               >
                 <span style={{ color: "#fbbf24", letterSpacing: "2px" }}>★★★★★</span>
                 <span style={{ fontWeight: 800 }}>{product.rating}</span>
                 <span style={{ color: "var(--foreground-muted)" }}>({product.reviewsCount} verified drop test reviews)</span>
+              </div>
+
+              {/* Core Armor Features & Compatibility Badges */}
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  marginBottom: "1.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 13px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--surface)",
+                    border: "1px solid var(--surface-border)",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    color: "var(--foreground)",
+                  }}
+                >
+                  <span style={{ fontSize: "1.05rem" }}>🧲</span>
+                  <span>N52 MagSafe Fast-Charging Ready</span>
+                </div>
+
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 13px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--surface)",
+                    border: "1px solid var(--surface-border)",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    color: "var(--foreground)",
+                  }}
+                >
+                  <span style={{ fontSize: "1.05rem" }}>🛡️</span>
+                  <span>12ft Military-Grade Dual-Layer Armor</span>
+                </div>
+
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 13px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--surface)",
+                    border: "1px solid var(--surface-border)",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    color: "var(--foreground)",
+                  }}
+                >
+                  <span style={{ fontSize: "1.05rem" }}>📱</span>
+                  <span>60+ Flagship Phone Models Compatible</span>
+                </div>
+
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 13px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--surface)",
+                    border: "1px solid var(--surface-border)",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    color: "var(--foreground)",
+                  }}
+                >
+                  <span style={{ fontSize: "1.05rem" }}>✨</span>
+                  <span>Anti-Yellowing 9H UV Shield</span>
+                </div>
               </div>
 
               {/* Pricing Section Box */}

@@ -1,29 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useCart } from "@/lib/cartContext";
 
 export default function Navbar() {
-  const { totalItems, setIsCartOpen, setIsSearchOpen, theme, toggleTheme } = useCart();
+  const { totalItems, setIsCartOpen, setIsSearchOpen, theme, toggleTheme, user, logout } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const categoryRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+      if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
+        setCategoryMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
-      {/* Top Ticker / Marquee */}
+      {/* 1. TOP PROMOTIONAL MARQUEE BANNER */}
       <div
         style={{
-          backgroundColor: "var(--primary)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          backgroundColor: "#111111",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
           color: "#ffffff",
           fontSize: "0.72rem",
           fontWeight: 700,
-          letterSpacing: "0.18em",
+          letterSpacing: "0.14em",
           textTransform: "uppercase",
           padding: "7px 0",
         }}
         className="marquee-container"
       >
-        <div className="marquee-content">
+        <div className="marquee-content" style={{ animationDuration: "30s" }}>
           <span>🔥 BUY 2 PHONE CASES: 10% OFF</span>
           <span>•</span>
           <span>⚡ 3+ CASES: 15% OFF</span>
@@ -46,30 +65,31 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Main Sticky Header */}
+      {/* 2. MAIN STICKY HEADER */}
       <header
         style={{
           position: "sticky",
           top: 0,
           zIndex: 50,
-          backgroundColor: "rgba(250, 249, 246, 0.94)",
+          backgroundColor: "var(--background)",
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
           borderBottom: "1px solid var(--surface-border)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
         }}
       >
-        <div className="container" style={{ padding: "0.9rem 1.5rem" }}>
+        <div className="container" style={{ padding: "0.75rem 1.5rem" }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: "1.5rem",
+              gap: "1.2rem",
             }}
           >
-            {/* Brand Logo & Nav */}
-            <div style={{ display: "flex", alignItems: "center", gap: "3rem" }}>
-              <a
+            {/* Brand Logo & Flame Icon */}
+            <div style={{ display: "flex", alignItems: "center", gap: "2.2rem" }}>
+              <Link
                 href="/"
                 style={{
                   display: "flex",
@@ -78,7 +98,6 @@ export default function Navbar() {
                   textDecoration: "none",
                 }}
               >
-                {/* Shinra Flame Icon */}
                 <div
                   style={{
                     width: "38px",
@@ -90,6 +109,7 @@ export default function Navbar() {
                     alignItems: "center",
                     justifyContent: "center",
                     boxShadow: "0 4px 15px rgba(124, 58, 237, 0.25)",
+                    flexShrink: 0,
                   }}
                 >
                   <svg
@@ -110,7 +130,7 @@ export default function Navbar() {
                   <span
                     style={{
                       fontFamily: "var(--font-heading)",
-                      fontSize: "1.55rem",
+                      fontSize: "1.45rem",
                       fontWeight: 900,
                       letterSpacing: "0.06em",
                       color: "var(--foreground)",
@@ -121,7 +141,7 @@ export default function Navbar() {
                   </span>
                   <span
                     style={{
-                      fontSize: "0.58rem",
+                      fontSize: "0.56rem",
                       fontWeight: 800,
                       letterSpacing: "0.22em",
                       color: "var(--main-accent)",
@@ -132,133 +152,247 @@ export default function Navbar() {
                     PHONE ARMOR & CASES
                   </span>
                 </div>
-              </a>
+              </Link>
 
-              {/* Desktop Nav Links */}
-              <nav
-                style={{
-                  display: "none",
-                  gap: "1.75rem",
-                  alignItems: "center",
-                }}
-                className="desktop-nav"
-              >
-                <style jsx>{`
-                  @media (min-width: 900px) {
-                    .desktop-nav {
-                      display: flex !important;
-                    }
-                  }
-                `}</style>
-                <a
+              {/* Desktop Nav Links (Visible on >= 1024px) */}
+              <nav className="desktop-nav-links">
+                {/* Shop All Cases */}
+                <Link
                   href="/shop"
                   style={{
                     fontSize: "0.78rem",
                     fontWeight: 700,
-                    letterSpacing: "0.14em",
+                    letterSpacing: "0.12em",
                     textTransform: "uppercase",
-                    color: "var(--foreground-muted)",
-                    transition: "color 0.2s",
+                    color: "var(--foreground)",
                     textDecoration: "none",
+                    transition: "color 0.15s",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = "var(--main-accent)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground-muted)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground)")}
                 >
                   Phone Cases
-                </a>
-                <a
-                  href="/categories"
-                  style={{
-                    fontSize: "0.78rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    color: "var(--foreground-muted)",
-                    transition: "color 0.2s",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--main-accent)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground-muted)")}
+                </Link>
+
+                {/* Categories with Dropdown */}
+                <div
+                  ref={categoryRef}
+                  className="nav-dropdown-container"
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => setCategoryMenuOpen(true)}
+                  onMouseLeave={() => setCategoryMenuOpen(false)}
                 >
-                  Case Finishes
-                </a>
-                <a
+                  <Link
+                    href="/categories"
+                    style={{
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "var(--foreground)",
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      transition: "color 0.15s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--main-accent)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground)")}
+                  >
+                    <span>Categories</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </Link>
+
+                  {/* Dropdown Card */}
+                  <div className="nav-dropdown-card" style={{ minWidth: "300px" }}>
+                    <div className="nav-dropdown-inner">
+                      <div style={{ fontSize: "0.65rem", fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--foreground-muted)", padding: "4px 8px 8px" }}>
+                        Case Finishes & Defense
+                      </div>
+
+                      <Link
+                        href="/categories"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          textDecoration: "none",
+                          color: "var(--foreground)",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      >
+                        <span style={{ fontSize: "1.2rem" }}>🧲</span>
+                        <div>
+                          <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>Ultra Impact MagSafe</div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>12ft Drop Tested • N52 Array</div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/categories"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          textDecoration: "none",
+                          color: "var(--foreground)",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      >
+                        <span style={{ fontSize: "1.2rem" }}>🛡️</span>
+                        <div>
+                          <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>Tough Armor Dual-Layer</div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>Shock-absorbing TPU + PC</div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/categories"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          textDecoration: "none",
+                          color: "var(--foreground)",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      >
+                        <span style={{ fontSize: "1.2rem" }}>🪶</span>
+                        <div>
+                          <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>Matte Slim Precision</div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>Ultra-thin featherweight feel</div>
+                        </div>
+                      </Link>
+
+                      <div style={{ borderTop: "1px solid var(--surface-border)", margin: "6px 0" }} />
+
+                      <Link
+                        href="/categories"
+                        style={{
+                          display: "block",
+                          textAlign: "center",
+                          padding: "6px",
+                          fontSize: "0.75rem",
+                          fontWeight: 800,
+                          color: "var(--main-accent)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        Explore All Categories & Finishes →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Custom Studio */}
+                <Link
                   href="/customize"
                   style={{
                     fontSize: "0.78rem",
                     fontWeight: 800,
-                    letterSpacing: "0.14em",
+                    letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "var(--secondary-accent)",
-                    transition: "color 0.2s",
                     textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    backgroundColor: "rgba(236, 72, 153, 0.08)",
+                    border: "1px solid rgba(236, 72, 153, 0.2)",
                   }}
                 >
-                  ⚡ Custom Studio
-                </a>
-                <a
+                  <span>⚡</span>
+                  <span>Custom Studio</span>
+                </Link>
+
+                {/* Track Order */}
+                <Link
                   href="/track-order"
                   style={{
                     fontSize: "0.78rem",
                     fontWeight: 700,
-                    letterSpacing: "0.14em",
+                    letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "var(--foreground-muted)",
-                    transition: "color 0.2s",
                     textDecoration: "none",
+                    transition: "color 0.15s",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = "var(--main-accent)")}
                   onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground-muted)")}
                 >
                   Track Order
-                </a>
-                <a
-                  href="/account"
+                </Link>
+
+                {/* Checkout */}
+                <Link
+                  href="/checkout"
                   style={{
                     fontSize: "0.78rem",
                     fontWeight: 700,
-                    letterSpacing: "0.14em",
+                    letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "var(--foreground-muted)",
-                    transition: "color 0.2s",
                     textDecoration: "none",
+                    transition: "color 0.15s",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = "var(--main-accent)")}
                   onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground-muted)")}
                 >
-                  Account
-                </a>
-                <a
-                  href="/admin"
-                  style={{
-                    fontSize: "0.72rem",
-                    fontWeight: 800,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    color: "var(--main-accent)",
-                    padding: "5px 10px",
-                    border: "1.5px solid rgba(124, 58, 237, 0.3)",
-                    borderRadius: "6px",
-                    transition: "all 0.2s",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--main-accent)";
-                    e.currentTarget.style.color = "#ffffff";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "var(--main-accent)";
-                  }}
-                >
-                  Admin Ops
-                </a>
+                  Checkout
+                </Link>
               </nav>
             </div>
 
+            {/* Right Action Suite */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              {/* Search Button */}
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search"
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--surface-border)",
+                  borderRadius: "8px",
+                  color: "var(--foreground)",
+                  height: "38px",
+                  padding: "0 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-heading)",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--main-accent)")}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--surface-border)")}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span className="search-text-label">Search</span>
+              </button>
 
-            {/* Action Buttons */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
@@ -266,7 +400,7 @@ export default function Navbar() {
                 style={{
                   background: "transparent",
                   border: "1px solid var(--surface-border)",
-                  borderRadius: "6px",
+                  borderRadius: "8px",
                   color: "var(--foreground-muted)",
                   width: "38px",
                   height: "38px",
@@ -277,8 +411,8 @@ export default function Navbar() {
                   transition: "all 0.2s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--shinra-red)";
-                  e.currentTarget.style.color = "var(--shinra-red)";
+                  e.currentTarget.style.borderColor = "var(--main-accent)";
+                  e.currentTarget.style.color = "var(--main-accent)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = "var(--surface-border)";
@@ -286,7 +420,7 @@ export default function Navbar() {
                 }}
               >
                 {theme === "dark" ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="5" />
                     <line x1="12" y1="1" x2="12" y2="3" />
                     <line x1="12" y1="21" x2="12" y2="23" />
@@ -298,60 +432,313 @@ export default function Navbar() {
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                   </svg>
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                   </svg>
                 )}
               </button>
 
-              {/* Search Button */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
+              {/* API Badge Link */}
+              <Link
+                href="/api"
+                className="desktop-utility-links"
                 style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--surface-border)",
-                  borderRadius: "6px",
-                  color: "var(--foreground)",
                   height: "38px",
-                  padding: "0 12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  cursor: "pointer",
+                  padding: "0 10px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  backgroundColor: "rgba(16, 185, 129, 0.06)",
+                  color: "#059669",
                   fontFamily: "var(--font-heading)",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
                   transition: "all 0.2s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--shinra-red)")}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--surface-border)")}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
+                  e.currentTarget.style.borderColor = "#059669";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.06)";
+                  e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <span className="search-text">Search</span>
-                <style jsx>{`
-                  @media (max-width: 600px) {
-                    .search-text {
-                      display: none;
-                    }
-                  }
-                `}</style>
-              </button>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981" }} />
+                <span>API</span>
+              </Link>
+
+              {/* Admin Badge Link */}
+              <Link
+                href="/admin"
+                className="desktop-utility-links"
+                style={{
+                  height: "38px",
+                  padding: "0 10px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(124, 58, 237, 0.35)",
+                  backgroundColor: "rgba(124, 58, 237, 0.06)",
+                  color: "var(--main-accent)",
+                  fontFamily: "var(--font-heading)",
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--main-accent)";
+                  e.currentTarget.style.color = "#ffffff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(124, 58, 237, 0.06)";
+                  e.currentTarget.style.color = "var(--main-accent)";
+                }}
+              >
+                <span>🛡️</span>
+                <span>Admin</span>
+              </Link>
+
+              {/* Account / User Menu Dropdown */}
+              <div
+                ref={accountRef}
+                className="nav-dropdown-container"
+                style={{ position: "relative" }}
+                onMouseEnter={() => setAccountMenuOpen(true)}
+                onMouseLeave={() => setAccountMenuOpen(false)}
+              >
+                <Link
+                  href={user ? "/account" : "/login"}
+                  style={{
+                    height: "38px",
+                    padding: "0 12px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--surface-border)",
+                    backgroundColor: "var(--surface)",
+                    color: "var(--foreground)",
+                    fontFamily: "var(--font-heading)",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--main-accent)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--surface-border)")}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span>{user ? user.name.split(" ")[0] : "Account"}</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </Link>
+
+                {/* Account Dropdown Menu */}
+                <div className="nav-dropdown-card" style={{ right: 0, left: "auto", transform: "translateY(8px)" }}>
+                  <div className="nav-dropdown-inner" style={{ minWidth: "240px" }}>
+                    {user ? (
+                      <>
+                        <div style={{ padding: "6px 8px 10px", borderBottom: "1px solid var(--surface-border)", marginBottom: "6px" }}>
+                          <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--foreground)" }}>{user.name}</div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>{user.email}</div>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              marginTop: "6px",
+                              backgroundColor: "var(--surface-raised)",
+                              color: "var(--main-accent)",
+                              fontSize: "0.65rem",
+                              fontWeight: 900,
+                              padding: "2px 8px",
+                              borderRadius: "999px",
+                            }}
+                          >
+                            ⭐ {user.tier} Tier
+                          </span>
+                        </div>
+
+                        <Link
+                          href="/account"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            color: "var(--foreground)",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        >
+                          <span>👤</span>
+                          <span>My Profile & Orders</span>
+                        </Link>
+
+                        <Link
+                          href="/saved-designs"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            color: "var(--foreground)",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        >
+                          <span>💾</span>
+                          <span>Saved Custom Cases</span>
+                        </Link>
+
+                        <Link
+                          href="/track-order"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            color: "var(--foreground)",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-raised)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        >
+                          <span>📦</span>
+                          <span>Track Active Order</span>
+                        </Link>
+
+                        <div style={{ borderTop: "1px solid var(--surface-border)", margin: "6px 0" }} />
+
+                        <button
+                          onClick={() => logout()}
+                          style={{
+                            width: "100%",
+                            textAlign: "left",
+                            background: "transparent",
+                            border: "none",
+                            padding: "8px",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 700,
+                            color: "#ef4444",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.08)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        >
+                          <span>🚪</span>
+                          <span>Sign Out</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ padding: "6px 8px 10px", borderBottom: "1px solid var(--surface-border)", marginBottom: "6px" }}>
+                          <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--foreground)" }}>Welcome to Hachiman</div>
+                          <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)" }}>Sign in to view orders & saved armor</div>
+                        </div>
+
+                        <Link
+                          href="/login"
+                          style={{
+                            display: "block",
+                            textAlign: "center",
+                            backgroundColor: "var(--main-accent)",
+                            color: "#ffffff",
+                            padding: "8px",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 800,
+                            textDecoration: "none",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          🔐 Login / Sign In
+                        </Link>
+
+                        <Link
+                          href="/login"
+                          style={{
+                            display: "block",
+                            textAlign: "center",
+                            border: "1px solid var(--surface-border)",
+                            color: "var(--foreground)",
+                            padding: "8px",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          Create Free Account
+                        </Link>
+
+                        <div style={{ borderTop: "1px solid var(--surface-border)", margin: "6px 0" }} />
+
+                        <Link
+                          href="/track-order"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "6px 8px",
+                            borderRadius: "6px",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            color: "var(--foreground-muted)",
+                          }}
+                        >
+                          <span>📦</span>
+                          <span>Track Order (Guest Mode)</span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Cart Drawer Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
+                aria-label="View Cart"
                 style={{
                   backgroundColor: "var(--main-accent)",
                   color: "#ffffff",
                   border: "none",
                   borderRadius: "8px",
-                  height: "40px",
-                  padding: "0 16px",
+                  height: "38px",
+                  padding: "0 14px",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
@@ -359,7 +746,7 @@ export default function Navbar() {
                   fontFamily: "var(--font-heading)",
                   fontSize: "0.75rem",
                   fontWeight: 800,
-                  letterSpacing: "0.12em",
+                  letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   boxShadow: "0 4px 15px rgba(124, 58, 237, 0.3)",
                   transition: "all 0.2s",
@@ -373,26 +760,19 @@ export default function Navbar() {
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
-                <span className="cart-text">Cart</span>
-                <style jsx>{`
-                  @media (max-width: 480px) {
-                    .cart-text {
-                      display: none;
-                    }
-                  }
-                `}</style>
+                <span className="cart-text-label">Cart</span>
                 <span
                   style={{
                     backgroundColor: "var(--secondary-accent)",
                     color: "#ffffff",
                     borderRadius: "999px",
-                    padding: "2px 8px",
-                    fontSize: "0.7rem",
+                    padding: "2px 7px",
+                    fontSize: "0.68rem",
                     fontWeight: 900,
                   }}
                 >
@@ -400,104 +780,219 @@ export default function Navbar() {
                 </span>
               </button>
 
-              {/* Mobile Menu Toggle */}
+              {/* Mobile Hamburger Toggle Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle Mobile Menu"
+                aria-label="Toggle Navigation Menu"
+                className="mobile-menu-btn"
                 style={{
-                  background: "#ffffff",
+                  background: "var(--surface)",
                   border: "1px solid var(--surface-border)",
                   borderRadius: "8px",
                   color: "var(--foreground)",
-                  width: "40px",
-                  height: "40px",
-                  display: "none",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: "38px",
+                  height: "38px",
                   cursor: "pointer",
                 }}
-                className="mobile-burger"
               >
-                <style jsx>{`
-                  @media (max-width: 899px) {
-                    .mobile-burger {
-                      display: flex !important;
-                    }
-                  }
-                `}</style>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
+                {mobileMenuOpen ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
 
-          {/* Mobile Dropdown */}
+          {/* 3. MOBILE MENU EXPANDABLE DRAWER */}
           {mobileMenuOpen && (
             <div
               style={{
                 marginTop: "1rem",
                 padding: "1.25rem",
-                backgroundColor: "#ffffff",
-                borderRadius: "12px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                backgroundColor: "var(--surface)",
+                borderRadius: "14px",
+                boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
                 border: "1px solid var(--surface-border)",
                 display: "flex",
                 flexDirection: "column",
-                gap: "1rem",
+                gap: "1.2rem",
               }}
             >
-              <a
-                href="/shop"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none" }}
+              {/* User Account Quick Card in Mobile */}
+              <div
+                style={{
+                  padding: "0.85rem",
+                  borderRadius: "10px",
+                  backgroundColor: "var(--surface-raised)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
-                Phone Cases Catalog
-              </a>
-              <a
-                href="/categories"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none" }}
-              >
-                Case Finishes & Defense Tiers
-              </a>
-              <a
-                href="/customize"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ fontSize: "0.85rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--secondary-accent)", textDecoration: "none" }}
-              >
-                ⚡ Custom 3D Armor Studio
-              </a>
-              <a
-                href="/track-order"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none" }}
-              >
-                Track Order
-              </a>
-              <a
-                href="/account"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none" }}
-              >
-                My Account
-              </a>
-              <a
-                href="/saved-designs"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none" }}
-              >
-                Saved Custom Cases
-              </a>
-              <a
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ fontSize: "0.85rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--main-accent)", textDecoration: "none" }}
-              >
-                Admin Command
-              </a>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--main-accent)",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {user ? user.name.charAt(0) : "👤"}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--foreground)" }}>
+                      {user ? user.name : "Guest User"}
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>
+                      {user ? `${user.tier} Tier` : "Sign in for VIP discounts"}
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href={user ? "/account" : "/login"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    fontSize: "0.72rem",
+                    fontWeight: 800,
+                    padding: "5px 10px",
+                    borderRadius: "6px",
+                    backgroundColor: "var(--main-accent)",
+                    color: "#ffffff",
+                    textDecoration: "none",
+                  }}
+                >
+                  {user ? "Dashboard" : "Login"}
+                </Link>
+              </div>
+
+              {/* Mobile Quick Action Buttons */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                <Link
+                  href="/track-order"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    padding: "9px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--surface-border)",
+                    fontSize: "0.78rem",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  <span>📦</span>
+                  <span>Track Order</span>
+                </Link>
+
+                <Link
+                  href="/checkout"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    padding: "9px",
+                    borderRadius: "8px",
+                    backgroundColor: "rgba(124, 58, 237, 0.1)",
+                    border: "1px solid rgba(124, 58, 237, 0.3)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    textDecoration: "none",
+                    color: "var(--main-accent)",
+                  }}
+                >
+                  <span>💳</span>
+                  <span>Checkout</span>
+                </Link>
+              </div>
+
+              {/* Nav List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                <Link
+                  href="/shop"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span>📱</span>
+                  <span>Phone Cases Catalog</span>
+                </Link>
+
+                <Link
+                  href="/categories"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span>📂</span>
+                  <span>Case Categories & Finishes</span>
+                </Link>
+
+                <Link
+                  href="/customize"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", color: "var(--secondary-accent)", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span>⚡</span>
+                  <span>Custom 3D Armor Studio</span>
+                </Link>
+
+                <Link
+                  href="/saved-designs"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span>💾</span>
+                  <span>Saved Custom Designs</span>
+                </Link>
+
+                <div style={{ borderTop: "1px solid var(--surface-border)", margin: "4px 0" }} />
+
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", color: "var(--foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span>👤</span>
+                  <span>My Account & Orders</span>
+                </Link>
+
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", color: "var(--main-accent)", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span>🛡️</span>
+                  <span>Admin Command Console</span>
+                </Link>
+
+                <Link
+                  href="/api"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", color: "#059669", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span>⚡</span>
+                  <span>Developer REST API Docs</span>
+                </Link>
+              </div>
             </div>
           )}
         </div>

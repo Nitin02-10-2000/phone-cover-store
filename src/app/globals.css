@@ -246,3 +246,112 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-4px);
   box-shadow: 0 16px 35px rgba(124, 58, 237, 0.12), 0 0 20px rgba(124, 58, 237, 0.1);
 }
+
+/* ===================================================
+   TOP UTILITY BAR & NAVIGATION STYLES
+   =================================================== */
+
+.top-bar-utility {
+  background-color: #0d0d0f;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #9ca3af;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  padding: 6px 0;
+  transition: all 0.2s ease;
+}
+
+.top-bar-utility a {
+  color: #d1d5db;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.top-bar-utility a:hover {
+  color: #ffffff;
+}
+
+.desktop-nav-links {
+  display: none;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .desktop-nav-links {
+    display: flex !important;
+  }
+}
+
+.desktop-utility-links {
+  display: none;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .desktop-utility-links {
+    display: flex !important;
+  }
+}
+
+.mobile-menu-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
+
+/* Dropdown styling */
+.nav-dropdown-container {
+  position: relative;
+}
+
+.nav-dropdown-container:hover .nav-dropdown-card,
+.nav-dropdown-container:focus-within .nav-dropdown-card {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.nav-dropdown-card {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  padding-top: 10px;
+  min-width: 260px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 100;
+}
+
+.nav-dropdown-inner {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem;
+  backdrop-filter: blur(12px);
+}
+
+.nav-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+

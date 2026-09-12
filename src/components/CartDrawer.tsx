@@ -2,9 +2,12 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartContext";
 
 export default function CartDrawer() {
+  const router = useRouter();
   const {
     cart,
     isCartOpen,
@@ -21,7 +24,6 @@ export default function CartDrawer() {
   } = useCart();
 
   const [inputCode, setInputCode] = useState("");
-  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
   if (!isCartOpen) return null;
 
@@ -29,11 +31,8 @@ export default function CartDrawer() {
   const remainingForFreeShipping = Math.max(0, 799 - subtotal);
 
   const handleCheckout = () => {
-    setCheckoutSuccess(true);
-    setTimeout(() => {
-      setCheckoutSuccess(false);
-      setIsCartOpen(false);
-    }, 3500);
+    setIsCartOpen(false);
+    router.push("/checkout");
   };
 
   return (
@@ -224,9 +223,9 @@ export default function CartDrawer() {
               </button>
             </div>
           ) : (
-            cart.map((item) => (
+            cart.map((item, index) => (
               <div
-                key={`${item.product.id}-${item.format}`}
+                key={`${item.product.id}-${item.format}-${item.phoneModel || ""}-${index}`}
                 style={{
                   display: "flex",
                   gap: "1rem",
@@ -249,7 +248,7 @@ export default function CartDrawer() {
                   }}
                 >
                   <Image
-                    src={item.product.image}
+                    src={item.customDesignPreview || item.product.image}
                     alt={item.product.name}
                     fill
                     sizes="70px"
@@ -286,34 +285,55 @@ export default function CartDrawer() {
                         {item.product.name}
                       </h4>
                       <button
-                        onClick={() => removeFromCart(item.product.id, item.format)}
+                        type="button"
+                        onClick={() => removeFromCart(item.product.id, item.format, item.phoneModel)}
                         style={{
                           background: "transparent",
                           border: "none",
                           color: "var(--foreground-muted)",
                           cursor: "pointer",
-                          fontSize: "0.9rem",
+                          fontSize: "0.95rem",
+                          padding: "2px",
+                          transition: "color 0.15s",
                         }}
-                        title="Remove"
+                        title="Remove from Cart"
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground-muted)")}
                       >
                         🗑️
                       </button>
                     </div>
 
-                    <span
-                      style={{
-                        fontSize: "0.68rem",
-                        fontWeight: 700,
-                        color: "var(--shinra-red-bright)",
-                        backgroundColor: "var(--shinra-red-glow)",
-                        padding: "1px 6px",
-                        borderRadius: "3px",
-                        display: "inline-block",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {item.format}
-                    </span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
+                      <span
+                        style={{
+                          fontSize: "0.68rem",
+                          fontWeight: 700,
+                          color: "var(--main-accent-bright)",
+                          backgroundColor: "rgba(124, 58, 237, 0.15)",
+                          padding: "1px 6px",
+                          borderRadius: "3px",
+                          display: "inline-block",
+                        }}
+                      >
+                        {item.format}
+                      </span>
+                      {item.phoneModel && (
+                        <span
+                          style={{
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            color: "var(--secondary-accent)",
+                            backgroundColor: "rgba(236, 72, 153, 0.15)",
+                            padding: "1px 6px",
+                            borderRadius: "3px",
+                            display: "inline-block",
+                          }}
+                        >
+                          📱 {item.phoneModel}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Quantity & Price Controls */}
@@ -335,42 +355,50 @@ export default function CartDrawer() {
                       }}
                     >
                       <button
+                        type="button"
                         onClick={() =>
-                          updateQuantity(item.product.id, item.format, item.quantity - 1)
+                          updateQuantity(item.product.id, item.format, item.quantity - 1, item.phoneModel)
                         }
                         style={{
                           background: "transparent",
                           border: "none",
                           color: "#ffffff",
-                          padding: "2px 8px",
+                          padding: "4px 10px",
                           cursor: "pointer",
                           fontWeight: 800,
+                          fontSize: "0.85rem",
                         }}
+                        aria-label="Decrease quantity"
                       >
                         -
                       </button>
                       <span
                         style={{
-                          padding: "0 6px",
-                          fontSize: "0.78rem",
+                          padding: "0 8px",
+                          fontSize: "0.82rem",
                           fontWeight: 800,
                           color: "#ffffff",
+                          minWidth: "20px",
+                          textAlign: "center",
                         }}
                       >
                         {item.quantity}
                       </span>
                       <button
+                        type="button"
                         onClick={() =>
-                          updateQuantity(item.product.id, item.format, item.quantity + 1)
+                          updateQuantity(item.product.id, item.format, item.quantity + 1, item.phoneModel)
                         }
                         style={{
                           background: "transparent",
                           border: "none",
                           color: "#ffffff",
-                          padding: "2px 8px",
+                          padding: "4px 10px",
                           cursor: "pointer",
                           fontWeight: 800,
+                          fontSize: "0.85rem",
                         }}
+                        aria-label="Increase quantity"
                       >
                         +
                       </button>
@@ -474,40 +502,44 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            {/* Checkout Feedback / Button */}
-            {checkoutSuccess ? (
-              <div
+            {/* Checkout Button */}
+            <button
+              onClick={handleCheckout}
+              className="shinra-btn shinra-btn-primary"
+              style={{
+                width: "100%",
+                padding: "0.95rem",
+                fontSize: "0.88rem",
+                borderRadius: "6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                cursor: "pointer",
+                boxShadow: "0 4px 20px var(--shinra-red-glow)",
+              }}
+            >
+              <span>PROCEED TO CHECKOUT (₹{finalTotal})</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </button>
+
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "4px" }}>
+              <Link
+                href="/cart"
+                onClick={() => setIsCartOpen(false)}
                 style={{
-                  backgroundColor: "#22c55e",
-                  color: "#000000",
-                  padding: "12px",
-                  borderRadius: "4px",
-                  textAlign: "center",
-                  fontWeight: 800,
-                  fontSize: "0.85rem",
-                  letterSpacing: "0.05em",
+                  fontSize: "0.75rem",
+                  color: "var(--foreground-muted)",
+                  textDecoration: "underline",
+                  cursor: "pointer",
                 }}
               >
-                🎉 ORDER PLACED! HACHIMAN IS CRAFTING YOUR ITEMS...
-              </div>
-            ) : (
-              <button
-                onClick={handleCheckout}
-                className="shinra-btn shinra-btn-primary"
-                style={{
-                  width: "100%",
-                  padding: "0.85rem",
-                  fontSize: "0.88rem",
-                  borderRadius: "4px",
-                }}
-              >
-                <span>PROCEED TO CHECKOUT (₹{finalTotal})</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
-                </svg>
-              </button>
-            )}
+                Or view complete cart details
+              </Link>
+            </div>
 
             <div
               style={{
