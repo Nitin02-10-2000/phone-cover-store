@@ -195,6 +195,7 @@ export default function UniverseBar({
               msOverflowStyle: "none",
               scrollBehavior: "smooth",
               flex: 1,
+              minWidth: 0,
             }}
           >
             {UNIVERSES.map((universe) => {

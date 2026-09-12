@@ -1,10 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { CartProvider } from "@/lib/cartContext";
 import { DeviceProvider } from "@/lib/deviceContext";
 import DevicePickerModal from "@/components/DevicePickerModal";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-heading",

@@ -386,6 +386,9 @@ export default function HeroBanner() {
               alignItems: "center",
               justifyContent: "center",
               userSelect: "none",
+              overflow: "hidden",
+              width: "100%",
+              maxWidth: "100%",
             }}
           >
             {/* 3D Stage Container */}

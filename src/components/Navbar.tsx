@@ -82,7 +82,7 @@ export default function Navbar() {
           boxShadow: "var(--glass-shadow)",
         }}
       >
-        <div className="container" style={{ padding: "0.75rem 1.5rem" }}>
+        <div className="container" style={{ paddingTop: "0.75rem", paddingBottom: "0.75rem" }}>
           <div
             style={{
               display: "flex",
@@ -838,6 +838,7 @@ export default function Navbar() {
               <button
                 onClick={toggleTheme}
                 aria-label="Toggle Theme"
+                className="desktop-utility-links"
                 style={{
                   background: "transparent",
                   border: "1px solid var(--surface-border)",
@@ -845,7 +846,6 @@ export default function Navbar() {
                   color: "var(--foreground-muted)",
                   width: "38px",
                   height: "38px",
-                  display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
@@ -895,7 +895,6 @@ export default function Navbar() {
                   fontWeight: 800,
                   letterSpacing: "0.08em",
                   textDecoration: "none",
-                  display: "inline-flex",
                   alignItems: "center",
                   gap: "5px",
                   transition: "all 0.2s",
@@ -929,7 +928,6 @@ export default function Navbar() {
                   fontWeight: 800,
                   letterSpacing: "0.08em",
                   textDecoration: "none",
-                  display: "inline-flex",
                   alignItems: "center",
                   gap: "5px",
                   transition: "all 0.2s",
@@ -950,7 +948,7 @@ export default function Navbar() {
               {/* Account / User Menu Dropdown */}
               <div
                 ref={accountRef}
-                className="nav-dropdown-container"
+                className="nav-dropdown-container desktop-account-btn"
                 style={{ position: "relative" }}
                 onMouseEnter={() => setAccountMenuOpen(true)}
                 onMouseLeave={() => setAccountMenuOpen(false)}
@@ -1175,7 +1173,6 @@ export default function Navbar() {
                 title={`Currently Selected Phone: ${selectedModel}. Click to change model.`}
                 className="navbar-device-btn"
                 style={{
-                  display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
                   backgroundColor: "var(--surface)",
@@ -1209,6 +1206,7 @@ export default function Navbar() {
               <button
                 onClick={() => setIsCartOpen(true)}
                 aria-label="View Cart"
+                className="navbar-cart-btn"
                 style={{
                   backgroundColor: "var(--main-accent)",
                   color: "#ffffff",
@@ -1391,7 +1389,7 @@ export default function Navbar() {
               </div>
 
               {/* Mobile Quick Action Buttons */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
                 <Link
                   href="/track-order"
                   onClick={() => setMobileMenuOpen(false)}
@@ -1399,18 +1397,18 @@ export default function Navbar() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "6px",
-                    padding: "9px",
+                    gap: "5px",
+                    padding: "9px 4px",
                     borderRadius: "8px",
                     border: "1px solid var(--surface-border)",
-                    fontSize: "0.78rem",
+                    fontSize: "0.74rem",
                     fontWeight: 700,
                     textDecoration: "none",
                     color: "var(--foreground)",
                   }}
                 >
                   <span>📦</span>
-                  <span>Track Order</span>
+                  <span>Track</span>
                 </Link>
 
                 <Link
@@ -1420,12 +1418,12 @@ export default function Navbar() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "6px",
-                    padding: "9px",
+                    gap: "5px",
+                    padding: "9px 4px",
                     borderRadius: "8px",
                     backgroundColor: "rgba(124, 58, 237, 0.1)",
                     border: "1px solid rgba(124, 58, 237, 0.3)",
-                    fontSize: "0.78rem",
+                    fontSize: "0.74rem",
                     fontWeight: 800,
                     textDecoration: "none",
                     color: "var(--main-accent)",
@@ -1434,6 +1432,28 @@ export default function Navbar() {
                   <span>💳</span>
                   <span>Checkout</span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "5px",
+                    padding: "9px 4px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--surface-border)",
+                    backgroundColor: "var(--surface)",
+                    fontSize: "0.74rem",
+                    fontWeight: 700,
+                    color: "var(--foreground)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span>{theme === "dark" ? "☀️" : "🌙"}</span>
+                  <span>{theme === "dark" ? "Light" : "Dark"}</span>
+                </button>
               </div>
 
               {/* Nav List */}
