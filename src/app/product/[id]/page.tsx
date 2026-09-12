@@ -33,6 +33,7 @@ export default function ProductDetailPage({ params }: PageProps) {
   const [lensProtectorAddon, setLensProtectorAddon] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"specs" | "compatibility" | "reviews">("specs");
+  const [pdpTilt, setPdpTilt] = useState<"front" | "left" | "right">("front");
 
   // Dynamic price calculation
   const caseTypeObj = CASE_TYPES.find(
@@ -131,6 +132,51 @@ export default function ProductDetailPage({ params }: PageProps) {
                   padding: "48px 32px",
                 }}
               >
+                {/* 3D Angle View Controls */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "18px",
+                    right: "18px",
+                    zIndex: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    backgroundColor: "rgba(0, 0, 0, 0.75)",
+                    backdropFilter: "blur(6px)",
+                    padding: "4px 8px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
+                >
+                  <span style={{ fontSize: "0.68rem", fontWeight: 800, color: "var(--foreground-muted)", textTransform: "uppercase", paddingRight: "4px" }}>
+                    3D Tilt:
+                  </span>
+                  {[
+                    { id: "front", label: "Front" },
+                    { id: "left", label: "Tilt Left ↺" },
+                    { id: "right", label: "Tilt Right ↻" },
+                  ].map((btn) => (
+                    <button
+                      key={btn.id}
+                      onClick={() => setPdpTilt(btn.id as any)}
+                      style={{
+                        padding: "3px 8px",
+                        borderRadius: "5px",
+                        fontSize: "0.68rem",
+                        fontWeight: 800,
+                        border: "none",
+                        backgroundColor: pdpTilt === btn.id ? "var(--main-accent)" : "transparent",
+                        color: pdpTilt === btn.id ? "#ffffff" : "#d4d4d8",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Dynamic 3D Phone Case Entity */}
                 <DynamicPhoneCase
                   artworkUrl={product.image}
@@ -140,6 +186,9 @@ export default function ProductDetailPage({ params }: PageProps) {
                   width={270}
                   height={500}
                   interactive={true}
+                  tiltSide={pdpTilt}
+                  onTiltChange={setPdpTilt}
+                  allowClickToTilt={true}
                 />
 
                 {/* Drop Rating Pill */}
