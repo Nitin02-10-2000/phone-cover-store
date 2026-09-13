@@ -33,6 +33,7 @@ export interface OrderRecord {
   shipping: {
     fullName: string;
     phone: string;
+    email?: string;
     address: string;
     city: string;
     state: string;
@@ -90,6 +91,7 @@ interface CartContextType {
   orders: OrderRecord[];
   createOrder: (data: Omit<OrderRecord, "id" | "date" | "status" | "trackingNumber" | "estimatedDelivery">) => OrderRecord;
   updateOrderStatus: (orderId: string, status: OrderRecord["status"]) => void;
+  deleteOrder: (orderId: string) => void;
   // Saved Designs
   savedDesigns: SavedDesign[];
   saveDesign: (design: Omit<SavedDesign, "id" | "createdAt">) => SavedDesign;
@@ -104,75 +106,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const FREE_SHIPPING_THRESHOLD = 799;
 
-const INITIAL_ORDERS: OrderRecord[] = [
-  {
-    id: "SHN-94281",
-    date: "2026-09-06",
-    status: "SHIPPED",
-    items: [
-      {
-        id: "item-1",
-        productName: "Luffy (Gear 5) — Sun God Nika",
-        format: "Framed",
-        price: 559,
-        quantity: 1,
-        image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787153686/mockups/luffy-gear-5-one-piece-poster-paper-5.jpg",
-      },
-      {
-        id: "item-2",
-        productName: "Guts — Blood-Red Eclipse",
-        format: "Tough Case",
-        phoneModel: "iPhone 16 Pro Max",
-        price: 499,
-        quantity: 1,
-        image: "https://res.cloudinary.com/dv7oqos1m/image/private/s--tUURy_y1--/t_shinra_card/v1/products/kbvsttiw8hoxpfel82du?_a=BAMAPqfk0",
-      },
-    ],
-    subtotal: 1058,
-    discount: 106,
-    total: 952,
-    shipping: {
-      fullName: "Kaito Takahashi",
-      phone: "+91 98765 43210",
-      address: "Flat 402, Cyber Heights, HSR Layout",
-      city: "Bengaluru",
-      state: "Karnataka",
-      pincode: "560102",
-    },
-    paymentMethod: "UPI (Google Pay)",
-    trackingNumber: "BD-SHN-99824102-IN",
-    estimatedDelivery: "Sep 11, 2026",
-  },
-  {
-    id: "SHN-88194",
-    date: "2026-08-28",
-    status: "DELIVERED",
-    items: [
-      {
-        id: "item-3",
-        productName: "Satoru Gojo — The Honored One",
-        format: "Acrylic",
-        price: 499,
-        quantity: 1,
-        image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786122801/mockups/gojo-satoru-honored-one-poster-paper-1.jpg",
-      },
-    ],
-    subtotal: 499,
-    discount: 50,
-    total: 449,
-    shipping: {
-      fullName: "Kaito Takahashi",
-      phone: "+91 98765 43210",
-      address: "Flat 402, Cyber Heights, HSR Layout",
-      city: "Bengaluru",
-      state: "Karnataka",
-      pincode: "560102",
-    },
-    paymentMethod: "Razorpay / Cards",
-    trackingNumber: "DEL-8401927341",
-    estimatedDelivery: "Aug 31, 2026",
-  },
-];
+const INITIAL_ORDERS: OrderRecord[] = [];
 
 const INITIAL_DESIGNS: SavedDesign[] = [
   {
@@ -223,7 +157,40 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
 
       const storedOrders = localStorage.getItem("hachiman_orders") || localStorage.getItem("shinra_orders");
-      if (storedOrders) setOrders(JSON.parse(storedOrders));
+      if (storedOrders) {
+        const parsed = JSON.parse(storedOrders);
+        if (Array.isArray(parsed)) {
+          // Exclude removed test/mock orders and convert SHN- to CATAD-
+          const sanitized = parsed
+            .filter(
+              (o: OrderRecord) =>
+                o.id !== "SHN-94281" &&
+                o.id !== "SHN-88194" &&
+                o.id !== "SHN-51057" &&
+                o.id !== "CATAD-51057"
+            )
+            .map((o: OrderRecord) => ({
+              ...o,
+              id: o.id?.startsWith("SHN-") ? o.id.replace("SHN-", "CATAD-") : o.id,
+              trackingNumber: o.trackingNumber?.replace("BD-SHN-", "BD-CATAD-") || o.trackingNumber,
+            }));
+          setOrders(sanitized);
+          localStorage.setItem("hachiman_orders", JSON.stringify(sanitized));
+          localStorage.removeItem("shinra_orders");
+        }
+      }
+
+      // Fetch live orders from backend database
+      fetch("/api/orders")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.orders)) {
+            setOrders(data.orders);
+          }
+        })
+        .catch(() => {
+          // Keep local storage fallback
+        });
 
       const storedDesigns = localStorage.getItem("hachiman_saved_designs") || localStorage.getItem("shinra_saved_designs");
       if (storedDesigns) setSavedDesigns(JSON.parse(storedDesigns));
@@ -420,7 +387,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const createOrder = (
     data: Omit<OrderRecord, "id" | "date" | "status" | "trackingNumber" | "estimatedDelivery">
   ): OrderRecord => {
-    const newId = `SHN-${Math.floor(10000 + Math.random() * 90000)}`;
+    const newId = `CATAD-${Math.floor(10000 + Math.random() * 90000)}`;
     const tracking = `BD-${newId}-${Math.floor(100 + Math.random() * 900)}-IN`;
     const today = new Date().toISOString().split("T")[0];
     const estDate = new Date();
@@ -443,6 +410,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) => [newOrder, ...prev]);
     clearCart();
     showToast(`Order ${newId} confirmed! Check tracking details.`);
+
+    // Persist to database API
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newOrder),
+    }).catch((err) => console.warn("Background order sync to DB:", err));
+
     return newOrder;
   };
 
@@ -451,6 +426,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
     );
     showToast(`Order ${orderId} updated to ${status}`);
+
+    // Sync status to database API
+    fetch(`/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }).catch((err) => console.warn("Background order status sync to DB:", err));
+  };
+
+  const deleteOrder = (orderId: string) => {
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    showToast(`Order #${orderId} removed`);
+
+    // Delete from database API
+    fetch(`/api/orders/${orderId}`, {
+      method: "DELETE",
+    }).catch((err) => console.warn("Background order delete from DB:", err));
   };
 
   // Saved Designs methods
@@ -523,6 +515,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         orders,
         createOrder,
         updateOrderStatus,
+        deleteOrder,
         savedDesigns,
         saveDesign,
         deleteDesign,

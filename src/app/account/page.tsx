@@ -172,7 +172,7 @@ export default function AccountPage() {
               <span style={{ fontSize: "1.3rem" }}>💎</span>
               <div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Hunter Reward Coins</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--foreground)" }}>1,250 SHN Pts</div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--foreground)" }}>1,250 CATAD Pts</div>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

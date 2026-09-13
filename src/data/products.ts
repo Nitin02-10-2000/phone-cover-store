@@ -617,5 +617,19 @@ export const TESTIMONIALS = [
 ];
 
 export function getProductById(id: string): Product | undefined {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("casetadka_custom_cases");
+      if (raw) {
+        const custom = JSON.parse(raw);
+        if (Array.isArray(custom)) {
+          const found = custom.find((p: Product) => p.id === id);
+          if (found) return found;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
   return PRODUCTS.find((p) => p.id === id);
 }

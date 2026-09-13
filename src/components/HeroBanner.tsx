@@ -380,15 +380,16 @@ export default function HeroBanner() {
             onMouseLeave={() => setIsPaused(false)}
             style={{
               position: "relative",
-              minHeight: "490px",
+              minHeight: "530px",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
               userSelect: "none",
-              overflow: "hidden",
+              overflow: "visible",
               width: "100%",
               maxWidth: "100%",
+              paddingTop: "20px",
             }}
           >
             {/* 3D Stage Container */}
@@ -396,12 +397,13 @@ export default function HeroBanner() {
               style={{
                 position: "relative",
                 width: "100%",
-                height: "450px",
+                height: "490px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 perspective: "1300px",
                 transformStyle: "preserve-3d",
+                overflow: "visible",
               }}
             >
               {showcaseProducts.map((item, index) => {
@@ -424,11 +426,11 @@ export default function HeroBanner() {
 
                 if (isCenter) {
                   translateX = 0;
-                  translateY = -28;
+                  translateY = -8;
                   translateZ = 60;
                   rotateY = -3;
                   rotateZ = -1;
-                  scale = 1.06;
+                  scale = 1.03;
                   zIndex = 50;
                   opacity = 1;
                 } else if (diff === 1) {

@@ -239,6 +239,7 @@ export default function CheckoutPage() {
         shipping: {
           fullName: formData.fullName,
           phone: `+91 ${formData.phone.replace(/\D/g, "")}`,
+          email: formData.email.trim(),
           address: formData.address,
           city: formData.city,
           state: formData.state,

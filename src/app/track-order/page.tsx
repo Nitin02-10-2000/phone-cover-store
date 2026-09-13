@@ -11,15 +11,15 @@ import { useCart } from "@/lib/cartContext";
 
 function TrackOrderContent() {
   const searchParams = useSearchParams();
-  const initialId = searchParams.get("id") || "SHN-94281";
   const { orders } = useCart();
+  const initialId = searchParams.get("id") || (orders[0]?.id ?? "");
 
   const [searchOrderId, setSearchOrderId] = useState(initialId);
   const [searchedId, setSearchedId] = useState(initialId);
 
   const matchedOrder = orders.find(
     (o) => o.id.toLowerCase() === searchedId.trim().toLowerCase()
-  ) || orders[0];
+  ) || (searchedId ? undefined : orders[0]);
 
   const milestones = [
     {
@@ -47,21 +47,21 @@ function TrackOrderContent() {
       title: "Dispatched with Courier Partner",
       date: "Sep 08, 2026 • 09:15 AM",
       location: "Bluedart Air Hub, Kempegowda Intl",
-      completed: matchedOrder.status === "SHIPPED" || matchedOrder.status === "DELIVERED",
+      completed: matchedOrder?.status === "SHIPPED" || matchedOrder?.status === "DELIVERED",
       desc: `Manifested with Bluedart Air under AWB #${matchedOrder?.trackingNumber || "BD-TADKA-99824102-IN"}. In transit to destination city.`,
     },
     {
       title: "Out for Doorstep Delivery",
-      date: matchedOrder.status === "DELIVERED" ? "Aug 31, 2026 • 10:30 AM" : "Expected in 2 Days",
-      location: `${matchedOrder?.shipping.city || "Bengaluru"} Local Hub`,
-      completed: matchedOrder.status === "DELIVERED",
+      date: matchedOrder?.status === "DELIVERED" ? "Aug 31, 2026 • 10:30 AM" : "Expected in 2 Days",
+      location: `${matchedOrder?.shipping?.city || "Bengaluru"} Local Hub`,
+      completed: matchedOrder?.status === "DELIVERED",
       desc: "Assigned to delivery agent for contactless doorstep handover.",
     },
     {
       title: "Delivered to Customer",
-      date: matchedOrder.status === "DELIVERED" ? "Aug 31, 2026 • 02:15 PM" : "Estimated " + matchedOrder?.estimatedDelivery,
-      location: matchedOrder?.shipping.city || "Bengaluru",
-      completed: matchedOrder.status === "DELIVERED",
+      date: matchedOrder?.status === "DELIVERED" ? "Aug 31, 2026 • 02:15 PM" : `Estimated ${matchedOrder?.estimatedDelivery || "4-5 Business Days"}`,
+      location: matchedOrder?.shipping?.city || "Bengaluru",
+      completed: matchedOrder?.status === "DELIVERED",
       desc: "Package signed and received. Covered under unconditional 7-day free damage replacement.",
     },
   ];
@@ -119,7 +119,7 @@ function TrackOrderContent() {
               type="text"
               value={searchOrderId}
               onChange={(e) => setSearchOrderId(e.target.value)}
-              placeholder="e.g. SHN-94281"
+              placeholder="e.g. CATAD-12345"
               style={{
                 width: "100%",
                 backgroundColor: "var(--background)",
@@ -159,51 +159,59 @@ function TrackOrderContent() {
           </div>
         </div>
 
-        {/* Quick Demo Selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "1rem", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", textTransform: "uppercase", fontWeight: 700 }}>
-            Quick Demo Orders:
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchOrderId("SHN-94281");
-              setSearchedId("SHN-94281");
-            }}
-            style={{
-              background: "none",
-              border: "1px solid var(--surface-border)",
-              color: "#ffffff",
-              padding: "3px 10px",
-              borderRadius: "4px",
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            SHN-94281 (In Transit)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchOrderId("SHN-88194");
-              setSearchedId("SHN-88194");
-            }}
-            style={{
-              background: "none",
-              border: "1px solid var(--surface-border)",
-              color: "#ffffff",
-              padding: "3px 10px",
-              borderRadius: "4px",
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            SHN-88194 (Delivered)
-          </button>
-        </div>
+        {/* Quick Recent Orders Selector */}
+        {orders.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "1rem", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+              Recent Orders:
+            </span>
+            {orders.slice(0, 3).map((ord) => (
+              <button
+                key={ord.id}
+                type="button"
+                onClick={() => {
+                  setSearchOrderId(ord.id);
+                  setSearchedId(ord.id);
+                }}
+                style={{
+                  background: "none",
+                  border: "1px solid var(--surface-border)",
+                  color: "#ffffff",
+                  padding: "3px 10px",
+                  borderRadius: "4px",
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                #{ord.id} ({ord.status})
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {!matchedOrder ? (
+        <div
+          style={{
+            backgroundColor: "var(--surface)",
+            border: "1px solid var(--surface-border)",
+            borderRadius: "12px",
+            padding: "3rem 2rem",
+            textAlign: "center",
+            marginBottom: "2.5rem",
+          }}
+        >
+          <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🔍</div>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>
+            {searchedId ? `No order found for "${searchedId}"` : "Enter an Order ID to track shipment"}
+          </h3>
+          <p style={{ color: "var(--foreground-muted)", fontSize: "0.9rem", maxWidth: "450px", margin: "0 auto" }}>
+            Order IDs start with CATAD- and are provided immediately upon order confirmation.
+          </p>
+        </div>
+      ) : (
+        <>
 
       {/* Order Status Overview Banner */}
       <div
@@ -418,6 +426,8 @@ function TrackOrderContent() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

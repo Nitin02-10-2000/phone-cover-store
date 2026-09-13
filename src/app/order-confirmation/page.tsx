@@ -10,10 +10,38 @@ import { useCart } from "@/lib/cartContext";
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId") || "SHN-94281";
   const { orders } = useCart();
+  const orderId = searchParams.get("orderId") || orders[0]?.id || "";
 
   const currentOrder = orders.find((o) => o.id === orderId) || orders[0];
+
+  if (!currentOrder) {
+    return (
+      <div className="container" style={{ maxWidth: "600px", margin: "4rem auto", textAlign: "center" }}>
+        <div style={{ backgroundColor: "var(--surface)", border: "1px solid var(--surface-border)", borderRadius: "16px", padding: "3rem 2rem" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "16px" }}>📦</div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "8px" }}>No Order Found</h1>
+          <p style={{ color: "var(--foreground-muted)", fontSize: "0.9rem", marginBottom: "24px" }}>
+            We couldn&apos;t find details for this order. Check your order confirmation email or explore our latest designs.
+          </p>
+          <Link
+            href="/shop"
+            style={{
+              display: "inline-block",
+              padding: "12px 28px",
+              backgroundColor: "var(--shinra-red)",
+              color: "#ffffff",
+              borderRadius: "8px",
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Explore Phone Cases
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container" style={{ maxWidth: "800px", margin: "3rem auto" }}>
@@ -108,7 +136,7 @@ function OrderConfirmationContent() {
               Tracking AWB
             </div>
             <div style={{ fontWeight: 800, fontFamily: "var(--font-heading)", fontSize: "0.85rem", color: "var(--shinra-red)" }}>
-              {currentOrder?.trackingNumber || "BD-SHN-99824102-IN"}
+              {currentOrder?.trackingNumber || "BD-CATAD-99824102-IN"}
             </div>
           </div>
           <div style={{ borderLeft: "1px solid var(--surface-border)", paddingLeft: "1.5rem" }}>

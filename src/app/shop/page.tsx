@@ -9,11 +9,13 @@ import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
 import { PRODUCTS, UNIVERSES, CASE_TYPES, PHONE_MODELS, BRAND_GROUPS } from "@/data/products";
 import { useDevice } from "@/lib/deviceContext";
+import { useAllProducts } from "@/lib/productsStorage";
 
 function ShopContent() {
   const searchParams = useSearchParams();
   const initialDevice = searchParams.get("device") || "";
   const { selectedModel: globalModel, setDeviceByModel } = useDevice();
+  const { products } = useAllProducts();
 
   const [selectedUniverse, setSelectedUniverse] = useState("all");
   const [selectedCaseType, setSelectedCaseType] = useState("all");
@@ -23,7 +25,7 @@ function ShopContent() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       // Franchise or Theme match
       if (selectedUniverse !== "all") {
         const isMatch =
@@ -54,7 +56,7 @@ function ShopContent() {
       if (sortBy === "rating") return b.rating - a.rating;
       return 0; // featured
     });
-  }, [selectedUniverse, selectedCaseType, sortBy, searchQuery]);
+  }, [products, selectedUniverse, selectedCaseType, sortBy, searchQuery]);
 
   return (
     <main style={{ flex: 1, paddingBottom: "5rem" }}>

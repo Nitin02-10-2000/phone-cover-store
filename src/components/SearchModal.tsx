@@ -2,24 +2,25 @@
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import { PRODUCTS } from "@/data/products";
 import { useCart } from "@/lib/cartContext";
+import { useAllProducts } from "@/lib/productsStorage";
 
 export default function SearchModal() {
   const { isSearchOpen, setIsSearchOpen, addToCart } = useCart();
+  const { products } = useAllProducts();
   const [query, setQuery] = useState("");
 
   const filteredProducts = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
-    return PRODUCTS.filter(
+    return products.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.franchise.toLowerCase().includes(q) ||
         p.tag.toLowerCase().includes(q) ||
         (p.theme && p.theme.toLowerCase().includes(q))
     );
-  }, [query]);
+  }, [query, products]);
 
   if (!isSearchOpen) return null;
 

@@ -7,47 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
-enum OrderStatus {
-  PENDING
-  PAID
-  SHIPPED
-  DELIVERED
-}
-
 model User {
-  id            String         @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?        @unique
+  email         String?    @unique
   emailVerified DateTime?
   password      String?
   image         String?
-  role          Role           @default(USER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  role          String     @default("USER")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   accounts      Account[]
   sessions      Session[]
   orders        Order[]
-  customDesigns CustomDesign[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -62,77 +49,70 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Category {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  products Product[]
-}
-
 model Product {
-  id          String      @id @default(cuid())
-  name        String
-  description String
-  price       Float
-  stock       Int         @default(0)
-  imageUrl    String?
-  categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
-  orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
-
-model PhoneModel {
-  id            String         @id @default(cuid())
-  brand         String
-  modelName     String
-  dimensions    String?
-  maskImageUrl  String?
-  customDesigns CustomDesign[]
-}
-
-model CustomDesign {
-  id              String      @id @default(cuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  phoneModelId    String
-  phoneModel      PhoneModel  @relation(fields: [phoneModelId], references: [id])
-  canvasData      Json
-  previewImageUrl String?
-  orderItems      OrderItem[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id              String   @id
+  name            String
+  franchise       String   @default("Anime")
+  theme           String   @default("anime")
+  category        String   @default("case")
+  tag             String   @default("Popular")
+  price           Float
+  originalPrice   Float    @default(999)
+  rating          Float    @default(5.0)
+  reviewsCount    Int      @default(1)
+  image           String
+  tiltedImage     String?
+  badge           String?
+  formats         String   @default("Ultra Impact MagSafe,Tough Armor Dual-Layer,9H Tempered Glass Back")
+  description     String   @default("")
+  supportedBrands String   @default("Apple iPhone,Samsung Galaxy,OnePlus,Google Pixel")
+  dropProtection  String   @default("12ft Drop Tested")
+  isCustom        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  totalAmount     Float
-  status          OrderStatus @default(PENDING)
-  paymentId       String?
-  shippingDetails Json?
-  orderItems      OrderItem[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                String      @id
+  customerName      String
+  customerPhone     String
+  customerEmail     String?
+  address           String
+  city              String
+  state             String
+  pincode           String
+  total             Float
+  subtotal          Float       @default(0)
+  discount          Float       @default(0)
+  status            String      @default("CONFIRMED")
+  paymentMethod     String      @default("UPI (Google Pay)")
+  trackingNumber    String?
+  estimatedDelivery String?
+  userId            String?
+  user              User?       @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 }
 
 model OrderItem {
-  id             String        @id @default(cuid())
-  orderId        String
-  order          Order         @relation(fields: [orderId], references: [id])
-  productId      String?
-  product        Product?      @relation(fields: [productId], references: [id])
-  customDesignId String?
-  customDesign   CustomDesign? @relation(fields: [customDesignId], references: [id])
-  quantity       Int           @default(1)
-  price          Float
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  productName String
+  format      String  @default("Ultra Impact MagSafe")
+  phoneModel  String?
+  image       String?
+  price       Float
+  quantity    Int     @default(1)
 }
 
 model Coupon {
-  id         String   @id @default(cuid())
-  code       String   @unique
+  id         String    @id @default(cuid())
+  code       String    @unique
   discount   Float
-  validUntil DateTime
-  createdAt  DateTime @default(now())
+  type       String    @default("percentage")
+  validUntil DateTime?
+  createdAt  DateTime  @default(now())
 }

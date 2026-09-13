@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
 import ProductCard from "@/components/ProductCard";
-import { PRODUCTS, CASE_TYPES, CASE_ANATOMY } from "@/data/products";
+import { PRODUCTS, CASE_TYPES, CASE_ANATOMY, getProductById } from "@/data/products";
 import { BRAND_GROUPS, getPhoneModelDetails } from "@/data/phoneModels";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
@@ -25,7 +25,7 @@ export default function ProductDetailPage({ params }: PageProps) {
   const { addToCart } = useCart();
   const { selectedModel: globalModel, setDevice } = useDevice();
 
-  const product = PRODUCTS.find((p) => p.id === id) || PRODUCTS[0];
+  const product = getProductById(id) || PRODUCTS[0];
 
   const [selectedCaseType, setSelectedCaseType] = useState(CASE_TYPES[0].name);
   const [selectedBrand, setSelectedBrand] = useState(() => getPhoneModelDetails(globalModel).brand);
