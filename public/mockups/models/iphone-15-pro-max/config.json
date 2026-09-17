@@ -1,0 +1,38 @@
+{
+  "slug": "iphone-15-pro-max",
+  "name": "iPhone 15 Pro Max",
+  "brand": "Apple",
+  "archetype": "iphone-triple",
+  "full_scene": {
+    "canvas_width": 2510,
+    "canvas_height": 1674,
+    "scene_url": "/mockups/models/iphone-15-pro-max/scene.png",
+    "overlay_url": "/mockups/models/iphone-15-pro-max/overlay.png",
+    "printable_x": 1045,
+    "printable_y": 568,
+    "printable_width": 340,
+    "printable_height": 762,
+    "printable_radius": 36
+  },
+  "case_focus": {
+    "canvas_width": 419,
+    "canvas_height": 841,
+    "base_url": "/mockups/models/iphone-15-pro-max/case_base.png",
+    "overlay_url": "/mockups/models/iphone-15-pro-max/case_overlay.png",
+    "printable_x": 40,
+    "printable_y": 40,
+    "printable_width": 340,
+    "printable_height": 762,
+    "printable_radius": 38,
+    "camera_x": 52,
+    "camera_y": 52,
+    "camera_width": 129,
+    "camera_height": 136,
+    "camera_radius": 24
+  },
+  "print_specs": {
+    "width_mm": 77.6,
+    "height_mm": 163.0,
+    "dpi": 300
+  }
+}

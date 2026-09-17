@@ -84,24 +84,39 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    let sbDeleted = false;
+    let prismaDeleted = false;
 
-    // Sync to Supabase
+    // 1. Delete from Supabase
     try {
       await supabase.from("order_items").delete().eq("order_id", id);
-      await supabase.from("orders").delete().eq("id", id);
+      const { error: sbErr } = await supabase.from("orders").delete().eq("id", id);
+      if (!sbErr) sbDeleted = true;
     } catch (e) {
       console.warn("Supabase DELETE order sync:", e);
     }
 
-    await prisma.order.delete({
-      where: { id },
-    });
+    // 2. Delete from Prisma
+    try {
+      await prisma.orderItem.deleteMany({
+        where: { orderId: id },
+      });
+      const result = await prisma.order.deleteMany({
+        where: { id },
+      });
+      if (result.count > 0) prismaDeleted = true;
+    } catch (e) {
+      console.warn("Prisma DELETE order sync:", e);
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Order #${id} deleted from database successfully.`,
+      message: `Order #${id} deleted successfully.`,
+      sbDeleted,
+      prismaDeleted,
     });
   } catch (error: any) {
+    console.error("DELETE /api/orders/[id] error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

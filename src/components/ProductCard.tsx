@@ -66,6 +66,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           artworkUrl={product.image}
           phoneModel={selectedModel || "iPhone 16 Pro Max"}
           caseType="9H Tempered Glass Back"
+          useGlassMockupOverlay={true}
           width={172}
           height={345}
           interactive={true}
@@ -74,6 +75,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           allowClickToTilt={true}
           showMagSafe={false}
           showModelBadge={false}
+          artworkFit={product.artworkFit}
+          artworkPosition={product.artworkPosition}
+          artworkScale={product.artworkScale}
+          artworkOffsetX={product.artworkOffsetX}
+          artworkOffsetY={product.artworkOffsetY}
         />
       </div>
 

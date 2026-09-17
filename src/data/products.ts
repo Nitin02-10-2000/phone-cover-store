@@ -16,6 +16,11 @@ export interface Product {
   description: string;
   supportedBrands?: string[];
   dropProtection?: string;
+  artworkFit?: "cover" | "contain";
+  artworkPosition?: string;
+  artworkScale?: number;
+  artworkOffsetX?: number;
+  artworkOffsetY?: number;
 }
 
 export const CASE_TYPES = [
@@ -206,7 +211,7 @@ export const PRODUCTS: Product[] = [
     originalPrice: 1399,
     rating: 5.0,
     reviewsCount: 680,
-    image: "/case-tadka-logo.png",
+    image: "/mockups/case_tadka_signature.jpg",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "9H Tempered Glass Back"],
     description: "The official Case Tadka signature flagship phone armor. Featuring our fiery tadka chili swirl, 'Good Covers Better Vibes ❤️' motto, and 12ft military drop protection.",
     dropProtection: "12ft Drop Tested",

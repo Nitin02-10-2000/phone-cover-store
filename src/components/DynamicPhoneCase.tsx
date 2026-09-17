@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { getPhoneModelDetails, CameraArchetype } from "@/data/phoneModels";
 import { useDevice } from "@/lib/deviceContext";
@@ -19,6 +19,12 @@ interface DynamicPhoneCaseProps {
   allowClickToTilt?: boolean;
   showModelBadge?: boolean;
   customOverlay?: React.ReactNode;
+  useGlassMockupOverlay?: boolean;
+  artworkFit?: "cover" | "contain";
+  artworkPosition?: string;
+  artworkScale?: number;
+  artworkOffsetX?: number;
+  artworkOffsetY?: number;
   style?: React.CSSProperties;
   className?: string;
 }
@@ -37,6 +43,12 @@ export default function DynamicPhoneCase({
   allowClickToTilt = false,
   showModelBadge = true,
   customOverlay,
+  useGlassMockupOverlay = true,
+  artworkFit = "cover",
+  artworkPosition = "center",
+  artworkScale = 1,
+  artworkOffsetX = 0,
+  artworkOffsetY = 0,
   style,
   className,
 }: DynamicPhoneCaseProps) {
@@ -46,10 +58,101 @@ export default function DynamicPhoneCase({
 
   const [isHovered, setIsHovered] = useState(false);
   const [internalTilt, setInternalTilt] = useState<"front" | "left" | "right">("front");
-  const currentTilt = tiltSide !== undefined ? tiltSide : internalTilt;
+
+  // Continuous mouse-drag rotation state
+  const isDragging = useRef(false);
+  const lastMouse = useRef({ x: 0, y: 0 });
+  const [dragRotY, setDragRotY] = useState(0);
+  const [dragRotX, setDragRotX] = useState(0);
+  const animFrameId = useRef<number | null>(null);
+  const targetRotY = useRef(0);
+  const targetRotX = useRef(0);
+  const currentRotY = useRef(0);
+  const currentRotX = useRef(0);
+
+  // Lerp animation loop for smooth spring-back
+  const startAnimLoop = useCallback(() => {
+    const loop = () => {
+      currentRotY.current += (targetRotY.current - currentRotY.current) * 0.14;
+      currentRotX.current += (targetRotX.current - currentRotX.current) * 0.14;
+      setDragRotY(currentRotY.current);
+      setDragRotX(currentRotX.current);
+      const stillMoving =
+        Math.abs(targetRotY.current - currentRotY.current) > 0.05 ||
+        Math.abs(targetRotX.current - currentRotX.current) > 0.05;
+      if (stillMoving) {
+        animFrameId.current = requestAnimationFrame(loop);
+      } else {
+        animFrameId.current = null;
+      }
+    };
+    if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+    animFrameId.current = requestAnimationFrame(loop);
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!interactive) return;
+    isDragging.current = true;
+    lastMouse.current = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
+  }, [interactive]);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const dx = e.clientX - lastMouse.current.x;
+      const dy = e.clientY - lastMouse.current.y;
+      lastMouse.current = { x: e.clientX, y: e.clientY };
+      // Clamp rotation to safe, realistic 3D angles so the back of the case remains the primary surface
+      targetRotY.current = Math.max(-22, Math.min(22, targetRotY.current + dx * 0.38));
+      targetRotX.current = Math.max(-12, Math.min(12, targetRotX.current - dy * 0.25));
+      startAnimLoop();
+    };
+    const onMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      targetRotY.current = 0;
+      targetRotX.current = 0;
+      startAnimLoop();
+      const absY = Math.abs(currentRotY.current);
+      if (absY > 8) {
+        const side = currentRotY.current < 0 ? "left" : "right";
+        setInternalTilt(side);
+        onTiltChange?.(side);
+      } else {
+        setInternalTilt("front");
+        onTiltChange?.("front");
+      }
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [startAnimLoop, onTiltChange]);
+
+  useEffect(() => {
+    if (tiltSide === undefined) return;
+    // Subtle, elegant 3/4 e-commerce angle (~12° instead of extreme -34°)
+    if (tiltSide === "left") { targetRotY.current = -12; targetRotX.current = 3; }
+    else if (tiltSide === "right") { targetRotY.current = 12; targetRotX.current = 3; }
+    else { targetRotY.current = 0; targetRotX.current = 0; }
+    startAnimLoop();
+  }, [tiltSide, startAnimLoop]);
+
+  const currentTilt: "front" | "left" | "right" =
+    tiltSide !== undefined
+      ? tiltSide
+      : dragRotY < -12
+      ? "left"
+      : dragRotY > 12
+      ? "right"
+      : "front";
 
   const handleCaseClick = (e: React.MouseEvent) => {
     if (!allowClickToTilt && tiltSide === undefined && onTiltChange === undefined) return;
+    if (Math.abs(dragRotY) > 3 || Math.abs(dragRotX) > 3) return;
     e.stopPropagation();
     const nextTilt = currentTilt === "front" ? "left" : "front";
     if (tiltSide === undefined) {
@@ -58,7 +161,6 @@ export default function DynamicPhoneCase({
     onTiltChange?.(nextTilt);
   };
 
-  // Corner radius based on phone design
   const cornerRadius =
     phone.corners === "sharp"
       ? "12px"
@@ -66,11 +168,33 @@ export default function DynamicPhoneCase({
       ? "44px"
       : "38px";
 
-  // MagSafe visibility
   const isMagSafe =
     showMagSafe !== undefined
       ? showMagSafe
-      : caseType.toLowerCase().includes("magsafe") || phone.hasMagSafe;
+      : caseType.toLowerCase().includes("magsafe");
+
+  // Photorealistic 9H Glass Case Mockup Overlay
+  // Uses authentic transparent PNG frame when available
+  const isGlassMockupAvailable =
+    useGlassMockupOverlay !== false &&
+    (phone.cameraType === "iphone-triple" ||
+      phone.cameraType === "iphone-dual-diag" ||
+      phone.cameraType === "iphone-dual-vert" ||
+      phone.cameraType === "samsung-ultra" ||
+      phone.cameraType === "oneplus-dial");
+
+  const glassOverlaySrc =
+    phone.cameraType === "iphone-triple"
+      ? "/mockups/glass_case_iphone_pro.png"
+      : phone.cameraType === "iphone-dual-diag"
+      ? "/mockups/glass_case_iphone_dual.png"
+      : phone.cameraType === "iphone-dual-vert"
+      ? "/mockups/glass_case_iphone_16.png"
+      : phone.cameraType === "samsung-ultra"
+      ? "/mockups/glass_case_samsung_ultra.png"
+      : phone.cameraType === "oneplus-dial"
+      ? "/mockups/glass_case_oneplus.png"
+      : "/mockups/glass_case_iphone_pro.png";
 
   // Render camera cutouts according to archetype
   const renderCameraCutout = (type: CameraArchetype) => {
@@ -815,46 +939,68 @@ export default function DynamicPhoneCase({
     }
   };
 
-  let currentTransform = "none";
-  let currentBoxShadow = isHovered
-    ? "0 30px 70px rgba(0,0,0,0.9), inset 0 0 0 1.5px rgba(255,255,255,0.2)"
-    : "0 20px 50px rgba(0,0,0,0.85), inset 0 0 0 1.5px rgba(255,255,255,0.15)";
+  // ── Build transform from continuous drag rotation values ─────────────────
+  const isDraggingNow = isDragging.current;
+  const hasDragRotation = Math.abs(dragRotY) > 0.5 || Math.abs(dragRotX) > 0.5;
 
-  if (currentTilt === "left") {
-    currentTransform = "perspective(1000px) rotateY(-34deg) rotateX(8deg) rotateZ(-3deg) scale(1.02)";
-    currentBoxShadow = "-14px 20px 42px rgba(0, 0, 0, 0.38), 0 4px 12px rgba(0, 0, 0, 0.2), inset -2px 0 4px rgba(255, 255, 255, 0.25)";
-  } else if (currentTilt === "right") {
-    currentTransform = "perspective(1000px) rotateY(34deg) rotateX(8deg) rotateZ(3deg) scale(1.02)";
-    currentBoxShadow = "14px 20px 42px rgba(0, 0, 0, 0.38), 0 4px 12px rgba(0, 0, 0, 0.2), inset 2px 0 4px rgba(255, 255, 255, 0.25)";
+  // Subtle specular shift based on rotation angle
+  const normalizedY = dragRotY / 60; // -1 to 1
+  const normalizedX = dragRotX / 35;
+
+  let currentTransform: string;
+  if (hasDragRotation) {
+    const skewZ = dragRotY * 0.06;
+    const scale = isDraggingNow ? 1.04 : 1.01;
+    currentTransform = `perspective(900px) rotateY(${dragRotY}deg) rotateX(${-dragRotX}deg) rotateZ(${-skewZ}deg) scale(${scale})`;
   } else if (isHovered && interactive) {
-    currentTransform = "translateY(-6px) rotateY(-3deg) rotateX(2deg)";
+    currentTransform = "perspective(900px) translateY(-6px) rotateY(-3deg) rotateX(2deg)";
+  } else {
+    currentTransform = "none";
   }
 
-  let shadowTransform = isHovered ? "translateY(16px) scale(0.96)" : "translateY(10px) scale(0.92)";
-  if (currentTilt === "left") {
-    shadowTransform = "translateX(18px) translateY(24px) rotate(-4deg) scale(0.92)";
-  } else if (currentTilt === "right") {
-    shadowTransform = "translateX(-18px) translateY(24px) rotate(4deg) scale(0.92)";
+  // Dynamic box shadow follows rotation direction
+  const shadowXOffset = normalizedY * -18;
+  const shadowYOffset = 20 + Math.abs(normalizedX) * 10;
+  let currentBoxShadow: string;
+  if (hasDragRotation) {
+    currentBoxShadow = `${shadowXOffset}px ${shadowYOffset}px 42px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.25), inset ${normalizedY > 0 ? 2 : -2}px 0 4px rgba(255,255,255,0.22)`;
+  } else if (isHovered) {
+    currentBoxShadow = "0 30px 70px rgba(0,0,0,0.9), inset 0 0 0 1.5px rgba(255,255,255,0.2)";
+  } else {
+    currentBoxShadow = "0 20px 50px rgba(0,0,0,0.85), inset 0 0 0 1.5px rgba(255,255,255,0.15)";
+  }
+
+  // Shadow blob beneath the case
+  const shadowSkewX = normalizedY * -4;
+  const shadowOffsetX = normalizedY * -18;
+  let shadowTransform: string;
+  if (hasDragRotation) {
+    shadowTransform = `translateX(${shadowOffsetX}px) translateY(24px) rotate(${shadowSkewX}deg) scale(0.92)`;
+  } else if (isHovered) {
+    shadowTransform = "translateY(16px) scale(0.96)";
+  } else {
+    shadowTransform = "translateY(10px) scale(0.92)";
   }
 
   return (
     <div
       className={`dynamic-phone-case ${className || ""}`}
       onClick={handleCaseClick}
-      title={allowClickToTilt || tiltSide !== undefined ? "Click cover to tilt 3D side view" : undefined}
+      onMouseDown={interactive ? handleMouseDown : undefined}
+      title={interactive ? "Click and drag to rotate 3D view" : undefined}
       style={{
         position: "relative",
         width: `${width}px`,
         height: `${height}px`,
-        perspective: interactive ? "1000px" : undefined,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        cursor: allowClickToTilt || tiltSide !== undefined ? "pointer" : undefined,
+        cursor: isDragging.current ? "grabbing" : interactive ? "grab" : undefined,
+        userSelect: "none",
         ...style,
       }}
       onMouseEnter={() => interactive && setIsHovered(true)}
-      onMouseLeave={() => interactive && setIsHovered(false)}
+      onMouseLeave={() => { if (interactive) { setIsHovered(false); } }}
     >
       {/* Dynamic Drop Shadow beneath Phone Case */}
       <div
@@ -879,28 +1025,66 @@ export default function DynamicPhoneCase({
           position: "relative",
           width: "100%",
           height: "100%",
-          borderRadius: cornerRadius,
+          borderRadius: phone.corners === "sharp" ? "16px" : isGlassMockupAvailable ? "40px" : cornerRadius,
           backgroundColor: "#121214",
-          border: currentTilt !== "front" ? "4.5px solid #2e3037" : "5px solid #27272a",
+          border: isGlassMockupAvailable
+            ? "none"
+            : hasDragRotation
+            ? "4.5px solid #2e3037"
+            : "5px solid #27272a",
           boxShadow: currentBoxShadow,
           overflow: "hidden",
           transform: currentTransform,
-          transition: "transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.4s ease, border-color 0.3s ease",
+          // Only use CSS transition when NOT actively dragging (for spring-back)
+          transition: isDragging.current
+            ? "none"
+            : "transform 0.05s linear, box-shadow 0.25s ease, border-color 0.2s ease",
           zIndex: 1,
         }}
       >
-        {/* Full-bleed Case Artwork */}
-        <Image
-          src={artworkUrl}
-          alt={phone.name}
-          fill
-          sizes={`${width}px`}
-          style={{ objectFit: "cover" }}
-          priority
-        />
+        {/* Full-bleed Case Artwork with Zoom / Scale and Position Offsets */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${artworkScale}) translate(${artworkOffsetX}%, ${artworkOffsetY}%)`,
+            transformOrigin: "center center",
+            transition: "transform 0.12s cubic-bezier(0.2, 0.9, 0.3, 1)",
+          }}
+        >
+          <Image
+            src={artworkUrl || "/mockups/akira.jpg"}
+            alt={phone.name}
+            fill
+            sizes={`${width}px`}
+            style={{ objectFit: artworkFit, objectPosition: artworkPosition }}
+            unoptimized
+            priority
+          />
+        </div>
 
-        {/* Dynamic Physical Camera Cutout */}
-        {renderCameraCutout(phone.cameraType)}
+        {/* Dynamic Camera Cutout or Photorealistic 9H Glass Frame Overlay */}
+        {isGlassMockupAvailable ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              pointerEvents: "none",
+            }}
+          >
+            <Image
+              src={glassOverlaySrc}
+              alt="Photorealistic 9H Glass Case Frame"
+              fill
+              sizes={`${width}px`}
+              style={{ objectFit: "fill" }}
+              priority
+            />
+          </div>
+        ) : (
+          renderCameraCutout(phone.cameraType)
+        )}
 
         {/* Glassmorphism / Gloss Finish Overlay */}
         <div
@@ -959,121 +1143,15 @@ export default function DynamicPhoneCase({
           </div>
         )}
 
-        {/* Physical 3D Side Chassis & Buttons (Visible when tilted, exactly matches Image 2) */}
-        {currentTilt === "left" && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              right: 0,
-              width: "16px",
-              background: "linear-gradient(90deg, rgba(20,21,25,0.95) 0%, rgba(45,47,54,0.98) 55%, rgba(18,19,23,1) 100%)",
-              borderLeft: "1.5px solid rgba(255, 255, 255, 0.15)",
-              borderRight: "2px solid #090a0c",
-              boxShadow: "inset 1px 0 2px rgba(255,255,255,0.25)",
-              zIndex: 12,
-              pointerEvents: "none",
-            }}
-          >
-            {/* Metallic Power Button Cutout */}
-            <div
-              style={{
-                position: "absolute",
-                top: "22%",
-                left: "2px",
-                width: "9px",
-                height: "38px",
-                borderRadius: "3px",
-                background: "linear-gradient(180deg, #4d515d 0%, #2f3139 100%)",
-                border: "1px solid rgba(255, 255, 255, 0.35)",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.8)",
-              }}
-            />
 
-            {/* Textured Knurled Grip Texture (Matches Image 2 diamond dot pattern) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "40%",
-                bottom: "16%",
-                left: "1px",
-                right: "1px",
-                backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px)",
-                backgroundSize: "3px 3px",
-                opacity: 0.85,
-              }}
-            />
 
-            {/* Front Screen Lip Highlight */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                bottom: 0,
-                right: 0,
-                width: "1.5px",
-                backgroundColor: "rgba(255,255,255,0.2)",
-              }}
-            />
-          </div>
-        )}
-
-        {currentTilt === "right" && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: 0,
-              width: "16px",
-              background: "linear-gradient(90deg, rgba(18,19,23,1) 0%, rgba(45,47,54,0.98) 45%, rgba(20,21,25,0.95) 100%)",
-              borderRight: "1.5px solid rgba(255, 255, 255, 0.15)",
-              borderLeft: "2px solid #090a0c",
-              boxShadow: "inset -1px 0 2px rgba(255,255,255,0.25)",
-              zIndex: 12,
-              pointerEvents: "none",
-            }}
-          >
-            {/* Volume Up */}
-            <div
-              style={{
-                position: "absolute",
-                top: "22%",
-                right: "2px",
-                width: "9px",
-                height: "30px",
-                borderRadius: "3px",
-                background: "linear-gradient(180deg, #4d515d 0%, #2f3139 100%)",
-                border: "1px solid rgba(255, 255, 255, 0.35)",
-              }}
-            />
-            {/* Volume Down */}
-            <div
-              style={{
-                position: "absolute",
-                top: "31%",
-                right: "2px",
-                width: "9px",
-                height: "30px",
-                borderRadius: "3px",
-                background: "linear-gradient(180deg, #4d515d 0%, #2f3139 100%)",
-                border: "1px solid rgba(255, 255, 255, 0.35)",
-              }}
-            />
-          </div>
-        )}
-
-        {/* Diagonal Specular Reflection across backplate when tilted (Matches Image 2) */}
-        {currentTilt !== "front" && (
+        {/* Continuous Specular Reflection — follows drag rotation */}
+        {hasDragRotation && (
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background:
-                currentTilt === "left"
-                  ? "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.32) 46%, rgba(255,255,255,0.06) 52%, transparent 64%)"
-                  : "linear-gradient(65deg, transparent 30%, rgba(255,255,255,0.32) 46%, rgba(255,255,255,0.06) 52%, transparent 64%)",
+              background: `linear-gradient(${90 + dragRotY * 0.8}deg, transparent 28%, rgba(255,255,255,${Math.min(0.38, 0.08 + Math.abs(normalizedY) * 0.3)}) 44%, rgba(255,255,255,0.05) 52%, transparent 66%)`,
               pointerEvents: "none",
               zIndex: 14,
             }}

@@ -1,0 +1,38 @@
+{
+  "slug": "iphone-16-pro",
+  "name": "iPhone 16 Pro",
+  "brand": "Apple",
+  "archetype": "iphone-triple",
+  "full_scene": {
+    "canvas_width": 2510,
+    "canvas_height": 1674,
+    "scene_url": "/mockups/models/iphone-16-pro/scene.png",
+    "overlay_url": "/mockups/models/iphone-16-pro/overlay.png",
+    "printable_x": 1032,
+    "printable_y": 588,
+    "printable_width": 372,
+    "printable_height": 741,
+    "printable_radius": 36
+  },
+  "case_focus": {
+    "canvas_width": 451,
+    "canvas_height": 820,
+    "base_url": "/mockups/models/iphone-16-pro/case_base.png",
+    "overlay_url": "/mockups/models/iphone-16-pro/case_overlay.png",
+    "printable_x": 40,
+    "printable_y": 40,
+    "printable_width": 372,
+    "printable_height": 741,
+    "printable_radius": 38,
+    "camera_x": 52,
+    "camera_y": 52,
+    "camera_width": 141,
+    "camera_height": 148,
+    "camera_radius": 24
+  },
+  "print_specs": {
+    "width_mm": 71.5,
+    "height_mm": 147.5,
+    "dpi": 300
+  }
+}

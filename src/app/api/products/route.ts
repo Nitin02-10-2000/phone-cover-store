@@ -14,7 +14,9 @@ function formatDbProduct(p: any): Product {
     originalPrice: p.originalPrice,
     rating: p.rating,
     reviewsCount: p.reviewsCount,
-    image: p.image,
+    image: (p.id === "case-tadka-signature-edition" && (p.image === "/case-tadka-logo.png" || !p.image))
+      ? "/mockups/case_tadka_signature.jpg"
+      : p.image,
     tiltedImage: p.tiltedImage || p.image,
     badge: p.badge || undefined,
     formats: typeof p.formats === "string" ? p.formats.split(",") : p.formats || ["Ultra Impact MagSafe"],

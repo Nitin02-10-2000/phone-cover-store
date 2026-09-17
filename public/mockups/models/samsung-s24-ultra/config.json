@@ -1,0 +1,38 @@
+{
+  "slug": "samsung-s24-ultra",
+  "name": "Samsung Galaxy S24 Ultra",
+  "brand": "Samsung",
+  "archetype": "samsung-ultra",
+  "full_scene": {
+    "canvas_width": 2674,
+    "canvas_height": 1782,
+    "scene_url": "/mockups/models/samsung-s24-ultra/scene.png",
+    "overlay_url": "/mockups/models/samsung-s24-ultra/overlay.png",
+    "printable_x": 935,
+    "printable_y": 445,
+    "printable_width": 802,
+    "printable_height": 891,
+    "printable_radius": 12
+  },
+  "case_focus": {
+    "canvas_width": 379,
+    "canvas_height": 955,
+    "base_url": "/mockups/models/samsung-s24-ultra/case_base.png",
+    "overlay_url": "/mockups/models/samsung-s24-ultra/case_overlay.png",
+    "printable_x": 40,
+    "printable_y": 40,
+    "printable_width": 802,
+    "printable_height": 891,
+    "printable_radius": 10,
+    "camera_x": 54,
+    "camera_y": 54,
+    "camera_width": 256,
+    "camera_height": 521,
+    "camera_radius": 16
+  },
+  "print_specs": {
+    "width_mm": 77.6,
+    "height_mm": 163.0,
+    "dpi": 300
+  }
+}

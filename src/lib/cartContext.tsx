@@ -436,11 +436,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteOrder = (orderId: string) => {
-    setOrders((prev) => prev.filter((o) => o.id !== orderId));
-    showToast(`Order #${orderId} removed`);
+    setOrders((prev) => {
+      const filtered = prev.filter((o) => o.id !== orderId);
+      try {
+        localStorage.setItem("hachiman_orders", JSON.stringify(filtered));
+        localStorage.setItem("shinra_orders", JSON.stringify(filtered));
+      } catch (e) {
+        // ignore
+      }
+      return filtered;
+    });
+    showToast(`Order #${orderId} deleted successfully`);
 
     // Delete from database API
-    fetch(`/api/orders/${orderId}`, {
+    fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
       method: "DELETE",
     }).catch((err) => console.warn("Background order delete from DB:", err));
   };

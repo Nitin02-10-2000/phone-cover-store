@@ -1,0 +1,62 @@
+{
+  "iphone_16_pro_max": {
+    "id": "iphone_16_pro_max",
+    "label": "iPhone 16 Pro Max",
+    "file": "/mockups/templates/iphone_16_pro_max.png",
+    "canvas_size": [
+      1058,
+      1255
+    ],
+    "slot": {
+      "x": 350,
+      "y": 250,
+      "width": 359,
+      "height": 756
+    }
+  },
+  "samsung_s23_ultra": {
+    "id": "samsung_s23_ultra",
+    "label": "Samsung Galaxy S23 Ultra",
+    "file": "/mockups/templates/samsung_s23_ultra.png",
+    "canvas_size": [
+      1175,
+      1497
+    ],
+    "slot": {
+      "x": 350,
+      "y": 250,
+      "width": 476,
+      "height": 998
+    }
+  },
+  "oneplus_11": {
+    "id": "oneplus_11",
+    "label": "OnePlus 11 5G",
+    "file": "/mockups/templates/oneplus_11.png",
+    "canvas_size": [
+      1110,
+      1422
+    ],
+    "slot": {
+      "x": 350,
+      "y": 250,
+      "width": 411,
+      "height": 923
+    }
+  },
+  "iphone_14_pro_max": {
+    "id": "iphone_14_pro_max",
+    "label": "iPhone 14 Pro Max",
+    "file": "/mockups/templates/iphone_14_pro_max.png",
+    "canvas_size": [
+      1032,
+      1225
+    ],
+    "slot": {
+      "x": 350,
+      "y": 250,
+      "width": 333,
+      "height": 726
+    }
+  }
+}

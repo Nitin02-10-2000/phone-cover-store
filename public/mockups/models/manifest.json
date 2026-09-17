@@ -1,0 +1,268 @@
+{
+  "iphone-16-pro-max": {
+    "slug": "iphone-16-pro-max",
+    "name": "iPhone 16 Pro Max",
+    "brand": "Apple",
+    "archetype": "iphone-triple",
+    "full_scene": {
+      "canvas_width": 2510,
+      "canvas_height": 1674,
+      "scene_url": "/mockups/models/iphone-16-pro-max/scene.png",
+      "overlay_url": "/mockups/models/iphone-16-pro-max/overlay.png",
+      "printable_x": 1038,
+      "printable_y": 551,
+      "printable_width": 192,
+      "printable_height": 767,
+      "printable_radius": 36
+    },
+    "case_focus": {
+      "canvas_width": 271,
+      "canvas_height": 846,
+      "base_url": "/mockups/models/iphone-16-pro-max/case_base.png",
+      "overlay_url": "/mockups/models/iphone-16-pro-max/case_overlay.png",
+      "printable_x": 40,
+      "printable_y": 40,
+      "printable_width": 192,
+      "printable_height": 767,
+      "printable_radius": 38,
+      "camera_x": 52,
+      "camera_y": 52,
+      "camera_width": 72,
+      "camera_height": 76,
+      "camera_radius": 24
+    },
+    "print_specs": {
+      "width_mm": 77.6,
+      "height_mm": 163.0,
+      "dpi": 300
+    }
+  },
+  "iphone-16-pro": {
+    "slug": "iphone-16-pro",
+    "name": "iPhone 16 Pro",
+    "brand": "Apple",
+    "archetype": "iphone-triple",
+    "full_scene": {
+      "canvas_width": 2510,
+      "canvas_height": 1674,
+      "scene_url": "/mockups/models/iphone-16-pro/scene.png",
+      "overlay_url": "/mockups/models/iphone-16-pro/overlay.png",
+      "printable_x": 1032,
+      "printable_y": 588,
+      "printable_width": 372,
+      "printable_height": 741,
+      "printable_radius": 36
+    },
+    "case_focus": {
+      "canvas_width": 451,
+      "canvas_height": 820,
+      "base_url": "/mockups/models/iphone-16-pro/case_base.png",
+      "overlay_url": "/mockups/models/iphone-16-pro/case_overlay.png",
+      "printable_x": 40,
+      "printable_y": 40,
+      "printable_width": 372,
+      "printable_height": 741,
+      "printable_radius": 38,
+      "camera_x": 52,
+      "camera_y": 52,
+      "camera_width": 141,
+      "camera_height": 148,
+      "camera_radius": 24
+    },
+    "print_specs": {
+      "width_mm": 71.5,
+      "height_mm": 147.5,
+      "dpi": 300
+    }
+  },
+  "iphone-16": {
+    "slug": "iphone-16",
+    "name": "iPhone 16",
+    "brand": "Apple",
+    "archetype": "iphone-dual-vert",
+    "full_scene": {
+      "canvas_width": 2510,
+      "canvas_height": 1674,
+      "scene_url": "/mockups/models/iphone-16/scene.png",
+      "overlay_url": "/mockups/models/iphone-16/overlay.png",
+      "printable_x": 1053,
+      "printable_y": 615,
+      "printable_width": 147,
+      "printable_height": 707,
+      "printable_radius": 36
+    },
+    "case_focus": {
+      "canvas_width": 226,
+      "canvas_height": 786,
+      "base_url": "/mockups/models/iphone-16/case_base.png",
+      "overlay_url": "/mockups/models/iphone-16/case_overlay.png",
+      "printable_x": 40,
+      "printable_y": 40,
+      "printable_width": 147,
+      "printable_height": 707,
+      "printable_radius": 38,
+      "camera_x": 52,
+      "camera_y": 52,
+      "camera_width": 32,
+      "camera_height": 61,
+      "camera_radius": 18
+    },
+    "print_specs": {
+      "width_mm": 71.5,
+      "height_mm": 147.5,
+      "dpi": 300
+    }
+  },
+  "iphone-15-pro-max": {
+    "slug": "iphone-15-pro-max",
+    "name": "iPhone 15 Pro Max",
+    "brand": "Apple",
+    "archetype": "iphone-triple",
+    "full_scene": {
+      "canvas_width": 2510,
+      "canvas_height": 1674,
+      "scene_url": "/mockups/models/iphone-15-pro-max/scene.png",
+      "overlay_url": "/mockups/models/iphone-15-pro-max/overlay.png",
+      "printable_x": 1045,
+      "printable_y": 568,
+      "printable_width": 340,
+      "printable_height": 762,
+      "printable_radius": 36
+    },
+    "case_focus": {
+      "canvas_width": 419,
+      "canvas_height": 841,
+      "base_url": "/mockups/models/iphone-15-pro-max/case_base.png",
+      "overlay_url": "/mockups/models/iphone-15-pro-max/case_overlay.png",
+      "printable_x": 40,
+      "printable_y": 40,
+      "printable_width": 340,
+      "printable_height": 762,
+      "printable_radius": 38,
+      "camera_x": 52,
+      "camera_y": 52,
+      "camera_width": 129,
+      "camera_height": 136,
+      "camera_radius": 24
+    },
+    "print_specs": {
+      "width_mm": 77.6,
+      "height_mm": 163.0,
+      "dpi": 300
+    }
+  },
+  "iphone-14-pro-max": {
+    "slug": "iphone-14-pro-max",
+    "name": "iPhone 14 Pro Max",
+    "brand": "Apple",
+    "archetype": "iphone-triple",
+    "full_scene": {
+      "canvas_width": 2510,
+      "canvas_height": 1674,
+      "scene_url": "/mockups/models/iphone-14-pro-max/scene.png",
+      "overlay_url": "/mockups/models/iphone-14-pro-max/overlay.png",
+      "printable_x": 1047,
+      "printable_y": 565,
+      "printable_width": 188,
+      "printable_height": 756,
+      "printable_radius": 36
+    },
+    "case_focus": {
+      "canvas_width": 267,
+      "canvas_height": 835,
+      "base_url": "/mockups/models/iphone-14-pro-max/case_base.png",
+      "overlay_url": "/mockups/models/iphone-14-pro-max/case_overlay.png",
+      "printable_x": 40,
+      "printable_y": 40,
+      "printable_width": 188,
+      "printable_height": 756,
+      "printable_radius": 38,
+      "camera_x": 52,
+      "camera_y": 52,
+      "camera_width": 71,
+      "camera_height": 75,
+      "camera_radius": 24
+    },
+    "print_specs": {
+      "width_mm": 77.6,
+      "height_mm": 163.0,
+      "dpi": 300
+    }
+  },
+  "samsung-s24-ultra": {
+    "slug": "samsung-s24-ultra",
+    "name": "Samsung Galaxy S24 Ultra",
+    "brand": "Samsung",
+    "archetype": "samsung-ultra",
+    "full_scene": {
+      "canvas_width": 2674,
+      "canvas_height": 1782,
+      "scene_url": "/mockups/models/samsung-s24-ultra/scene.png",
+      "overlay_url": "/mockups/models/samsung-s24-ultra/overlay.png",
+      "printable_x": 935,
+      "printable_y": 445,
+      "printable_width": 802,
+      "printable_height": 891,
+      "printable_radius": 12
+    },
+    "case_focus": {
+      "canvas_width": 379,
+      "canvas_height": 955,
+      "base_url": "/mockups/models/samsung-s24-ultra/case_base.png",
+      "overlay_url": "/mockups/models/samsung-s24-ultra/case_overlay.png",
+      "printable_x": 40,
+      "printable_y": 40,
+      "printable_width": 802,
+      "printable_height": 891,
+      "printable_radius": 10,
+      "camera_x": 54,
+      "camera_y": 54,
+      "camera_width": 256,
+      "camera_height": 521,
+      "camera_radius": 16
+    },
+    "print_specs": {
+      "width_mm": 77.6,
+      "height_mm": 163.0,
+      "dpi": 300
+    }
+  },
+  "oneplus-11": {
+    "slug": "oneplus-11",
+    "name": "OnePlus 11",
+    "brand": "OnePlus",
+    "archetype": "oneplus-dial",
+    "full_scene": {
+      "canvas_width": 3129,
+      "canvas_height": 2086,
+      "scene_url": "/mockups/models/oneplus-11/scene.png",
+      "overlay_url": "/mockups/models/oneplus-11/overlay.png",
+      "printable_x": 1359,
+      "printable_y": 755,
+      "printable_width": 259,
+      "printable_height": 256,
+      "printable_radius": 32
+    },
+    "case_focus": {
+      "canvas_width": 338,
+      "canvas_height": 335,
+      "base_url": "/mockups/models/oneplus-11/case_base.png",
+      "overlay_url": "/mockups/models/oneplus-11/case_overlay.png",
+      "printable_x": 40,
+      "printable_y": 40,
+      "printable_width": 259,
+      "printable_height": 256,
+      "printable_radius": 34,
+      "camera_x": 60,
+      "camera_y": 47,
+      "camera_width": 116,
+      "camera_height": 116,
+      "camera_radius": 56
+    },
+    "print_specs": {
+      "width_mm": 71.5,
+      "height_mm": 147.5,
+      "dpi": 300
+    }
+  }
+}

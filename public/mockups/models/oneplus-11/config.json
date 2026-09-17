@@ -1,0 +1,38 @@
+{
+  "slug": "oneplus-11",
+  "name": "OnePlus 11",
+  "brand": "OnePlus",
+  "archetype": "oneplus-dial",
+  "full_scene": {
+    "canvas_width": 3129,
+    "canvas_height": 2086,
+    "scene_url": "/mockups/models/oneplus-11/scene.png",
+    "overlay_url": "/mockups/models/oneplus-11/overlay.png",
+    "printable_x": 1359,
+    "printable_y": 755,
+    "printable_width": 259,
+    "printable_height": 256,
+    "printable_radius": 32
+  },
+  "case_focus": {
+    "canvas_width": 338,
+    "canvas_height": 335,
+    "base_url": "/mockups/models/oneplus-11/case_base.png",
+    "overlay_url": "/mockups/models/oneplus-11/case_overlay.png",
+    "printable_x": 40,
+    "printable_y": 40,
+    "printable_width": 259,
+    "printable_height": 256,
+    "printable_radius": 34,
+    "camera_x": 60,
+    "camera_y": 47,
+    "camera_width": 116,
+    "camera_height": 116,
+    "camera_radius": 56
+  },
+  "print_specs": {
+    "width_mm": 71.5,
+    "height_mm": 147.5,
+    "dpi": 300
+  }
+}

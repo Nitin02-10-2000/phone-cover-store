@@ -7,6 +7,21 @@ import { PRODUCTS, PHONE_MODELS } from "@/data/products";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
 
+const getMockupOverlayForModel = (modelName?: string) => {
+  if (!modelName) return "/mockups/glass_case_iphone_pro.png";
+  const lower = modelName.toLowerCase();
+  if (lower.includes("ultra")) return "/mockups/glass_case_samsung_ultra.png";
+  if (lower.includes("oneplus")) return "/mockups/glass_case_oneplus.png";
+  if (lower.includes("iphone 16") && !lower.includes("pro")) return "/mockups/glass_case_iphone_16.png";
+  if (
+    (lower.includes("iphone 15") || lower.includes("iphone 14") || lower.includes("iphone 13") || lower.includes("iphone 12")) &&
+    !lower.includes("pro")
+  ) {
+    return "/mockups/glass_case_iphone_dual.png";
+  }
+  return "/mockups/glass_case_iphone_pro.png";
+};
+
 export default function HeroBanner() {
   const { addToCart } = useCart();
   const { selectedModel: globalModel, setDevice } = useDevice();
@@ -14,6 +29,8 @@ export default function HeroBanner() {
   const [selectedBrandIndex, setSelectedBrandIndex] = useState(0);
   const [selectedModel, setSelectedModel] = useState(() => globalModel || PHONE_MODELS[0].models[0]);
   const [isPaused, setIsPaused] = useState(false);
+
+  const currentMockupOverlay = getMockupOverlayForModel(selectedModel);
 
   const showcaseProducts = [
     { product: PRODUCTS[0] }, // Cover 1: Cyber Anime
@@ -472,14 +489,13 @@ export default function HeroBanner() {
                     title={`Click to bring ${item.product.name} to front`}
                     style={{
                       position: "absolute",
-                      width: isCenter ? "228px" : "194px",
-                      height: isCenter ? "410px" : "350px",
-                      borderRadius: "38px",
+                      width: isCenter ? "220px" : "186px",
+                      height: isCenter ? "450px" : "380px",
+                      borderRadius: isCenter ? "44px" : "38px",
                       backgroundColor: "#0d0d10",
-                      border: isCenter ? "3px solid var(--main-accent)" : "2px solid rgba(255, 255, 255, 0.2)",
                       boxShadow: isCenter
-                        ? "0 35px 70px -10px rgba(0, 0, 0, 0.95), 0 15px 30px rgba(0,0,0,0.8), 0 0 35px var(--tadka-red-glow), inset 0 0 0 1.5px rgba(255,255,255,0.2)"
-                        : "0 25px 50px -10px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255,255,255,0.12)",
+                        ? "0 32px 70px -10px rgba(0, 0, 0, 0.95), 0 0 35px var(--tadka-red-glow)"
+                        : "0 22px 48px -10px rgba(0, 0, 0, 0.85)",
                       transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
                       zIndex,
                       opacity,
@@ -489,78 +505,13 @@ export default function HeroBanner() {
                       flexDirection: "column",
                     }}
                   >
-                    {/* Realistic Physical Side Buttons (Modeled on phone case edge) */}
-                    {/* Right: Power / Lock Button */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        right: "-4px",
-                        top: isCenter ? "115px" : "95px",
-                        width: "4px",
-                        height: isCenter ? "46px" : "38px",
-                        backgroundColor: "#3f3f46",
-                        borderRadius: "0 3px 3px 0",
-                        boxShadow: "1px 0 3px rgba(0,0,0,0.6)",
-                        pointerEvents: "none",
-                        zIndex: 1,
-                      }}
-                    />
-
-                    {/* Left: Action Button */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: "-4px",
-                        top: isCenter ? "75px" : "62px",
-                        width: "4px",
-                        height: isCenter ? "22px" : "18px",
-                        backgroundColor: "#3f3f46",
-                        borderRadius: "3px 0 0 3px",
-                        boxShadow: "-1px 0 3px rgba(0,0,0,0.6)",
-                        pointerEvents: "none",
-                        zIndex: 1,
-                      }}
-                    />
-
-                    {/* Left: Volume Up Button */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: "-4px",
-                        top: isCenter ? "112px" : "92px",
-                        width: "4px",
-                        height: isCenter ? "36px" : "30px",
-                        backgroundColor: "#3f3f46",
-                        borderRadius: "3px 0 0 3px",
-                        boxShadow: "-1px 0 3px rgba(0,0,0,0.6)",
-                        pointerEvents: "none",
-                        zIndex: 1,
-                      }}
-                    />
-
-                    {/* Left: Volume Down Button */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: "-4px",
-                        top: isCenter ? "156px" : "130px",
-                        width: "4px",
-                        height: isCenter ? "36px" : "30px",
-                        backgroundColor: "#3f3f46",
-                        borderRadius: "3px 0 0 3px",
-                        boxShadow: "-1px 0 3px rgba(0,0,0,0.6)",
-                        pointerEvents: "none",
-                        zIndex: 1,
-                      }}
-                    />
-
-                    {/* Outer Bumper Frame & Inner Bevel Shadow */}
+                    {/* Outer Bumper Frame & Inner Artwork Container */}
                     <div
                       style={{
                         position: "relative",
                         width: "100%",
                         height: "100%",
-                        borderRadius: "34px",
+                        borderRadius: isCenter ? "44px" : "38px",
                         overflow: "hidden",
                         backgroundColor: "#111114",
                       }}
@@ -571,7 +522,10 @@ export default function HeroBanner() {
                         alt={item.product.name}
                         fill
                         sizes="(max-width: 768px) 194px, 228px"
-                        style={{ objectFit: "cover" }}
+                        style={{
+                          objectFit: item.product.artworkFit || "cover",
+                          objectPosition: item.product.artworkPosition || "center",
+                        }}
                         priority={isCenter}
                       />
 
@@ -581,164 +535,29 @@ export default function HeroBanner() {
                           position: "absolute",
                           inset: 0,
                           background:
-                            "linear-gradient(130deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.12) 22%, transparent 44%, rgba(255,255,255,0.03) 68%, rgba(255,255,255,0.18) 100%)",
+                            "linear-gradient(130deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.1) 22%, transparent 44%, rgba(255,255,255,0.03) 68%, rgba(255,255,255,0.16) 100%)",
                           pointerEvents: "none",
                           zIndex: 4,
-                          borderRadius: "34px",
+                          borderRadius: isCenter ? "44px" : "38px",
                         }}
                       />
 
-                      {/* Protective Raised Lip & Inner Bezel Shadow */}
+                      {/* Authentic Transparent PSD Glass Case Frame & Camera Module Overlay */}
                       <div
                         style={{
                           position: "absolute",
                           inset: 0,
-                          boxShadow: "inset 0 0 0 2px rgba(18, 18, 22, 0.9), inset 0 0 10px rgba(0, 0, 0, 0.7)",
-                          borderRadius: "34px",
+                          zIndex: 10,
                           pointerEvents: "none",
-                          zIndex: 5,
-                        }}
-                      />
-
-                      {/* Ultra-Realistic Flagship Pro Camera Plateau Island */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: isCenter ? "14px" : "12px",
-                          left: isCenter ? "14px" : "12px",
-                          width: isCenter ? "72px" : "62px",
-                          height: isCenter ? "76px" : "66px",
-                          borderRadius: "22px",
-                          background: "linear-gradient(145deg, rgba(24, 24, 28, 0.96), rgba(10, 10, 12, 0.98))",
-                          border: "1.5px solid rgba(255, 255, 255, 0.22)",
-                          boxShadow: "0 8px 18px rgba(0, 0, 0, 0.65), inset 0 1px 1.5px rgba(255, 255, 255, 0.35)",
-                          zIndex: 6,
                         }}
                       >
-                        {/* Lens 1 (Top-Left Main Camera) */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: isCenter ? "9px" : "8px",
-                            left: isCenter ? "9px" : "8px",
-                            width: isCenter ? "23px" : "20px",
-                            height: isCenter ? "23px" : "20px",
-                            borderRadius: "50%",
-                            border: "2px solid #52525b",
-                            background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
-                            boxShadow: "0 2px 5px rgba(0,0,0,0.8), inset 0 1px 1.5px rgba(255,255,255,0.4)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "3px",
-                              left: "3px",
-                              width: "4px",
-                              height: "4px",
-                              borderRadius: "50%",
-                              backgroundColor: "#ffffff",
-                              opacity: 0.85,
-                            }}
-                          />
-                        </div>
-
-                        {/* Lens 2 (Bottom-Left Ultra-Wide Camera) */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: isCenter ? "9px" : "8px",
-                            left: isCenter ? "9px" : "8px",
-                            width: isCenter ? "23px" : "20px",
-                            height: isCenter ? "23px" : "20px",
-                            borderRadius: "50%",
-                            border: "2px solid #52525b",
-                            background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
-                            boxShadow: "0 2px 5px rgba(0,0,0,0.8), inset 0 1px 1.5px rgba(255,255,255,0.4)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "3px",
-                              left: "3px",
-                              width: "4px",
-                              height: "4px",
-                              borderRadius: "50%",
-                              backgroundColor: "#ffffff",
-                              opacity: 0.85,
-                            }}
-                          />
-                        </div>
-
-                        {/* Lens 3 (Center-Right Telephoto Periscope Camera) */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: isCenter ? "26px" : "23px",
-                            right: isCenter ? "9px" : "8px",
-                            width: isCenter ? "23px" : "20px",
-                            height: isCenter ? "23px" : "20px",
-                            borderRadius: "50%",
-                            border: "2px solid #52525b",
-                            background: "radial-gradient(circle at 35% 35%, #1e3a8a 0%, #030712 75%)",
-                            boxShadow: "0 2px 5px rgba(0,0,0,0.8), inset 0 1px 1.5px rgba(255,255,255,0.4)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "3px",
-                              left: "3px",
-                              width: "4px",
-                              height: "4px",
-                              borderRadius: "50%",
-                              backgroundColor: "#ffffff",
-                              opacity: 0.85,
-                            }}
-                          />
-                        </div>
-
-                        {/* Quad-LED True Tone Flash (Top-Right) */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: isCenter ? "11px" : "9px",
-                            right: isCenter ? "14px" : "12px",
-                            width: isCenter ? "11px" : "9px",
-                            height: isCenter ? "11px" : "9px",
-                            borderRadius: "50%",
-                            background: "radial-gradient(circle, #fef08a 25%, #d97706 80%, #78350f 100%)",
-                            border: "1px solid rgba(0,0,0,0.6)",
-                            boxShadow: "0 0 6px rgba(254, 240, 138, 0.4)",
-                          }}
-                        />
-
-                        {/* LiDAR Scanner Sensor (Bottom-Right) */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: isCenter ? "12px" : "10px",
-                            right: isCenter ? "14px" : "12px",
-                            width: isCenter ? "10px" : "8px",
-                            height: isCenter ? "10px" : "8px",
-                            borderRadius: "50%",
-                            background: "radial-gradient(circle, #09090b 60%, #27272a 100%)",
-                            border: "1px solid #3f3f46",
-                          }}
-                        />
-
-                        {/* Audio Microphone Hole */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: isCenter ? "37px" : "32px",
-                            right: isCenter ? "36px" : "31px",
-                            width: "3px",
-                            height: "3px",
-                            borderRadius: "50%",
-                            backgroundColor: "#09090b",
-                          }}
+                        <Image
+                          src={currentMockupOverlay}
+                          alt="Photorealistic Glass Case Frame"
+                          fill
+                          sizes="(max-width: 768px) 194px, 228px"
+                          style={{ objectFit: "fill" }}
+                          priority={isCenter}
                         />
                       </div>
 
@@ -750,8 +569,8 @@ export default function HeroBanner() {
                             top: "43%",
                             left: "50%",
                             transform: "translate(-50%, -50%)",
-                            width: "96px",
-                            height: "96px",
+                            width: "92px",
+                            height: "92px",
                             borderRadius: "50%",
                             border: "2px solid rgba(255, 255, 255, 0.45)",
                             boxShadow: "0 0 14px rgba(255,255,255,0.2), inset 0 0 8px rgba(255,255,255,0.12)",
@@ -759,8 +578,8 @@ export default function HeroBanner() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            opacity: 0.7,
-                            zIndex: 4,
+                            opacity: 0.65,
+                            zIndex: 12,
                           }}
                         >
                           {/* Magnetic Alignment Bar */}

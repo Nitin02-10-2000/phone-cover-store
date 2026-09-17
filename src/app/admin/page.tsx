@@ -1,12 +1,33 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart, OrderRecord } from "@/lib/cartContext";
 import { Product, CASE_TYPES, CATEGORIES } from "@/data/products";
 import { useAllProducts } from "@/lib/productsStorage";
+import DynamicPhoneCase from "@/components/DynamicPhoneCase";
+import StudioManagerView from "@/components/admin/StudioManagerView";
+import PhoneModelsManagerView from "@/components/admin/PhoneModelsManagerView";
+import ThreeDModelsManagerView from "@/components/admin/ThreeDModelsManagerView";
+import PrintAreaEditorView from "@/components/admin/PrintAreaEditorView";
+import DesignTemplateBuilderView from "@/components/admin/DesignTemplateBuilderView";
+import StickersAssetsManagerView from "@/components/admin/StickersAssetsManagerView";
+import FontsManagerView from "@/components/admin/FontsManagerView";
+import PricingManagerView from "@/components/admin/PricingManagerView";
+import PrintSettingsView from "@/components/admin/PrintSettingsView";
+import OrdersDesignsView from "@/components/admin/OrdersDesignsView";
+import MockupsManagerView from "@/components/admin/MockupsManagerView";
+
+const POPULAR_PREVIEW_MODELS = [
+  "iPhone 16 Pro Max",
+  "iPhone 16",
+  "Galaxy S25 Ultra",
+  "Galaxy S24 Ultra",
+  "Pixel 9 Pro",
+  "OnePlus 12",
+];
 
 const NAV_SECTIONS = [
   {
@@ -30,7 +51,17 @@ const NAV_SECTIONS = [
   {
     label: "ADMIN OPERATIONS",
     links: [
-      { href: "/admin", label: "Admin Console", icon: "⚙️" },
+      { href: "/admin", label: "Admin Console", icon: "⚙️", view: "console" },
+      { href: "/admin?view=mockups-manager", label: "PSD Mockup Manager", icon: "📐", view: "mockups-manager" },
+      { href: "/admin?view=studio-manager", label: "Studio Manager", icon: "🎨", view: "studio-manager" },
+      { href: "/admin?view=phone-models", label: "Phone Models", icon: "📱", view: "phone-models" },
+      { href: "/admin?view=3d-models", label: "3D Case Models", icon: "🧊", view: "3d-models" },
+      { href: "/admin?view=design-templates", label: "Design Templates", icon: "🖼", view: "design-templates" },
+      { href: "/admin?view=stickers", label: "Stickers & Assets", icon: "✨", view: "stickers" },
+      { href: "/admin?view=fonts", label: "Fonts", icon: "🔤", view: "fonts" },
+      { href: "/admin?view=pricing", label: "Pricing", icon: "💰", view: "pricing" },
+      { href: "/admin?view=print-settings", label: "Print Settings", icon: "🖨", view: "print-settings" },
+      { href: "/admin?view=custom-orders", label: "Orders & Designs", icon: "📦", view: "custom-orders" },
     ],
   },
 ];
@@ -76,7 +107,7 @@ const CASE_PRESETS = [
     title: "Itachi Uchiha — Crimson Tsukuyomi",
     theme: "anime",
     franchise: "Naruto",
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786523901/mockups/itachi-uchiha-poster-paper-1.jpg",
+    image: "/mockups/itachi_tsukuyomi.jpg",
     price: 599,
   },
 ];
@@ -84,21 +115,105 @@ const CASE_PRESETS = [
 export default function AdminPage() {
   const pathname = usePathname();
   const { orders, updateOrderStatus, deleteOrder, createOrder } = useCart();
-  const { products, addProduct, deleteProduct, isCustom } = useAllProducts();
+  const { products, addProduct, updateProduct, deleteProduct, isCustom } = useAllProducts();
 
-  // Tab State
-  const [activeTab, setActiveTab] = useState<"orders" | "customers" | "catalog" | "analytics">("orders");
+  // Studio Operations View State
+  const [adminView, setAdminView] = useState<
+    | "console"
+    | "mockups-manager"
+    | "studio-manager"
+    | "phone-models"
+    | "3d-models"
+    | "design-templates"
+    | "stickers"
+    | "fonts"
+    | "pricing"
+    | "print-settings"
+    | "custom-orders"
+  >("console");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get("view");
+      if (
+        view &&
+        [
+          "mockups-manager",
+          "studio-manager",
+          "phone-models",
+          "3d-models",
+          "design-templates",
+          "stickers",
+          "fonts",
+          "pricing",
+          "print-settings",
+          "custom-orders",
+        ].includes(view)
+      ) {
+        setAdminView(view as any);
+      }
+    }
+  }, []);
+
+  // Tab State (for Console)
+  const [activeTab, setActiveTab] = useState<"orders" | "customers" | "catalog" | "my-uploads" | "analytics">("orders");
+
+  // Editing Phone Case State
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    theme: "anime",
+    franchise: "Anime",
+    tag: "Anime Armor",
+    price: 599,
+    originalPrice: 999,
+    badge: "NEW DROP",
+    description: "",
+    formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "9H Tempered Glass Back"],
+    image: "",
+    dropProtection: "12ft Drop Tested",
+  });
+  const editFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Filters & Search
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [catalogSearch, setCatalogSearch] = useState<string>("");
   const [catalogCategory, setCatalogCategory] = useState<string>("ALL");
+  const [catalogViewMode, setCatalogViewMode] = useState<"3d-cards" | "table">("3d-cards");
+  const [catalogChassis, setCatalogChassis] = useState<string>("iPhone 16 Pro Max");
 
   // Modals State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedSlipOrder, setSelectedSlipOrder] = useState<OrderRecord | null>(null);
   const [adminToast, setAdminToast] = useState<string | null>(null);
+  const [confirmDeleteProduct, setConfirmDeleteProduct] = useState<Product | null>(null);
+
+  // Live Phone Mockup Preview States for Upload Modal
+  const [modalPreviewModel, setModalPreviewModel] = useState("iPhone 16 Pro Max");
+  const [modalPreviewTilt, setModalPreviewTilt] = useState<"front" | "left" | "right">("front");
+  const [modalPreviewCaseType, setModalPreviewCaseType] = useState("9H Tempered Glass Back");
+  const [modalPreviewShowMagSafe, setModalPreviewShowMagSafe] = useState(false);
+  const [modalArtworkFit, setModalArtworkFit] = useState<"cover" | "contain">("cover");
+  const [modalArtworkPosition, setModalArtworkPosition] = useState("center");
+  const [modalArtworkScale, setModalArtworkScale] = useState(1);
+  const [modalArtworkOffsetX, setModalArtworkOffsetX] = useState(0);
+  const [modalArtworkOffsetY, setModalArtworkOffsetY] = useState(0);
+
+  // Artwork Sizing & Positioning States for Edit Modal
+  const [editArtworkFit, setEditArtworkFit] = useState<"cover" | "contain">("cover");
+  const [editArtworkPosition, setEditArtworkPosition] = useState("center");
+  const [editArtworkScale, setEditArtworkScale] = useState(1);
+  const [editArtworkOffsetX, setEditArtworkOffsetX] = useState(0);
+  const [editArtworkOffsetY, setEditArtworkOffsetY] = useState(0);
+
+  // Phone Mockup Inspector State for Catalog
+  const [mockupInspectorProduct, setMockupInspectorProduct] = useState<Product | null>(null);
+  const [inspectorModel, setInspectorModel] = useState("iPhone 16 Pro Max");
+  const [inspectorTilt, setInspectorTilt] = useState<"front" | "left" | "right">("front");
+  const [inspectorCaseType, setInspectorCaseType] = useState("9H Tempered Glass Back");
+  const [inspectorMagSafe, setInspectorMagSafe] = useState(false);
 
   // File Upload Reference
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -295,11 +410,16 @@ export default function AdminPage() {
       description: newCase.description,
       supportedBrands: ["Apple iPhone", "Samsung Galaxy", "OnePlus", "Google Pixel"],
       dropProtection: newCase.dropProtection || "12ft Drop Tested",
+      artworkFit: modalArtworkFit,
+      artworkPosition: modalArtworkPosition,
+      artworkScale: modalArtworkScale,
+      artworkOffsetX: modalArtworkOffsetX,
+      artworkOffsetY: modalArtworkOffsetY,
     };
 
     addProduct(createdProduct);
     setIsUploadModalOpen(false);
-    setActiveTab("catalog");
+    setActiveTab("my-uploads");
     showToast(`Case "${createdProduct.name}" is now live in store!`);
 
     // Reset form
@@ -316,6 +436,9 @@ export default function AdminPage() {
       image: CASE_PRESETS[0].image,
       dropProtection: "12ft Drop Tested",
     });
+    setModalArtworkScale(1);
+    setModalArtworkOffsetX(0);
+    setModalArtworkOffsetY(0);
   };
 
   // Toggle format in new case form
@@ -329,6 +452,119 @@ export default function AdminPage() {
         return { ...prev, formats: [...prev.formats, fmtName] };
       }
     });
+  };
+
+  // List of all custom phone cases uploaded by admin
+  const myUploadedCases = useMemo(() => {
+    return products.filter((p) => isCustom(p.id));
+  }, [products, isCustom]);
+
+  // Open Edit Modal for a case
+  const handleOpenEditModal = (prod: Product) => {
+    setEditingProduct(prod);
+    setEditForm({
+      name: prod.name,
+      theme: prod.theme || "anime",
+      franchise: prod.franchise || "Anime",
+      tag: prod.tag || "Anime Armor",
+      price: prod.price,
+      originalPrice: prod.originalPrice || 999,
+      badge: prod.badge || "",
+      description: prod.description || "Military-grade dual-layer shock absorption with high-definition UV DTF print.",
+      formats: Array.isArray(prod.formats) ? [...prod.formats] : ["Ultra Impact MagSafe", "9H Tempered Glass Back"],
+      image: prod.image,
+      dropProtection: prod.dropProtection || "12ft Drop Tested",
+    });
+    setModalPreviewModel("iPhone 16 Pro Max");
+    setModalPreviewTilt("front");
+    setModalPreviewCaseType("9H Tempered Glass Back");
+    setEditArtworkFit(prod.artworkFit || "cover");
+    setEditArtworkPosition(prod.artworkPosition || "center");
+    setEditArtworkScale(prod.artworkScale ?? 1);
+    setEditArtworkOffsetX(prod.artworkOffsetX ?? 0);
+    setEditArtworkOffsetY(prod.artworkOffsetY ?? 0);
+  };
+
+  // Image upload in edit modal
+  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Please upload an image file (PNG, JPG, or WEBP)");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setEditForm((prev) => ({ ...prev, image: reader.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.url) {
+          setEditForm((prev) => ({ ...prev, image: data.url }));
+          showToast("New image uploaded to server!");
+        }
+      })
+      .catch(() => showToast("Image ready for case update."));
+  };
+
+  // Toggle format in edit modal
+  const toggleEditFormat = (fmtName: string) => {
+    setEditForm((prev) => {
+      const exists = prev.formats.includes(fmtName);
+      if (exists) {
+        if (prev.formats.length <= 1) return prev;
+        return { ...prev, formats: prev.formats.filter((f) => f !== fmtName) };
+      } else {
+        return { ...prev, formats: [...prev.formats, fmtName] };
+      }
+    });
+  };
+
+  // Save edited case
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    if (!editForm.name.trim()) {
+      showToast("Please provide a phone case name");
+      return;
+    }
+
+    const updated: Product = {
+      ...editingProduct,
+      name: editForm.name.trim(),
+      franchise: editForm.franchise || "Anime",
+      theme: editForm.theme || "anime",
+      tag: editForm.tag || editForm.franchise || "Limited Armor",
+      price: Number(editForm.price) || 599,
+      originalPrice: Number(editForm.originalPrice) || 999,
+      badge: editForm.badge || undefined,
+      formats: editForm.formats.length > 0 ? editForm.formats : ["Ultra Impact MagSafe"],
+      description: editForm.description,
+      image: editForm.image || editingProduct.image,
+      tiltedImage: editForm.image || editingProduct.image,
+      dropProtection: editForm.dropProtection || "12ft Drop Tested",
+      artworkFit: editArtworkFit,
+      artworkPosition: editArtworkPosition,
+      artworkScale: editArtworkScale,
+      artworkOffsetX: editArtworkOffsetX,
+      artworkOffsetY: editArtworkOffsetY,
+    };
+
+    updateProduct(updated);
+    setEditingProduct(null);
+    showToast(`Saved changes to "${updated.name}"!`);
   };
 
   // Seed a sample order for testing
@@ -470,12 +706,22 @@ export default function AdminPage() {
               >
                 {section.label}
               </div>
-              {section.links.map((link) => {
-                const isActive = pathname === link.href;
+              {section.links.map((link: any) => {
+                const isOpLink = link.view !== undefined;
+                const isActive = isOpLink ? adminView === link.view : pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={(e) => {
+                      if (isOpLink) {
+                        e.preventDefault();
+                        setAdminView(link.view);
+                        if (typeof window !== "undefined") {
+                          window.history.replaceState(null, "", link.href);
+                        }
+                      }
+                    }}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -488,6 +734,7 @@ export default function AdminPage() {
                       borderLeft: isActive ? "3px solid var(--shinra-red)" : "3px solid transparent",
                       textDecoration: "none",
                       transition: "all 0.15s",
+                      cursor: "pointer",
                     }}
                   >
                     <span style={{ fontSize: "1rem" }}>{link.icon}</span>
@@ -516,7 +763,9 @@ export default function AdminPage() {
       <div style={{ flex: 1, overflowX: "hidden", padding: "90px 36px 80px" }}>
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
           
-          {/* Top Operational Status Bar */}
+          {adminView === "console" && (
+            <>
+              {/* Top Operational Status Bar */}
           <div
             style={{
               display: "flex",
@@ -698,13 +947,17 @@ export default function AdminPage() {
 
             {/* Catalog & Uploads */}
             <div
+              onClick={() => setActiveTab("my-uploads")}
               style={{
                 backgroundColor: "var(--surface)",
-                border: "1px solid var(--surface-border)",
+                border: activeTab === "my-uploads" ? "2px solid var(--main-accent)" : "1px solid var(--surface-border)",
                 borderRadius: "14px",
                 padding: "20px 24px",
                 boxShadow: "0 4px 15px rgba(0, 0, 0, 0.03)",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
               }}
+              title="Click to view & edit your uploaded phone cases"
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>
@@ -715,8 +968,9 @@ export default function AdminPage() {
               <div style={{ fontSize: "1.9rem", fontWeight: 900, marginTop: "8px", color: "var(--foreground)" }}>
                 {products.length}
               </div>
-              <div style={{ fontSize: "0.78rem", color: "var(--secondary-accent)", marginTop: "6px", fontWeight: 600 }}>
-                {customCasesCount} custom uploaded from admin
+              <div style={{ fontSize: "0.78rem", color: "var(--main-accent)", marginTop: "6px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>🎨 {customCasesCount} custom uploaded</span>
+                <span style={{ fontSize: "0.7rem", backgroundColor: "rgba(230, 57, 70, 0.15)", padding: "1px 6px", borderRadius: "4px" }}>Manage ↗</span>
               </div>
             </div>
           </div>
@@ -734,7 +988,8 @@ export default function AdminPage() {
             {[
               { id: "orders", label: `Fulfillment & Orders (${orders.length})`, icon: "📦" },
               { id: "customers", label: `Customer Database ("Who Ordered") (${customerDatabase.length})`, icon: "👥" },
-              { id: "catalog", label: `Phone Cases Catalog (${products.length})`, icon: "📱" },
+              { id: "my-uploads", label: `🎨 My Uploaded Cases (${customCasesCount})`, icon: "✨", highlight: true },
+              { id: "catalog", label: `Full Catalog (${products.length})`, icon: "📱" },
               { id: "analytics", label: "Analytics & Telemetry", icon: "📊" },
             ].map((tab) => (
               <button
@@ -1042,23 +1297,27 @@ export default function AdminPage() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (confirm(`Remove order #${order.id}?`)) {
-                                    deleteOrder(order.id);
-                                  }
+                                  deleteOrder(order.id);
+                                  showToast(`Order #${order.id} deleted successfully.`);
                                 }}
                                 style={{
                                   padding: "6px 10px",
                                   borderRadius: "4px",
-                                  backgroundColor: "rgba(255, 42, 58, 0.1)",
+                                  backgroundColor: "rgba(255, 42, 58, 0.12)",
                                   color: "#ff4d4d",
-                                  border: "1px solid rgba(255, 42, 58, 0.25)",
+                                  border: "1px solid rgba(255, 42, 58, 0.3)",
                                   fontSize: "0.78rem",
                                   fontWeight: 700,
                                   cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  transition: "all 0.15s ease",
                                 }}
                                 title="Delete Order"
                               >
-                                🗑️
+                                <span>🗑️</span>
+                                <span>Delete</span>
                               </button>
                             </div>
                           </td>
@@ -1338,6 +1597,344 @@ export default function AdminPage() {
           )}
 
           {/* ═══════════════════════════════════════════════════
+              TAB: MY UPLOADED CASES & COVERS MANAGER
+             ═══════════════════════════════════════════════════ */}
+          {activeTab === "my-uploads" && (
+            <div>
+              {/* Header with Upload CTA */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "14px",
+                  marginBottom: "24px",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <h2 style={{ fontSize: "1.4rem", fontWeight: 900, margin: "0 0 4px", color: "var(--foreground)" }}>
+                      🎨 My Uploaded Phone Covers ({myUploadedCases.length})
+                    </h2>
+                    <span
+                      style={{
+                        fontSize: "0.72rem",
+                        fontWeight: 800,
+                        backgroundColor: "rgba(46, 213, 115, 0.15)",
+                        color: "#2ed573",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                      }}
+                    >
+                      LIVE IN STORE
+                    </span>
+                  </div>
+                  <p style={{ fontSize: "0.85rem", color: "var(--foreground-muted)", margin: 0 }}>
+                    Here are all the custom phone cases you uploaded from your admin panel. Click &quot;Edit&quot; to change pricing, formats, titles, or replace artwork with live 3D phone mockup preview.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsUploadModalOpen(true)}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--main-accent)",
+                    color: "#ffffff",
+                    border: "none",
+                    fontSize: "0.88rem",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 4px 14px rgba(230, 57, 70, 0.3)",
+                  }}
+                >
+                  <span>✨</span>
+                  <span>+ Upload New Phone Case</span>
+                </button>
+              </div>
+
+              {/* Uploaded Cases Grid */}
+              {myUploadedCases.length === 0 ? (
+                <div
+                  style={{
+                    backgroundColor: "var(--surface)",
+                    borderRadius: "14px",
+                    border: "1px solid var(--surface-border)",
+                    padding: "60px 20px",
+                    textAlign: "center",
+                  }}
+                >
+                  <div style={{ fontSize: "3rem", marginBottom: "12px" }}>🎨</div>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: "0 0 6px", color: "var(--foreground)" }}>
+                    No Custom Cases Uploaded Yet
+                  </h3>
+                  <p style={{ fontSize: "0.88rem", color: "var(--foreground-muted)", maxWidth: "440px", margin: "0 auto 20px" }}>
+                    Whenever you upload custom phone case designs from this admin panel, they will appear here with instant edit controls and 3D phone case inspection.
+                  </p>
+                  <button
+                    onClick={() => setIsUploadModalOpen(true)}
+                    style={{
+                      padding: "10px 24px",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--main-accent)",
+                      color: "#fff",
+                      border: "none",
+                      fontSize: "0.88rem",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                    }}
+                  >
+                    ✨ Upload Your First Phone Case
+                  </button>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: "20px",
+                  }}
+                >
+                  {myUploadedCases.map((prod) => (
+                    <div
+                      key={prod.id}
+                      style={{
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--surface-border)",
+                        borderRadius: "14px",
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      {/* Phone Case Stage */}
+                      <div
+                        onClick={() => handleOpenEditModal(prod)}
+                        title="Click to edit case"
+                        style={{
+                          position: "relative",
+                          background: "radial-gradient(ellipse at 50% 30%, #1e2029 0%, #0a0b0d 100%)",
+                          padding: "24px 16px 18px",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          cursor: "pointer",
+                          minHeight: "260px",
+                        }}
+                      >
+                        <DynamicPhoneCase
+                          artworkUrl={prod.image}
+                          phoneModel="iPhone 16 Pro Max"
+                          caseType="9H Tempered Glass Back"
+                          artworkFit={prod.artworkFit}
+                          artworkPosition={prod.artworkPosition}
+                          artworkScale={prod.artworkScale}
+                          artworkOffsetX={prod.artworkOffsetX}
+                          artworkOffsetY={prod.artworkOffsetY}
+                          width={130}
+                          height={260}
+                          interactive={true}
+                          allowClickToTilt={true}
+                          showModelBadge={false}
+                        />
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: "10px",
+                            right: "10px",
+                            backgroundColor: "rgba(46, 213, 115, 0.2)",
+                            color: "#2ed573",
+                            border: "1px solid rgba(46, 213, 115, 0.4)",
+                            borderRadius: "4px",
+                            padding: "2px 8px",
+                            fontSize: "0.68rem",
+                            fontWeight: 800,
+                          }}
+                        >
+                          ADMIN UPLOAD
+                        </span>
+                        {prod.badge && (
+                          <span
+                            style={{
+                              position: "absolute",
+                              top: "10px",
+                              left: "10px",
+                              backgroundColor: "var(--main-accent)",
+                              color: "#fff",
+                              borderRadius: "4px",
+                              padding: "2px 8px",
+                              fontSize: "0.68rem",
+                              fontWeight: 800,
+                            }}
+                          >
+                            {prod.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Info & Editing Controls */}
+                      <div
+                        style={{
+                          padding: "16px",
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          backgroundColor: "var(--surface)",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                            {prod.franchise} • {prod.theme || "Anime"}
+                          </div>
+                          <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--foreground)", margin: "4px 0 8px" }}>
+                            {prod.name}
+                          </div>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "10px" }}>
+                            <span style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--foreground)" }}>
+                              ₹{prod.price}
+                            </span>
+                            <span style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
+                              ₹{prod.originalPrice}
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "14px" }}>
+                            {prod.formats.slice(0, 2).map((fmt) => (
+                              <span
+                                key={fmt}
+                                style={{
+                                  fontSize: "0.68rem",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  backgroundColor: "var(--surface-raised)",
+                                  color: "var(--secondary-accent)",
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {fmt}
+                              </span>
+                            ))}
+                            {prod.formats.length > 2 && (
+                              <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)", alignSelf: "center" }}>
+                                +{prod.formats.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: "8px",
+                            borderTop: "1px solid var(--surface-border)",
+                            paddingTop: "12px",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditModal(prod)}
+                            style={{
+                              padding: "8px 10px",
+                              borderRadius: "6px",
+                              backgroundColor: "rgba(255, 170, 0, 0.15)",
+                              color: "#ffa502",
+                              border: "1px solid rgba(255, 170, 0, 0.3)",
+                              fontSize: "0.8rem",
+                              fontWeight: 800,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            <span>✏️</span>
+                            <span>Edit Case</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setMockupInspectorProduct(prod)}
+                            style={{
+                              padding: "8px 10px",
+                              borderRadius: "6px",
+                              backgroundColor: "var(--surface-raised)",
+                              color: "var(--foreground)",
+                              border: "1px solid var(--surface-border)",
+                              fontSize: "0.8rem",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <span>📱</span>
+                            <span>3D Mockup</span>
+                          </button>
+
+                          <Link
+                            href={`/product/${prod.id}`}
+                            target="_blank"
+                            style={{
+                              padding: "8px 10px",
+                              borderRadius: "6px",
+                              backgroundColor: "var(--surface-raised)",
+                              color: "var(--main-accent)",
+                              border: "1px solid var(--surface-border)",
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              textDecoration: "none",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <span>↗</span>
+                            <span>Live Store</span>
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteProduct(prod)}
+                            style={{
+                              padding: "8px 10px",
+                              borderRadius: "6px",
+                              backgroundColor: "transparent",
+                              color: "#ff4757",
+                              border: "1px solid rgba(255, 71, 87, 0.25)",
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════
               TAB 3: PHONE CASES CATALOG & UPLOAD MANAGER
              ═══════════════════════════════════════════════════ */}
           {activeTab === "catalog" && (
@@ -1424,181 +2021,586 @@ export default function AdminPage() {
                   ))}
                 </div>
 
-                {/* Search */}
-                <input
-                  type="text"
-                  placeholder="Search case name, franchise..."
-                  value={catalogSearch}
-                  onChange={(e) => setCatalogSearch(e.target.value)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "8px",
-                    backgroundColor: "var(--surface)",
-                    border: "1px solid var(--surface-border)",
-                    color: "var(--foreground)",
-                    fontSize: "0.85rem",
-                    minWidth: "260px",
-                    outline: "none",
-                  }}
-                />
+                {/* Search & View Mode Switcher */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <input
+                    type="text"
+                    placeholder="Search case name, franchise..."
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--surface-border)",
+                      color: "var(--foreground)",
+                      fontSize: "0.85rem",
+                      minWidth: "240px",
+                      outline: "none",
+                    }}
+                  />
+
+                  {/* View Mode Toggle */}
+                  <div style={{ display: "flex", backgroundColor: "var(--surface)", borderRadius: "8px", border: "1px solid var(--surface-border)", padding: "2px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setCatalogViewMode("3d-cards")}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        fontSize: "0.78rem",
+                        fontWeight: 700,
+                        backgroundColor: catalogViewMode === "3d-cards" ? "var(--main-accent)" : "transparent",
+                        color: catalogViewMode === "3d-cards" ? "#fff" : "var(--foreground-muted)",
+                        border: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                      title="View all covers as realistic 3D phone models"
+                    >
+                      <span>📱</span>
+                      <span>3D Models ({filteredCatalog.length})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCatalogViewMode("table")}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        fontSize: "0.78rem",
+                        fontWeight: 700,
+                        backgroundColor: catalogViewMode === "table" ? "var(--main-accent)" : "transparent",
+                        color: catalogViewMode === "table" ? "#fff" : "var(--foreground-muted)",
+                        border: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                      title="View as detailed data table"
+                    >
+                      <span>📋</span>
+                      <span>Table</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Cases Grid Table */}
-              <div
-                style={{
-                  backgroundColor: "var(--surface)",
-                  borderRadius: "14px",
-                  border: "1px solid var(--surface-border)",
-                  overflowX: "auto",
-                  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.03)",
-                }}
-              >
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.88rem" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid var(--surface-border)", color: "var(--foreground-muted)", fontSize: "0.75rem", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                      <th style={{ padding: "16px 20px" }}>CASE ARTWORK & TITLE</th>
-                      <th style={{ padding: "16px 20px" }}>THEME / FRANCHISE</th>
-                      <th style={{ padding: "16px 20px" }}>PRICE & MRP</th>
-                      <th style={{ padding: "16px 20px" }}>AVAILABLE FORMATS</th>
-                      <th style={{ padding: "16px 20px" }}>BADGE</th>
-                      <th style={{ padding: "16px 20px" }}>ACTIONS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              {/* 3D Chassis Selector Bar (when 3D Models View is Active) */}
+              {catalogViewMode === "3d-cards" && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "10px",
+                    marginBottom: "20px",
+                    padding: "10px 16px",
+                    backgroundColor: "var(--surface)",
+                    borderRadius: "10px",
+                    border: "1px solid var(--surface-border)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", fontWeight: 700, color: "var(--foreground)" }}>
+                    <span>⚡ 3D PHONE CHASSIS:</span>
+                    <span style={{ fontSize: "0.74rem", color: "var(--foreground-muted)" }}>All covers rendered in 3D on:</span>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {POPULAR_PREVIEW_MODELS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setCatalogChassis(m)}
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: "6px",
+                          fontSize: "0.74rem",
+                          fontWeight: 700,
+                          backgroundColor: catalogChassis === m ? "var(--main-accent)" : "var(--surface-raised)",
+                          color: catalogChassis === m ? "#fff" : "var(--foreground-muted)",
+                          border: "1px solid var(--surface-border)",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 1: 3D MODELS GRID VIEW */}
+              {catalogViewMode === "3d-cards" && (
+                <div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: "24px",
+                    }}
+                  >
                     {filteredCatalog.map((prod) => {
                       const isUserUploaded = isCustom(prod.id);
-
                       return (
-                        <tr
+                        <div
                           key={prod.id}
                           style={{
-                            borderBottom: "1px solid var(--surface-border)",
-                            transition: "background 0.15s ease",
+                            backgroundColor: "var(--surface)",
+                            borderRadius: "16px",
+                            border: "1px solid var(--surface-border)",
+                            overflow: "hidden",
+                            display: "flex",
+                            flexDirection: "column",
+                            boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+                            transition: "transform 0.2s ease, box-shadow 0.2s ease",
                           }}
                         >
-                          {/* Case Info */}
-                          <td style={{ padding: "14px 20px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                              <div
-                                style={{
-                                  position: "relative",
-                                  width: "44px",
-                                  height: "58px",
-                                  borderRadius: "6px",
-                                  overflow: "hidden",
-                                  flexShrink: 0,
-                                  backgroundColor: "#111",
-                                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                                }}
-                              >
-                                {prod.image && (
-                                  <Image src={prod.image} alt={prod.name} fill sizes="44px" style={{ objectFit: "cover" }} />
-                                )}
-                              </div>
-                              <div>
-                                <div style={{ fontWeight: 800, color: "var(--foreground)", fontSize: "0.92rem" }}>
-                                  {prod.name}
-                                </div>
-                                <div style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", marginTop: "2px" }}>
-                                  ID: {prod.id} {isUserUploaded && <span style={{ color: "#2ed573", fontWeight: 700 }}>• Admin Upload</span>}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
+                          {/* 3D Phone Case Showcase Stage */}
+                          <div
+                            style={{
+                              position: "relative",
+                              background: "radial-gradient(ellipse at 50% 30%, #1e2029 0%, #0a0b0d 100%)",
+                              padding: "28px 16px 20px",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              minHeight: "330px",
+                            }}
+                          >
+                            <DynamicPhoneCase
+                              artworkUrl={prod.image}
+                              phoneModel={catalogChassis}
+                              caseType="9H Tempered Glass Back"
+                              artworkFit={prod.artworkFit}
+                              artworkPosition={prod.artworkPosition}
+                              artworkScale={prod.artworkScale}
+                              artworkOffsetX={prod.artworkOffsetX}
+                              artworkOffsetY={prod.artworkOffsetY}
+                              width={160}
+                              height={320}
+                              interactive={true}
+                              allowClickToTilt={true}
+                              showModelBadge={false}
+                            />
 
-                          {/* Theme */}
-                          <td style={{ padding: "14px 20px" }}>
-                            <div style={{ fontWeight: 700, color: "var(--foreground)" }}>{prod.franchise}</div>
-                            <div style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", textTransform: "capitalize" }}>
-                              {prod.theme || "Anime"}
-                            </div>
-                          </td>
-
-                          {/* Price */}
-                          <td style={{ padding: "14px 20px" }}>
-                            <div style={{ fontWeight: 900, color: "var(--foreground)", fontSize: "1rem" }}>
-                              ₹{prod.price}
-                            </div>
-                            <div style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
-                              ₹{prod.originalPrice}
-                            </div>
-                          </td>
-
-                          {/* Formats */}
-                          <td style={{ padding: "14px 20px" }}>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", maxWidth: "260px" }}>
-                              {prod.formats.slice(0, 2).map((fmt) => (
+                            {/* Badges */}
+                            <div style={{ position: "absolute", top: "12px", right: "12px", display: "flex", flexDirection: "column", gap: "6px", alignItems: "flex-end" }}>
+                              {isUserUploaded && (
                                 <span
-                                  key={fmt}
                                   style={{
-                                    fontSize: "0.7rem",
-                                    padding: "2px 6px",
+                                    backgroundColor: "rgba(46, 213, 115, 0.2)",
+                                    color: "#2ed573",
+                                    border: "1px solid rgba(46, 213, 115, 0.4)",
                                     borderRadius: "4px",
-                                    backgroundColor: "var(--surface-raised)",
-                                    color: "var(--secondary-accent)",
-                                    fontWeight: 700,
+                                    padding: "2px 8px",
+                                    fontSize: "0.68rem",
+                                    fontWeight: 800,
                                   }}
                                 >
-                                  {fmt}
+                                  ADMIN UPLOAD
                                 </span>
-                              ))}
-                              {prod.formats.length > 2 && (
-                                <span style={{ fontSize: "0.7rem", color: "var(--foreground-muted)", alignSelf: "center" }}>
-                                  +{prod.formats.length - 2} more
+                              )}
+                              {prod.badge && (
+                                <span
+                                  style={{
+                                    backgroundColor: "var(--main-accent)",
+                                    color: "#fff",
+                                    borderRadius: "4px",
+                                    padding: "2px 8px",
+                                    fontSize: "0.68rem",
+                                    fontWeight: 800,
+                                  }}
+                                >
+                                  {prod.badge}
                                 </span>
                               )}
                             </div>
-                          </td>
 
-                          {/* Badge */}
-                          <td style={{ padding: "14px 20px" }}>
-                            {prod.badge ? (
-                              <span
+                            <span
+                              style={{
+                                position: "absolute",
+                                bottom: "8px",
+                                fontSize: "0.68rem",
+                                color: "rgba(255, 255, 255, 0.4)",
+                              }}
+                            >
+                              👆 Click phone to tilt 3D
+                            </span>
+                          </div>
+
+                          {/* Info & Action Controls */}
+                          <div
+                            style={{
+                              padding: "16px",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                              flex: 1,
+                              backgroundColor: "var(--surface)",
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                                {prod.franchise} • {prod.theme || "Anime"}
+                              </div>
+                              <div style={{ fontSize: "0.98rem", fontWeight: 900, color: "var(--foreground)", margin: "4px 0 6px" }}>
+                                {prod.name}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "12px" }}>
+                                <span style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--foreground)" }}>
+                                  ₹{prod.price}
+                                </span>
+                                <span style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
+                                  ₹{prod.originalPrice}
+                                </span>
+                              </div>
+
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "14px" }}>
+                                {prod.formats.slice(0, 2).map((fmt) => (
+                                  <span
+                                    key={fmt}
+                                    style={{
+                                      fontSize: "0.68rem",
+                                      padding: "2px 6px",
+                                      borderRadius: "4px",
+                                      backgroundColor: "var(--surface-raised)",
+                                      color: "var(--secondary-accent)",
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {fmt}
+                                  </span>
+                                ))}
+                                {prod.formats.length > 2 && (
+                                  <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)", alignSelf: "center" }}>
+                                    +{prod.formats.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
+                                gap: "8px",
+                                borderTop: "1px solid var(--surface-border)",
+                                paddingTop: "12px",
+                              }}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(prod)}
                                 style={{
-                                  fontSize: "0.7rem",
+                                  padding: "8px 10px",
+                                  borderRadius: "6px",
+                                  backgroundColor: "rgba(255, 170, 0, 0.15)",
+                                  color: "#ffa502",
+                                  border: "1px solid rgba(255, 170, 0, 0.3)",
+                                  fontSize: "0.8rem",
                                   fontWeight: 800,
-                                  padding: "3px 8px",
-                                  borderRadius: "4px",
-                                  backgroundColor: "rgba(230, 57, 70, 0.15)",
-                                  color: "var(--main-accent)",
-                                  textTransform: "uppercase",
-                                  letterSpacing: "0.05em",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                {prod.badge}
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>—</span>
-                            )}
-                          </td>
+                                <span>✏️</span>
+                                <span>Edit</span>
+                              </button>
 
-                          {/* Actions */}
-                          <td style={{ padding: "14px 20px" }}>
-                            <div style={{ display: "flex", gap: "6px" }}>
+                              <button
+                                type="button"
+                                onClick={() => setMockupInspectorProduct(prod)}
+                                style={{
+                                  padding: "8px 10px",
+                                  borderRadius: "6px",
+                                  backgroundColor: "var(--surface-raised)",
+                                  color: "var(--foreground)",
+                                  border: "1px solid var(--surface-border)",
+                                  fontSize: "0.8rem",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <span>📱</span>
+                                <span>3D Mockup</span>
+                              </button>
+
                               <Link
                                 href={`/product/${prod.id}`}
                                 target="_blank"
                                 style={{
-                                  padding: "6px 10px",
-                                  borderRadius: "4px",
+                                  padding: "8px 10px",
+                                  borderRadius: "6px",
                                   backgroundColor: "var(--surface-raised)",
                                   color: "var(--main-accent)",
-                                  textDecoration: "none",
+                                  border: "1px solid var(--surface-border)",
                                   fontSize: "0.78rem",
                                   fontWeight: 700,
-                                  border: "1px solid var(--surface-border)",
+                                  textDecoration: "none",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                View ↗
+                                <span>↗</span>
+                                <span>View</span>
                               </Link>
-                              {isUserUploaded && (
-                                <button
-                                  onClick={() => {
-                                    if (confirm(`Remove custom case "${prod.name}" from the store?`)) {
-                                      deleteProduct(prod.id);
-                                      showToast(`Removed "${prod.name}" from store.`);
-                                    }
+
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteProduct(prod)}
+                                style={{
+                                  padding: "8px 10px",
+                                  borderRadius: "6px",
+                                  backgroundColor: "rgba(255, 71, 87, 0.1)",
+                                  color: "#ff4757",
+                                  border: "1px solid rgba(255, 71, 87, 0.25)",
+                                  fontSize: "0.78rem",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <span>🗑️</span>
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {filteredCatalog.length === 0 && (
+                    <div style={{ textAlign: "center", padding: "64px 20px", color: "var(--foreground-muted)", backgroundColor: "var(--surface)", borderRadius: "14px" }}>
+                      <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🔍</div>
+                      <div style={{ fontWeight: 800, fontSize: "1.1rem" }}>No phone cases found matching &quot;{catalogSearch}&quot;</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* VIEW 2: CASES GRID TABLE VIEW */}
+              {catalogViewMode === "table" && (
+                <div
+                  style={{
+                    backgroundColor: "var(--surface)",
+                    borderRadius: "14px",
+                    border: "1px solid var(--surface-border)",
+                    overflowX: "auto",
+                    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.03)",
+                  }}
+                >
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.88rem" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--surface-border)", color: "var(--foreground-muted)", fontSize: "0.75rem", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                        <th style={{ padding: "16px 20px" }}>CASE ARTWORK & TITLE</th>
+                        <th style={{ padding: "16px 20px" }}>THEME / FRANCHISE</th>
+                        <th style={{ padding: "16px 20px" }}>PRICE & MRP</th>
+                        <th style={{ padding: "16px 20px" }}>AVAILABLE FORMATS</th>
+                        <th style={{ padding: "16px 20px" }}>BADGE</th>
+                        <th style={{ padding: "16px 20px" }}>ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCatalog.map((prod) => {
+                        const isUserUploaded = isCustom(prod.id);
+
+                        return (
+                          <tr
+                            key={prod.id}
+                            style={{
+                              borderBottom: "1px solid var(--surface-border)",
+                              transition: "background 0.15s ease",
+                            }}
+                          >
+                            {/* Case Info */}
+                            <td style={{ padding: "14px 20px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div
+                                  onClick={() => setMockupInspectorProduct(prod)}
+                                  title="Click to inspect on 3D phone mockup"
+                                  style={{
+                                    position: "relative",
+                                    width: "42px",
+                                    height: "80px",
+                                    flexShrink: 0,
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                   }}
+                                >
+                                  <DynamicPhoneCase
+                                    artworkUrl={prod.image}
+                                    phoneModel="iPhone 16 Pro Max"
+                                    caseType="9H Tempered Glass Back"
+                                    artworkFit={prod.artworkFit}
+                                    artworkPosition={prod.artworkPosition}
+                                    artworkScale={prod.artworkScale}
+                                    artworkOffsetX={prod.artworkOffsetX}
+                                    artworkOffsetY={prod.artworkOffsetY}
+                                    width={40}
+                                    height={76}
+                                    interactive={false}
+                                    showModelBadge={false}
+                                  />
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: 800, color: "var(--foreground)", fontSize: "0.92rem" }}>
+                                    {prod.name}
+                                  </div>
+                                  <div style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", marginTop: "2px" }}>
+                                    ID: {prod.id} {isUserUploaded && <span style={{ color: "#2ed573", fontWeight: 700 }}>• Admin Upload</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Theme */}
+                            <td style={{ padding: "14px 20px" }}>
+                              <div style={{ fontWeight: 700, color: "var(--foreground)" }}>{prod.franchise}</div>
+                              <div style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", textTransform: "capitalize" }}>
+                                {prod.theme || "Anime"}
+                              </div>
+                            </td>
+
+                            {/* Price */}
+                            <td style={{ padding: "14px 20px" }}>
+                              <div style={{ fontWeight: 900, color: "var(--foreground)", fontSize: "1rem" }}>
+                                ₹{prod.price}
+                              </div>
+                              <div style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
+                                ₹{prod.originalPrice}
+                              </div>
+                            </td>
+
+                            {/* Formats */}
+                            <td style={{ padding: "14px 20px" }}>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", maxWidth: "260px" }}>
+                                {prod.formats.slice(0, 2).map((fmt) => (
+                                  <span
+                                    key={fmt}
+                                    style={{
+                                      fontSize: "0.7rem",
+                                      padding: "2px 6px",
+                                      borderRadius: "4px",
+                                      backgroundColor: "var(--surface-raised)",
+                                      color: "var(--secondary-accent)",
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {fmt}
+                                  </span>
+                                ))}
+                                {prod.formats.length > 2 && (
+                                  <span style={{ fontSize: "0.7rem", color: "var(--foreground-muted)", alignSelf: "center" }}>
+                                    +{prod.formats.length - 2} more
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Badge */}
+                            <td style={{ padding: "14px 20px" }}>
+                              {prod.badge ? (
+                                <span
+                                  style={{
+                                    fontSize: "0.7rem",
+                                    fontWeight: 800,
+                                    padding: "3px 8px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "rgba(230, 57, 70, 0.15)",
+                                    color: "var(--main-accent)",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em",
+                                  }}
+                                >
+                                  {prod.badge}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>—</span>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td style={{ padding: "14px 20px" }}>
+                              <div style={{ display: "flex", gap: "6px" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditModal(prod)}
+                                  style={{
+                                    padding: "6px 10px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "rgba(255, 170, 0, 0.15)",
+                                    color: "#ffa502",
+                                    fontSize: "0.78rem",
+                                    fontWeight: 700,
+                                    border: "1px solid rgba(255, 170, 0, 0.3)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                  title="Edit this phone case details & artwork"
+                                >
+                                  ✏️ Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setMockupInspectorProduct(prod)}
+                                  style={{
+                                    padding: "6px 10px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "var(--surface-raised)",
+                                    color: "var(--foreground)",
+                                    fontSize: "0.78rem",
+                                    fontWeight: 700,
+                                    border: "1px solid var(--surface-border)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                  title="Inspect on 3D phone models"
+                                >
+                                  📱 Mockup
+                                </button>
+                                <Link
+                                  href={`/product/${prod.id}`}
+                                  target="_blank"
+                                  style={{
+                                    padding: "6px 10px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "var(--surface-raised)",
+                                    color: "var(--main-accent)",
+                                    textDecoration: "none",
+                                    fontSize: "0.78rem",
+                                    fontWeight: 700,
+                                    border: "1px solid var(--surface-border)",
+                                  }}
+                                >
+                                  View ↗
+                                </Link>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteProduct(prod)}
                                   style={{
                                     padding: "6px 10px",
                                     borderRadius: "4px",
@@ -1608,29 +2610,32 @@ export default function AdminPage() {
                                     fontSize: "0.78rem",
                                     fontWeight: 700,
                                     cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
                                   }}
-                                  title="Delete Custom Case"
+                                  title="Delete phone case from store"
                                 >
                                   🗑️ Delete
                                 </button>
-                              )}
-                            </div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {filteredCatalog.length === 0 && (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: "center", padding: "48px 20px", color: "var(--foreground-muted)" }}>
+                            <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
+                            <div style={{ fontWeight: 700 }}>No phone cases found matching &quot;{catalogSearch}&quot;</div>
                           </td>
                         </tr>
-                      );
-                    })}
-
-                    {filteredCatalog.length === 0 && (
-                      <tr>
-                        <td colSpan={6} style={{ textAlign: "center", padding: "48px 20px", color: "var(--foreground-muted)" }}>
-                          <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
-                          <div style={{ fontWeight: 700 }}>No phone cases found matching &quot;{catalogSearch}&quot;</div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -1710,6 +2715,20 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+        </>
+      )}
+
+      {/* ─── EXPANDED STUDIO OPERATIONS VIEWS ─── */}
+      {adminView === "mockups-manager" && <MockupsManagerView />}
+      {adminView === "studio-manager" && <StudioManagerView />}
+      {adminView === "phone-models" && <PhoneModelsManagerView />}
+      {adminView === "3d-models" && <ThreeDModelsManagerView />}
+      {adminView === "design-templates" && <DesignTemplateBuilderView />}
+      {adminView === "stickers" && <StickersAssetsManagerView />}
+      {adminView === "fonts" && <FontsManagerView />}
+      {adminView === "pricing" && <PricingManagerView />}
+      {adminView === "print-settings" && <PrintSettingsView />}
+      {adminView === "custom-orders" && <OrdersDesignsView />}
 
         </div>
       </div>
@@ -1737,7 +2756,7 @@ export default function AdminPage() {
               border: "1px solid var(--surface-border)",
               borderRadius: "16px",
               width: "100%",
-              maxWidth: "880px",
+              maxWidth: "1060px",
               maxHeight: "92vh",
               overflowY: "auto",
               boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
@@ -1974,15 +2993,18 @@ export default function AdminPage() {
                     </label>
 
                     {/* File Upload Box */}
+                    {/* Compact Sleek File Upload Box */}
                     <div
                       onClick={() => fileInputRef.current?.click()}
                       style={{
-                        border: "2px dashed var(--surface-border)",
-                        borderRadius: "10px",
-                        padding: "20px",
-                        textAlign: "center",
+                        border: "1.5px dashed var(--main-accent)",
+                        borderRadius: "8px",
+                        padding: "10px 14px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
                         cursor: "pointer",
-                        backgroundColor: "var(--background)",
+                        backgroundColor: "rgba(230, 57, 70, 0.04)",
                         transition: "all 0.15s ease",
                       }}
                     >
@@ -1993,17 +3015,22 @@ export default function AdminPage() {
                         onChange={handleImageFileUpload}
                         style={{ display: "none" }}
                       />
-                      <div style={{ fontSize: "1.8rem", marginBottom: "6px" }}>📁</div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--main-accent)" }}>
-                        Click to Upload Artwork File
+                      <span style={{ fontSize: "1.35rem" }}>📁</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--main-accent)" }}>
+                          Click to Upload Artwork File
+                        </div>
+                        <div style={{ fontSize: "0.68rem", color: "var(--foreground-muted)" }}>
+                          PNG, JPG, or WEBP from your device
+                        </div>
                       </div>
-                      <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", marginTop: "2px" }}>
-                        PNG, JPG, or WEBP from your computer
-                      </div>
+                      <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", border: "1px solid var(--surface-border)", borderRadius: "4px", padding: "2px 6px" }}>
+                        Browse
+                      </span>
                     </div>
 
                     {/* Direct Image URL input */}
-                    <div style={{ marginTop: "10px" }}>
+                    <div style={{ marginTop: "8px" }}>
                       <input
                         type="text"
                         placeholder="Or paste direct image URL..."
@@ -2011,7 +3038,7 @@ export default function AdminPage() {
                         onChange={(e) => setNewCase({ ...newCase, image: e.target.value })}
                         style={{
                           width: "100%",
-                          padding: "8px 12px",
+                          padding: "7px 10px",
                           backgroundColor: "var(--background)",
                           border: "1px solid var(--surface-border)",
                           borderRadius: "6px",
@@ -2023,8 +3050,8 @@ export default function AdminPage() {
                     </div>
 
                     {/* Quick Presets */}
-                    <div style={{ marginTop: "10px" }}>
-                      <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
+                    <div style={{ marginTop: "8px" }}>
+                      <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
                         Or Choose from High-Res Presets:
                       </span>
                       <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
@@ -2043,8 +3070,8 @@ export default function AdminPage() {
                             }}
                             style={{
                               position: "relative",
-                              width: "48px",
-                              height: "64px",
+                              width: "44px",
+                              height: "58px",
                               borderRadius: "6px",
                               overflow: "hidden",
                               cursor: "pointer",
@@ -2053,75 +3080,484 @@ export default function AdminPage() {
                             }}
                             title={preset.title}
                           >
-                            <Image src={preset.image} alt={preset.title} fill sizes="48px" style={{ objectFit: "cover" }} />
+                            <Image src={preset.image} alt={preset.title} fill sizes="44px" style={{ objectFit: "cover" }} unoptimized />
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  {/* Live Card Preview Box */}
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
-                      Live Store Card Preview
-                    </label>
+                  {/* Automatic Live 3D Phone Mockup Container */}
+                  <div
+                    style={{
+                      backgroundColor: "var(--background)",
+                      border: "1px solid var(--surface-border)",
+                      borderRadius: "14px",
+                      padding: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Header with Live Sync Status */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "0.74rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--foreground)" }}>
+                          AUTOMATIC 3D PHONE MOCKUP
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            backgroundColor: "rgba(46, 213, 115, 0.15)",
+                            color: "#2ed573",
+                            fontSize: "0.68rem",
+                            fontWeight: 800,
+                          }}
+                        >
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#2ed573" }} />
+                          LIVE AUTO-WRAP
+                        </span>
+                      </div>
+
+                      {/* 3D Tilt & MagSafe Quick Toggles */}
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          type="button"
+                          onClick={() => setModalPreviewTilt((prev) => (prev === "front" ? "left" : "front"))}
+                          style={{
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            backgroundColor: modalPreviewTilt !== "front" ? "var(--main-accent)" : "var(--surface-raised)",
+                            color: modalPreviewTilt !== "front" ? "#fff" : "var(--foreground-muted)",
+                            border: "1px solid var(--surface-border)",
+                            cursor: "pointer",
+                          }}
+                          title="Toggle 3D Angle tilt"
+                        >
+                          {modalPreviewTilt === "front" ? "📐 3D Angle" : "📱 Front"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setModalPreviewShowMagSafe((prev) => !prev)}
+                          style={{
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            backgroundColor: modalPreviewShowMagSafe ? "var(--main-accent)" : "var(--surface-raised)",
+                            color: modalPreviewShowMagSafe ? "#fff" : "var(--foreground-muted)",
+                            border: "1px solid var(--surface-border)",
+                            cursor: "pointer",
+                          }}
+                          title="Toggle MagSafe ring overlay"
+                        >
+                          ⚡ MagSafe
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Phone Model Selector Pills */}
+                    <div>
+                      <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", marginBottom: "6px" }}>
+                        Select Phone Chassis:
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {POPULAR_PREVIEW_MODELS.map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setModalPreviewModel(m)}
+                            style={{
+                              padding: "4px 10px",
+                              borderRadius: "6px",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              backgroundColor: modalPreviewModel === m ? "var(--main-accent)" : "var(--surface-raised)",
+                              color: modalPreviewModel === m ? "#fff" : "var(--foreground-muted)",
+                              border: "1px solid var(--surface-border)",
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Case Finish Selector */}
+                    <div>
+                      <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", marginBottom: "6px" }}>
+                        Case Finish / Overlay:
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {["9H Tempered Glass Back", "Ultra Impact MagSafe", "Tough Armor Dual-Layer"].map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => setModalPreviewCaseType(c)}
+                            style={{
+                              padding: "4px 9px",
+                              borderRadius: "6px",
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              backgroundColor: modalPreviewCaseType === c ? "var(--secondary-accent)" : "var(--surface-raised)",
+                              color: modalPreviewCaseType === c ? "#fff" : "var(--foreground-muted)",
+                              border: "1px solid var(--surface-border)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* The 3D Phone Stage */}
                     <div
                       style={{
-                        backgroundColor: "var(--background)",
-                        border: "1px solid var(--surface-border)",
+                        position: "relative",
+                        minHeight: "390px",
                         borderRadius: "12px",
-                        padding: "16px",
+                        background: "radial-gradient(ellipse at 50% 30%, #1e2029 0%, #0a0b0d 100%)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
                         display: "flex",
-                        gap: "16px",
                         alignItems: "center",
+                        justifyContent: "center",
+                        padding: "24px 16px",
+                        overflow: "hidden",
+                        boxShadow: "inset 0 2px 20px rgba(0, 0, 0, 0.6)",
                       }}
                     >
-                      <div
-                        style={{
-                          position: "relative",
-                          width: "72px",
-                          height: "96px",
-                          borderRadius: "8px",
-                          overflow: "hidden",
-                          flexShrink: 0,
-                          backgroundColor: "#111",
-                        }}
-                      >
-                        {newCase.image && (
-                          <Image src={newCase.image} alt="Preview" fill sizes="72px" style={{ objectFit: "cover" }} />
-                        )}
-                      </div>
+                      <DynamicPhoneCase
+                        artworkUrl={newCase.image || CASE_PRESETS[0].image}
+                        phoneModel={modalPreviewModel}
+                        caseType={modalPreviewCaseType}
+                        showMagSafe={modalPreviewShowMagSafe}
+                        tiltSide={modalPreviewTilt}
+                        onTiltChange={setModalPreviewTilt}
+                        allowClickToTilt={true}
+                        artworkFit={modalArtworkFit}
+                        artworkPosition={modalArtworkPosition}
+                        artworkScale={modalArtworkScale}
+                        artworkOffsetX={modalArtworkOffsetX}
+                        artworkOffsetY={modalArtworkOffsetY}
+                        width={190}
+                        height={380}
+                      />
+                    </div>
+
+                    {/* ── PHOTO RESIZE & POSITIONING CONTROLS ── */}
+                    <div
+                      style={{
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--surface-border)",
+                        borderRadius: "10px",
+                        padding: "12px 14px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                      }}
+                    >
+                      {/* Row 1: Scale / Size slider with - and + and Reset */}
                       <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.74rem", fontWeight: 800, color: "var(--foreground)" }}>
+                            <span>🔍 PHOTO SIZE / ZOOM</span>
+                            <span
+                              style={{
+                                padding: "2px 7px",
+                                borderRadius: "4px",
+                                backgroundColor: "rgba(230, 57, 70, 0.15)",
+                                color: "var(--main-accent)",
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                              }}
+                            >
+                              {Math.round(modalArtworkScale * 100)}%
+                            </span>
+                          </div>
+
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            <button
+                              type="button"
+                              onClick={() => setModalArtworkScale((prev) => Math.max(0.4, Number((prev - 0.1).toFixed(2))))}
+                              style={{
+                                padding: "3px 8px",
+                                borderRadius: "4px",
+                                backgroundColor: "var(--surface-raised)",
+                                color: "var(--foreground)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                              }}
+                              title="Zoom Out (-10%)"
+                            >
+                              − Zoom Out
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setModalArtworkScale((prev) => Math.min(2.5, Number((prev + 0.1).toFixed(2))))}
+                              style={{
+                                padding: "3px 8px",
+                                borderRadius: "4px",
+                                backgroundColor: "var(--surface-raised)",
+                                color: "var(--foreground)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                              }}
+                              title="Zoom In (+10%)"
+                            >
+                              + Zoom In
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setModalArtworkScale(1);
+                                setModalArtworkOffsetX(0);
+                                setModalArtworkOffsetY(0);
+                              }}
+                              style={{
+                                padding: "3px 8px",
+                                borderRadius: "4px",
+                                backgroundColor: "transparent",
+                                color: "var(--foreground-muted)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                              }}
+                              title="Reset Size & Position"
+                            >
+                              ↺ Reset
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Range Slider */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)" }}>50%</span>
+                          <input
+                            type="range"
+                            min={0.5}
+                            max={2.2}
+                            step={0.02}
+                            value={modalArtworkScale}
+                            onChange={(e) => setModalArtworkScale(parseFloat(e.target.value))}
+                            style={{
+                              flex: 1,
+                              accentColor: "var(--main-accent)",
+                              cursor: "pointer",
+                            }}
+                          />
+                          <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)" }}>220%</span>
+                        </div>
+
+                        {/* Quick Zoom Presets */}
+                        <div style={{ display: "flex", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
+                          {[
+                            { label: "Fit 65%", scale: 0.65 },
+                            { label: "80%", scale: 0.8 },
+                            { label: "100% (Normal)", scale: 1 },
+                            { label: "120%", scale: 1.2 },
+                            { label: "140%", scale: 1.4 },
+                            { label: "180%", scale: 1.8 },
+                          ].map((p) => (
+                            <button
+                              key={p.label}
+                              type="button"
+                              onClick={() => setModalArtworkScale(p.scale)}
+                              style={{
+                                padding: "2px 7px",
+                                borderRadius: "4px",
+                                fontSize: "0.68rem",
+                                fontWeight: 700,
+                                backgroundColor: Math.abs(modalArtworkScale - p.scale) < 0.03 ? "var(--main-accent)" : "var(--surface-raised)",
+                                color: Math.abs(modalArtworkScale - p.scale) < 0.03 ? "#fff" : "var(--foreground-muted)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Row 2: Fit Mode & Nudge Position */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", paddingTop: "8px", borderTop: "1px solid var(--surface-border)" }}>
+                        {/* Fit Mode */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--foreground-muted)" }}>Fit:</span>
+                          <button
+                            type="button"
+                            onClick={() => setModalArtworkFit("cover")}
+                            style={{
+                              padding: "3px 8px",
+                              borderRadius: "4px",
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              backgroundColor: modalArtworkFit === "cover" ? "var(--surface-raised)" : "transparent",
+                              color: modalArtworkFit === "cover" ? "var(--foreground)" : "var(--foreground-muted)",
+                              border: modalArtworkFit === "cover" ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            🖼️ Fill Cover
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setModalArtworkFit("contain")}
+                            style={{
+                              padding: "3px 8px",
+                              borderRadius: "4px",
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              backgroundColor: modalArtworkFit === "contain" ? "var(--surface-raised)" : "transparent",
+                              color: modalArtworkFit === "contain" ? "var(--foreground)" : "var(--foreground-muted)",
+                              border: modalArtworkFit === "contain" ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            🔍 Contain
+                          </button>
+                        </div>
+
+                        {/* Pan / Nudge Alignment (Up/Down & Left/Right) */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--foreground-muted)" }}>Position:</span>
+                          <button
+                            type="button"
+                            onClick={() => setModalArtworkOffsetY((prev) => Math.max(-40, prev - 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Up"
+                          >
+                            ⬆
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setModalArtworkOffsetY((prev) => Math.min(40, prev + 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Down"
+                          >
+                            ⬇
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setModalArtworkOffsetX((prev) => Math.max(-40, prev - 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Left"
+                          >
+                            ⬅
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setModalArtworkOffsetX((prev) => Math.min(40, prev + 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Right"
+                          >
+                            ➡
+                          </button>
+                          {(modalArtworkOffsetX !== 0 || modalArtworkOffsetY !== 0) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setModalArtworkOffsetX(0);
+                                setModalArtworkOffsetY(0);
+                              }}
+                              style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "transparent", color: "var(--main-accent)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.68rem" }}
+                              title="Center Photo"
+                            >
+                              Center
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)", textAlign: "center", fontStyle: "italic" }}>
+                      💡 Click phone to toggle 3D tilt. Artwork automatically wraps phone edges & camera cutouts.
+                    </div>
+                  </div>
+
+                  {/* Live Store Card Representation */}
+                  <div
+                    style={{
+                      backgroundColor: "var(--background)",
+                      border: "1px solid var(--surface-border)",
+                      borderRadius: "12px",
+                      padding: "12px 16px",
+                      display: "flex",
+                      gap: "14px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "48px",
+                        height: "72px",
+                        borderRadius: "10px",
+                        overflow: "hidden",
+                        flexShrink: 0,
+                        backgroundColor: "#111",
+                        border: "2px solid #333",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+                      }}
+                    >
+                      {newCase.image && (
+                        <Image
+                          src={newCase.image}
+                          alt="Preview"
+                          fill
+                          sizes="48px"
+                          style={{ objectFit: modalArtworkFit, objectPosition: modalArtworkPosition }}
+                          unoptimized
+                        />
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         {newCase.badge && (
                           <span
                             style={{
                               display: "inline-block",
-                              fontSize: "0.65rem",
+                              fontSize: "0.62rem",
                               fontWeight: 800,
                               padding: "2px 6px",
                               borderRadius: "4px",
                               backgroundColor: "var(--main-accent)",
                               color: "#fff",
-                              marginBottom: "4px",
                             }}
                           >
                             {newCase.badge}
                           </span>
                         )}
-                        <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--foreground)" }}>
-                          {newCase.name || "Untitled Phone Case"}
-                        </div>
-                        <div style={{ fontSize: "0.78rem", color: "var(--foreground-muted)" }}>
-                          {newCase.franchise} • {newCase.formats[0]}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "6px" }}>
-                          <span style={{ fontWeight: 900, fontSize: "1.05rem", color: "var(--foreground)" }}>
-                            ₹{newCase.price}
-                          </span>
-                          <span style={{ fontSize: "0.78rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
-                            ₹{newCase.originalPrice}
-                          </span>
-                        </div>
+                        <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)" }}>
+                          Store Card Representation
+                        </span>
+                      </div>
+                      <div style={{ fontWeight: 800, fontSize: "0.92rem", color: "var(--foreground)", marginTop: "2px" }}>
+                        {newCase.name || "Untitled Phone Case"}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "2px" }}>
+                        <span style={{ fontWeight: 900, fontSize: "1rem", color: "var(--foreground)" }}>
+                          ₹{newCase.price}
+                        </span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
+                          ₹{newCase.originalPrice}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -2163,6 +3599,823 @@ export default function AdminPage() {
                 >
                   🚀 Publish Phone Case to Store
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════
+          MODAL: EDIT PHONE CASE DETAILS & ARTWORK
+         ═══════════════════════════════════════════════════ */}
+      {editingProduct && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--surface-border)",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "1060px",
+              maxHeight: "92vh",
+              overflowY: "auto",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.7)",
+              padding: "28px",
+              position: "relative",
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <span style={{ fontSize: "0.72rem", color: "#ffa502", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  ADMIN CASE EDITOR
+                </span>
+                <h2 style={{ fontSize: "1.45rem", fontWeight: 900, margin: "4px 0 0", color: "var(--foreground)" }}>
+                  Edit Case: {editingProduct.name}
+                </h2>
+                <div style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", marginTop: "2px" }}>
+                  ID: {editingProduct.id} {isCustom(editingProduct.id) ? "• Custom Admin Upload" : "• Catalog Product"}
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingProduct(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.5rem",
+                  cursor: "pointer",
+                  color: "var(--foreground-muted)",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "24px" }}>
+                {/* Left Column: Form Fields */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground)" }}>
+                      Case Title / Design Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Gojo Satoru — Limitless Void"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        backgroundColor: "var(--background)",
+                        border: "1px solid var(--surface-border)",
+                        borderRadius: "8px",
+                        color: "var(--foreground)",
+                        fontSize: "0.9rem",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
+                        Category / Theme
+                      </label>
+                      <select
+                        value={editForm.theme}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditForm({
+                            ...editForm,
+                            theme: val,
+                            franchise: editForm.franchise || (val.charAt(0).toUpperCase() + val.slice(1)),
+                          });
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          backgroundColor: "var(--background)",
+                          border: "1px solid var(--surface-border)",
+                          borderRadius: "8px",
+                          color: "var(--foreground)",
+                          fontSize: "0.85rem",
+                          outline: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <option value="anime">Anime</option>
+                        <option value="gaming">Gaming</option>
+                        <option value="streetwear">Streetwear</option>
+                        <option value="dark-gothic">Dark / Gothic</option>
+                        <option value="cars">Cars / JDM</option>
+                        <option value="cute-kawaii">Cute / Kawaii</option>
+                        <option value="aesthetic">Aesthetic</option>
+                        <option value="sports">Sports</option>
+                        <option value="music">Music</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
+                        Franchise / Universe
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Jujutsu Kaisen"
+                        value={editForm.franchise}
+                        onChange={(e) => setEditForm({ ...editForm, franchise: e.target.value })}
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          backgroundColor: "var(--background)",
+                          border: "1px solid var(--surface-border)",
+                          borderRadius: "8px",
+                          color: "var(--foreground)",
+                          fontSize: "0.85rem",
+                          outline: "none",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
+                        Selling Price (₹) *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        value={editForm.price}
+                        onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          backgroundColor: "var(--background)",
+                          border: "1px solid var(--surface-border)",
+                          borderRadius: "8px",
+                          color: "var(--foreground)",
+                          fontSize: "0.85rem",
+                          outline: "none",
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
+                        Original / MRP (₹)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editForm.originalPrice}
+                        onChange={(e) => setEditForm({ ...editForm, originalPrice: Number(e.target.value) })}
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          backgroundColor: "var(--background)",
+                          border: "1px solid var(--surface-border)",
+                          borderRadius: "8px",
+                          color: "var(--foreground)",
+                          fontSize: "0.85rem",
+                          outline: "none",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
+                      Badge Tag
+                    </label>
+                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                      {["NEW DROP", "HOT", "BESTSELLER", "LIMITED", "EXCLUSIVE"].map((b) => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setEditForm({ ...editForm, badge: editForm.badge === b ? "" : b })}
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "4px",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            backgroundColor: editForm.badge === b ? "var(--main-accent)" : "var(--surface-raised)",
+                            color: editForm.badge === b ? "#fff" : "var(--foreground-muted)",
+                            border: "1px solid var(--surface-border)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
+                      Supported Case Formats
+                    </label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {CASE_TYPES.map((c) => {
+                        const checked = editForm.formats.includes(c.name);
+                        return (
+                          <label
+                            key={c.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              fontSize: "0.82rem",
+                              cursor: "pointer",
+                              color: checked ? "var(--foreground)" : "var(--foreground-muted)",
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleEditFormat(c.name)}
+                              style={{ accentColor: "var(--main-accent)" }}
+                            />
+                            <span>{c.name} ({c.priceText})</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground-muted)" }}>
+                      Product Description
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        backgroundColor: "var(--background)",
+                        border: "1px solid var(--surface-border)",
+                        borderRadius: "8px",
+                        color: "var(--foreground)",
+                        fontSize: "0.85rem",
+                        outline: "none",
+                        resize: "vertical",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column: Replace Artwork & Live 3D Phone Mockup */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "6px", color: "var(--foreground)" }}>
+                      Replace Artwork Image (Optional)
+                    </label>
+
+                    {/* File Upload Box */}
+                    <div
+                      onClick={() => editFileInputRef.current?.click()}
+                      style={{
+                        border: "1.5px dashed #ffa502",
+                        borderRadius: "8px",
+                        padding: "10px 14px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        cursor: "pointer",
+                        backgroundColor: "rgba(255, 170, 0, 0.05)",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <input
+                        ref={editFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditImageUpload}
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "1.35rem" }}>📁</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#ffa502" }}>
+                          Click to Replace Artwork File
+                        </div>
+                        <div style={{ fontSize: "0.68rem", color: "var(--foreground-muted)" }}>
+                          Upload new PNG, JPG, or WEBP to update this case
+                        </div>
+                      </div>
+                      <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", border: "1px solid var(--surface-border)", borderRadius: "4px", padding: "2px 6px" }}>
+                        Browse
+                      </span>
+                    </div>
+
+                    {/* Direct Image URL input */}
+                    <div style={{ marginTop: "8px" }}>
+                      <input
+                        type="text"
+                        placeholder="Or paste replacement image URL..."
+                        value={editForm.image}
+                        onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                        style={{
+                          width: "100%",
+                          padding: "7px 10px",
+                          backgroundColor: "var(--background)",
+                          border: "1px solid var(--surface-border)",
+                          borderRadius: "6px",
+                          color: "var(--foreground)",
+                          fontSize: "0.78rem",
+                          outline: "none",
+                        }}
+                      />
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div style={{ marginTop: "8px" }}>
+                      <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
+                        Or Swap with High-Res Preset:
+                      </span>
+                      <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+                        {CASE_PRESETS.map((preset) => (
+                          <div
+                            key={preset.title}
+                            onClick={() => {
+                              setEditForm((prev) => ({
+                                ...prev,
+                                image: preset.image,
+                              }));
+                            }}
+                            style={{
+                              position: "relative",
+                              width: "44px",
+                              height: "58px",
+                              borderRadius: "6px",
+                              overflow: "hidden",
+                              cursor: "pointer",
+                              border: editForm.image === preset.image ? "2px solid #ffa502" : "1px solid var(--surface-border)",
+                              flexShrink: 0,
+                            }}
+                            title={preset.title}
+                          >
+                            <Image src={preset.image} alt={preset.title} fill sizes="44px" style={{ objectFit: "cover" }} unoptimized />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Automatic Live 3D Phone Mockup Container */}
+                  <div
+                    style={{
+                      backgroundColor: "var(--background)",
+                      border: "1px solid var(--surface-border)",
+                      borderRadius: "14px",
+                      padding: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Header with Live Sync Status */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "0.74rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--foreground)" }}>
+                          LIVE 3D PHONE MOCKUP
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            backgroundColor: "rgba(46, 213, 115, 0.15)",
+                            color: "#2ed573",
+                            fontSize: "0.68rem",
+                            fontWeight: 800,
+                          }}
+                        >
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#2ed573" }} />
+                          LIVE PREVIEW
+                        </span>
+                      </div>
+
+                      {/* 3D Tilt & MagSafe Quick Toggles */}
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          type="button"
+                          onClick={() => setModalPreviewTilt((prev) => (prev === "front" ? "left" : "front"))}
+                          style={{
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            backgroundColor: modalPreviewTilt !== "front" ? "var(--main-accent)" : "var(--surface-raised)",
+                            color: modalPreviewTilt !== "front" ? "#fff" : "var(--foreground-muted)",
+                            border: "1px solid var(--surface-border)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {modalPreviewTilt === "front" ? "📐 3D Angle" : "📱 Front"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setModalPreviewShowMagSafe((prev) => !prev)}
+                          style={{
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            backgroundColor: modalPreviewShowMagSafe ? "var(--main-accent)" : "var(--surface-raised)",
+                            color: modalPreviewShowMagSafe ? "#fff" : "var(--foreground-muted)",
+                            border: "1px solid var(--surface-border)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          ⚡ MagSafe
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Phone Model Selector Pills */}
+                    <div>
+                      <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", marginBottom: "6px" }}>
+                        Device Chassis:
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {POPULAR_PREVIEW_MODELS.map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setModalPreviewModel(m)}
+                            style={{
+                              padding: "4px 10px",
+                              borderRadius: "6px",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              backgroundColor: modalPreviewModel === m ? "var(--main-accent)" : "var(--surface-raised)",
+                              color: modalPreviewModel === m ? "#fff" : "var(--foreground-muted)",
+                              border: "1px solid var(--surface-border)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* The 3D Phone Stage */}
+                    <div
+                      style={{
+                        position: "relative",
+                        minHeight: "360px",
+                        borderRadius: "12px",
+                        background: "radial-gradient(ellipse at 50% 30%, #1e2029 0%, #0a0b0d 100%)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "24px 16px",
+                        overflow: "hidden",
+                        boxShadow: "inset 0 2px 20px rgba(0, 0, 0, 0.6)",
+                      }}
+                    >
+                      <DynamicPhoneCase
+                        artworkUrl={editForm.image || editingProduct.image}
+                        phoneModel={modalPreviewModel}
+                        caseType={modalPreviewCaseType}
+                        showMagSafe={modalPreviewShowMagSafe}
+                        tiltSide={modalPreviewTilt}
+                        onTiltChange={setModalPreviewTilt}
+                        allowClickToTilt={true}
+                        artworkFit={editArtworkFit}
+                        artworkPosition={editArtworkPosition}
+                        artworkScale={editArtworkScale}
+                        artworkOffsetX={editArtworkOffsetX}
+                        artworkOffsetY={editArtworkOffsetY}
+                        width={180}
+                        height={360}
+                      />
+                    </div>
+
+                    {/* ── PHOTO RESIZE & POSITIONING CONTROLS FOR EDIT MODAL ── */}
+                    <div
+                      style={{
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--surface-border)",
+                        borderRadius: "10px",
+                        padding: "12px 14px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                      }}
+                    >
+                      {/* Row 1: Scale / Size slider with - and + and Reset */}
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.74rem", fontWeight: 800, color: "var(--foreground)" }}>
+                            <span>🔍 PHOTO SIZE / ZOOM</span>
+                            <span
+                              style={{
+                                padding: "2px 7px",
+                                borderRadius: "4px",
+                                backgroundColor: "rgba(255, 170, 0, 0.15)",
+                                color: "#ffa502",
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                              }}
+                            >
+                              {Math.round(editArtworkScale * 100)}%
+                            </span>
+                          </div>
+
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            <button
+                              type="button"
+                              onClick={() => setEditArtworkScale((prev) => Math.max(0.4, Number((prev - 0.1).toFixed(2))))}
+                              style={{
+                                padding: "3px 8px",
+                                borderRadius: "4px",
+                                backgroundColor: "var(--surface-raised)",
+                                color: "var(--foreground)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                              }}
+                              title="Zoom Out (-10%)"
+                            >
+                              − Zoom Out
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditArtworkScale((prev) => Math.min(2.5, Number((prev + 0.1).toFixed(2))))}
+                              style={{
+                                padding: "3px 8px",
+                                borderRadius: "4px",
+                                backgroundColor: "var(--surface-raised)",
+                                color: "var(--foreground)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                              }}
+                              title="Zoom In (+10%)"
+                            >
+                              + Zoom In
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditArtworkScale(1);
+                                setEditArtworkOffsetX(0);
+                                setEditArtworkOffsetY(0);
+                              }}
+                              style={{
+                                padding: "3px 8px",
+                                borderRadius: "4px",
+                                backgroundColor: "transparent",
+                                color: "var(--foreground-muted)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                              }}
+                              title="Reset Size & Position"
+                            >
+                              ↺ Reset
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Range Slider */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)" }}>50%</span>
+                          <input
+                            type="range"
+                            min={0.5}
+                            max={2.2}
+                            step={0.02}
+                            value={editArtworkScale}
+                            onChange={(e) => setEditArtworkScale(parseFloat(e.target.value))}
+                            style={{
+                              flex: 1,
+                              accentColor: "#ffa502",
+                              cursor: "pointer",
+                            }}
+                          />
+                          <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)" }}>220%</span>
+                        </div>
+
+                        {/* Quick Zoom Presets */}
+                        <div style={{ display: "flex", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
+                          {[
+                            { label: "Fit 65%", scale: 0.65 },
+                            { label: "80%", scale: 0.8 },
+                            { label: "100% (Normal)", scale: 1 },
+                            { label: "120%", scale: 1.2 },
+                            { label: "140%", scale: 1.4 },
+                            { label: "180%", scale: 1.8 },
+                          ].map((p) => (
+                            <button
+                              key={p.label}
+                              type="button"
+                              onClick={() => setEditArtworkScale(p.scale)}
+                              style={{
+                                padding: "2px 7px",
+                                borderRadius: "4px",
+                                fontSize: "0.68rem",
+                                fontWeight: 700,
+                                backgroundColor: Math.abs(editArtworkScale - p.scale) < 0.03 ? "#ffa502" : "var(--surface-raised)",
+                                color: Math.abs(editArtworkScale - p.scale) < 0.03 ? "#000" : "var(--foreground-muted)",
+                                border: "1px solid var(--surface-border)",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Row 2: Fit Mode & Nudge Position */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", paddingTop: "8px", borderTop: "1px solid var(--surface-border)" }}>
+                        {/* Fit Mode */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--foreground-muted)" }}>Fit:</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditArtworkFit("cover")}
+                            style={{
+                              padding: "3px 8px",
+                              borderRadius: "4px",
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              backgroundColor: editArtworkFit === "cover" ? "var(--surface-raised)" : "transparent",
+                              color: editArtworkFit === "cover" ? "var(--foreground)" : "var(--foreground-muted)",
+                              border: editArtworkFit === "cover" ? "1px solid #ffa502" : "1px solid var(--surface-border)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            🖼️ Fill Cover
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditArtworkFit("contain")}
+                            style={{
+                              padding: "3px 8px",
+                              borderRadius: "4px",
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              backgroundColor: editArtworkFit === "contain" ? "var(--surface-raised)" : "transparent",
+                              color: editArtworkFit === "contain" ? "var(--foreground)" : "var(--foreground-muted)",
+                              border: editArtworkFit === "contain" ? "1px solid #ffa502" : "1px solid var(--surface-border)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            🔍 Contain
+                          </button>
+                        </div>
+
+                        {/* Pan / Nudge Alignment (Up/Down & Left/Right) */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--foreground-muted)" }}>Position:</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditArtworkOffsetY((prev) => Math.max(-40, prev - 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Up"
+                          >
+                            ⬆
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditArtworkOffsetY((prev) => Math.min(40, prev + 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Down"
+                          >
+                            ⬇
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditArtworkOffsetX((prev) => Math.max(-40, prev - 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Left"
+                          >
+                            ⬅
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditArtworkOffsetX((prev) => Math.min(40, prev + 5))}
+                            style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.72rem" }}
+                            title="Nudge Photo Right"
+                          >
+                            ➡
+                          </button>
+                          {(editArtworkOffsetX !== 0 || editArtworkOffsetY !== 0) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditArtworkOffsetX(0);
+                                setEditArtworkOffsetY(0);
+                              }}
+                              style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "transparent", color: "#ffa502", border: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.68rem" }}
+                              title="Center Photo"
+                            >
+                              Center
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginTop: "24px",
+                  paddingTop: "18px",
+                  borderTop: "1px solid var(--surface-border)",
+                }}
+              >
+                <div>
+                  {isCustom(editingProduct.id) && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteProduct(editingProduct)}
+                      style={{
+                        padding: "10px 18px",
+                        borderRadius: "8px",
+                        backgroundColor: "transparent",
+                        color: "#ff4757",
+                        border: "1px solid rgba(255, 71, 87, 0.3)",
+                        fontSize: "0.85rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      🗑️ Delete Case
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingProduct(null)}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "8px",
+                      backgroundColor: "transparent",
+                      color: "var(--foreground-muted)",
+                      border: "1px solid var(--surface-border)",
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: "10px 26px",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--main-accent)",
+                      color: "#ffffff",
+                      border: "none",
+                      fontSize: "0.9rem",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      boxShadow: "0 4px 14px rgba(230, 57, 70, 0.3)",
+                    }}
+                  >
+                    💾 Save Changes to Store
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -2318,6 +4571,236 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════
+          MODAL 3: 3D PHONE MOCKUP INSPECTOR (CATALOG PREVIEW)
+         ═══════════════════════════════════════════════════ */}
+      {mockupInspectorProduct && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--surface-border)",
+              borderRadius: "18px",
+              width: "100%",
+              maxWidth: "860px",
+              maxHeight: "92vh",
+              overflowY: "auto",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.7)",
+              padding: "28px",
+              position: "relative",
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <span style={{ fontSize: "0.72rem", color: "var(--main-accent)", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  STORE PRODUCT 3D INSPECTOR
+                </span>
+                <h2 style={{ fontSize: "1.45rem", fontWeight: 900, margin: "4px 0 0", color: "var(--foreground)" }}>
+                  {mockupInspectorProduct.name}
+                </h2>
+                <div style={{ fontSize: "0.82rem", color: "var(--foreground-muted)", marginTop: "2px" }}>
+                  {mockupInspectorProduct.franchise} • ₹{mockupInspectorProduct.price} • ID: {mockupInspectorProduct.id}
+                </div>
+              </div>
+              <button
+                onClick={() => setMockupInspectorProduct(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.5rem",
+                  cursor: "pointer",
+                  color: "var(--foreground-muted)",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", alignItems: "center" }}>
+              {/* Left Column: Phone Showcase */}
+              <div
+                style={{
+                  borderRadius: "14px",
+                  background: "radial-gradient(ellipse at 50% 30%, #1e2029 0%, #0a0b0d 100%)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "28px 16px 20px",
+                  boxShadow: "inset 0 2px 24px rgba(0,0,0,0.6)",
+                }}
+              >
+                <DynamicPhoneCase
+                  artworkUrl={mockupInspectorProduct.image}
+                  phoneModel={inspectorModel}
+                  caseType={inspectorCaseType}
+                  showMagSafe={inspectorMagSafe}
+                  tiltSide={inspectorTilt}
+                  onTiltChange={setInspectorTilt}
+                  allowClickToTilt={true}
+                  artworkFit={mockupInspectorProduct.artworkFit}
+                  artworkPosition={mockupInspectorProduct.artworkPosition}
+                  artworkScale={mockupInspectorProduct.artworkScale}
+                  artworkOffsetX={mockupInspectorProduct.artworkOffsetX}
+                  artworkOffsetY={mockupInspectorProduct.artworkOffsetY}
+                  width={210}
+                  height={420}
+                />
+                <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", marginTop: "16px" }}>
+                  👆 Click case to toggle 3D tilt
+                </div>
+              </div>
+
+              {/* Right Column: Controls & Device Selector */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "8px", color: "var(--foreground-muted)" }}>
+                    Inspect On Device Chassis:
+                  </label>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {POPULAR_PREVIEW_MODELS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setInspectorModel(m)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          fontSize: "0.78rem",
+                          fontWeight: 700,
+                          backgroundColor: inspectorModel === m ? "var(--main-accent)" : "var(--background)",
+                          color: inspectorModel === m ? "#fff" : "var(--foreground)",
+                          border: "1px solid var(--surface-border)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "8px", color: "var(--foreground-muted)" }}>
+                    Case Finish & Materials:
+                  </label>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {["9H Tempered Glass Back", "Ultra Impact MagSafe", "Tough Armor Dual-Layer"].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setInspectorCaseType(c)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          backgroundColor: inspectorCaseType === c ? "var(--secondary-accent)" : "var(--background)",
+                          color: inspectorCaseType === c ? "#fff" : "var(--foreground)",
+                          border: "1px solid var(--surface-border)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => setInspectorTilt((prev) => (prev === "front" ? "left" : "front"))}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      backgroundColor: inspectorTilt !== "front" ? "var(--main-accent)" : "var(--background)",
+                      color: inspectorTilt !== "front" ? "#fff" : "var(--foreground)",
+                      border: "1px solid var(--surface-border)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {inspectorTilt === "front" ? "📐 3D Angle Tilt" : "📱 Front Face View"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setInspectorMagSafe((prev) => !prev)}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      backgroundColor: inspectorMagSafe ? "var(--main-accent)" : "var(--background)",
+                      color: inspectorMagSafe ? "#fff" : "var(--foreground)",
+                      border: "1px solid var(--surface-border)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ⚡ {inspectorMagSafe ? "MagSafe ON" : "MagSafe OFF"}
+                  </button>
+                </div>
+
+                <div style={{ borderTop: "1px solid var(--surface-border)", paddingTop: "16px", marginTop: "8px" }}>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <Link
+                      href={`/product/${mockupInspectorProduct.id}`}
+                      target="_blank"
+                      style={{
+                        padding: "10px 18px",
+                        borderRadius: "8px",
+                        backgroundColor: "var(--main-accent)",
+                        color: "#fff",
+                        textDecoration: "none",
+                        fontSize: "0.85rem",
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      Open Live Product Page ↗
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setMockupInspectorProduct(null)}
+                      style={{
+                        padding: "10px 18px",
+                        borderRadius: "8px",
+                        backgroundColor: "transparent",
+                        color: "var(--foreground-muted)",
+                        border: "1px solid var(--surface-border)",
+                        fontSize: "0.85rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Admin Toast */}
       {adminToast && (
         <div
@@ -2341,6 +4824,87 @@ export default function AdminPage() {
         >
           <span>🔥</span>
           <span>{adminToast}</span>
+        </div>
+      )}
+
+      {/* ── Inline Delete Confirm Modal ───────────────────────────────────── */}
+      {confirmDeleteProduct && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setConfirmDeleteProduct(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "#18181b",
+              border: "1px solid rgba(255,71,87,0.35)",
+              borderRadius: "16px",
+              padding: "32px 28px",
+              maxWidth: "420px",
+              width: "90%",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.8)",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🗑️</div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "8px" }}>
+              Delete Phone Case?
+            </div>
+            <div style={{ fontSize: "0.88rem", color: "#a1a1aa", marginBottom: "24px", lineHeight: 1.5 }}>
+              Are you sure you want to remove{" "}
+              <strong style={{ color: "#fff" }}>&quot;{confirmDeleteProduct.name}&quot;</strong> from the store?
+              This action cannot be undone.
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteProduct(null)}
+                style={{
+                  padding: "10px 22px",
+                  borderRadius: "8px",
+                  backgroundColor: "transparent",
+                  color: "#a1a1aa",
+                  border: "1px solid #3f3f46",
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteProduct(confirmDeleteProduct.id);
+                  if (editingProduct?.id === confirmDeleteProduct.id) setEditingProduct(null);
+                  showToast(`Deleted "${confirmDeleteProduct.name}".`);
+                  setConfirmDeleteProduct(null);
+                }}
+                style={{
+                  padding: "10px 22px",
+                  borderRadius: "8px",
+                  backgroundColor: "#ff4757",
+                  color: "#fff",
+                  border: "none",
+                  fontSize: "0.9rem",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(255,71,87,0.45)",
+                }}
+              >
+                🗑️ Confirm Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

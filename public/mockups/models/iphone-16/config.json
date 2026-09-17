@@ -1,0 +1,38 @@
+{
+  "slug": "iphone-16",
+  "name": "iPhone 16",
+  "brand": "Apple",
+  "archetype": "iphone-dual-vert",
+  "full_scene": {
+    "canvas_width": 2510,
+    "canvas_height": 1674,
+    "scene_url": "/mockups/models/iphone-16/scene.png",
+    "overlay_url": "/mockups/models/iphone-16/overlay.png",
+    "printable_x": 1053,
+    "printable_y": 615,
+    "printable_width": 147,
+    "printable_height": 707,
+    "printable_radius": 36
+  },
+  "case_focus": {
+    "canvas_width": 226,
+    "canvas_height": 786,
+    "base_url": "/mockups/models/iphone-16/case_base.png",
+    "overlay_url": "/mockups/models/iphone-16/case_overlay.png",
+    "printable_x": 40,
+    "printable_y": 40,
+    "printable_width": 147,
+    "printable_height": 707,
+    "printable_radius": 38,
+    "camera_x": 52,
+    "camera_y": 52,
+    "camera_width": 32,
+    "camera_height": 61,
+    "camera_radius": 18
+  },
+  "print_specs": {
+    "width_mm": 71.5,
+    "height_mm": 147.5,
+    "dpi": 300
+  }
+}

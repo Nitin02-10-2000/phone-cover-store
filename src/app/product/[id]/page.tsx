@@ -183,6 +183,11 @@ export default function ProductDetailPage({ params }: PageProps) {
                   phoneModel={selectedModel}
                   caseType={selectedCaseType}
                   lensProtectorAddon={lensProtectorAddon}
+                  artworkFit={product.artworkFit}
+                  artworkPosition={product.artworkPosition}
+                  artworkScale={product.artworkScale}
+                  artworkOffsetX={product.artworkOffsetX}
+                  artworkOffsetY={product.artworkOffsetY}
                   width={270}
                   height={500}
                   interactive={true}
