@@ -51,12 +51,15 @@ export async function PUT(
   }
 }
 
+import { deleteLocalCustomProduct } from "../route";
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    deleteLocalCustomProduct(id);
     try {
       await prisma.product.delete({
         where: { id },

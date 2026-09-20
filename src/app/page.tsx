@@ -12,22 +12,31 @@ import FaqSection from "@/components/FaqSection";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
-import { PRODUCTS, CASE_ANATOMY, PHONE_MODELS } from "@/data/products";
+import { CASE_ANATOMY, PHONE_MODELS } from "@/data/products";
+import { useAllProducts } from "@/lib/productsStorage";
 import Link from "next/link";
 
 export default function Home() {
+  const { products } = useAllProducts();
   const [selectedUniverse, setSelectedUniverse] = useState("all");
   const [activeCaseType, setActiveCaseType] = useState<string>("all");
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((item) => {
+    const list = products.filter((item) => {
       const matchUniverse =
-        selectedUniverse === "all" || item.franchise === selectedUniverse;
+        selectedUniverse === "all" ||
+        item.franchise?.toLowerCase() === selectedUniverse.toLowerCase() ||
+        item.theme?.toLowerCase() === selectedUniverse.toLowerCase() ||
+        (selectedUniverse === "anime" && (!item.theme || item.theme === "anime"));
       const matchType =
-        activeCaseType === "all" || item.formats.some((f) => f.toLowerCase().includes(activeCaseType.toLowerCase()));
+        activeCaseType === "all" ||
+        item.formats.some((f) => f.toLowerCase().includes(activeCaseType.toLowerCase()));
       return matchUniverse && matchType;
     });
-  }, [selectedUniverse, activeCaseType]);
+    const customCases = list.filter((p) => p.isCustom);
+    const standardCases = list.filter((p) => !p.isCustom);
+    return [...customCases, ...standardCases];
+  }, [products, selectedUniverse, activeCaseType]);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>

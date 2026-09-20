@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PRODUCTS, PHONE_MODELS } from "@/data/products";
+import { Product, PRODUCTS, PHONE_MODELS } from "@/data/products";
+import { useAllProducts } from "@/lib/productsStorage";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
 
@@ -13,10 +14,7 @@ const getMockupOverlayForModel = (modelName?: string) => {
   if (lower.includes("ultra")) return "/mockups/glass_case_samsung_ultra.png";
   if (lower.includes("oneplus")) return "/mockups/glass_case_oneplus.png";
   if (lower.includes("iphone 16") && !lower.includes("pro")) return "/mockups/glass_case_iphone_16.png";
-  if (
-    (lower.includes("iphone 15") || lower.includes("iphone 14") || lower.includes("iphone 13") || lower.includes("iphone 12")) &&
-    !lower.includes("pro")
-  ) {
+  if (lower.includes("iphone 15") || lower.includes("iphone 14") || lower.includes("iphone 13")) {
     return "/mockups/glass_case_iphone_dual.png";
   }
   return "/mockups/glass_case_iphone_pro.png";
@@ -25,27 +23,70 @@ const getMockupOverlayForModel = (modelName?: string) => {
 export default function HeroBanner() {
   const { addToCart } = useCart();
   const { selectedModel: globalModel, setDevice } = useDevice();
+  const { products, isCustom } = useAllProducts();
   const [activeCardIndex, setActiveCardIndex] = useState(0); // Active front phone case
   const [selectedBrandIndex, setSelectedBrandIndex] = useState(0);
   const [selectedModel, setSelectedModel] = useState(() => globalModel || PHONE_MODELS[0].models[0]);
   const [isPaused, setIsPaused] = useState(false);
+  const [heroFeaturedId, setHeroFeaturedId] = useState<string | null>(null);
+
 
   const currentMockupOverlay = getMockupOverlayForModel(selectedModel);
 
-  const showcaseProducts = [
-    { product: PRODUCTS[0] }, // Cover 1: Cyber Anime
-    { product: PRODUCTS[1] }, // Cover 2: Streetwear Anime Boy
-    { product: PRODUCTS[2] }, // Cover 3: Miya Moonlight Archer
-    { product: PRODUCTS[3] }, // Cover 4: Dark Ninja Crimson Eye
-  ];
+  // Sync featured hero cover ID from storage & events
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setHeroFeaturedId(localStorage.getItem("casetadka_hero_featured_id"));
 
-  // Auto-cycle through covers every 3.5 seconds
+      const handleUpdate = () => {
+        setHeroFeaturedId(localStorage.getItem("casetadka_hero_featured_id"));
+      };
+      window.addEventListener("casetadka_products_changed", handleUpdate);
+      window.addEventListener("storage", handleUpdate);
+      return () => {
+        window.removeEventListener("casetadka_products_changed", handleUpdate);
+        window.removeEventListener("storage", handleUpdate);
+      };
+    }
+  }, []);
+
+  const showcaseProducts = React.useMemo(() => {
+    const isCustomCase = (p: Product) =>
+      Boolean(p.isCustom) || isCustom(p.id) || (p.id.startsWith("case-") && p.id !== "case-tadka-signature-edition");
+
+    const customList = products.filter(isCustomCase);
+    const catalogList = products.filter((p) => !isCustomCase(p));
+    let ordered = [...customList, ...catalogList];
+
+    // If heroFeaturedId is set, place that product at index 0 (front-and-center)
+    if (heroFeaturedId) {
+      const match = ordered.find((p) => p.id === heroFeaturedId);
+      if (match) {
+        ordered = [match, ...ordered.filter((p) => p.id !== heroFeaturedId)];
+      }
+    }
+
+    // Strictly only 4 covers visible in hero showcase
+    const list = ordered.slice(0, 4);
+    return list.length > 0 ? list.map((p) => ({ product: p })) : PRODUCTS.slice(0, 4).map((p) => ({ product: p }));
+  }, [products, isCustom, heroFeaturedId]);
+
+  // Keep active index in bounds if list changes
+  useEffect(() => {
+    if (activeCardIndex >= showcaseProducts.length) {
+      setActiveCardIndex(0);
+    }
+  }, [showcaseProducts.length, activeCardIndex]);
+
+
+
+  // Auto-cycle through covers every 4 seconds when not paused
   useEffect(() => {
     if (isPaused) return;
 
     const interval = setInterval(() => {
       setActiveCardIndex((prev) => (prev + 1) % showcaseProducts.length);
-    }, 3500);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [isPaused, showcaseProducts.length]);
@@ -59,7 +100,7 @@ export default function HeroBanner() {
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
-        padding: "5.5rem 0 4.5rem",
+        padding: "3.5rem 0 3rem",
         borderBottom: "1px solid var(--surface-border)",
       }}
     >
@@ -397,7 +438,7 @@ export default function HeroBanner() {
             onMouseLeave={() => setIsPaused(false)}
             style={{
               position: "relative",
-              minHeight: "530px",
+              minHeight: "480px",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -406,7 +447,7 @@ export default function HeroBanner() {
               overflow: "visible",
               width: "100%",
               maxWidth: "100%",
-              paddingTop: "20px",
+              paddingTop: "0px",
             }}
           >
             {/* 3D Stage Container */}
@@ -414,7 +455,7 @@ export default function HeroBanner() {
               style={{
                 position: "relative",
                 width: "100%",
-                height: "490px",
+                height: "430px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -427,7 +468,7 @@ export default function HeroBanner() {
                 const total = showcaseProducts.length;
                 let diff = (index - activeCardIndex + total) % total;
                 if (diff > total / 2) {
-                  diff -= total; // values: [-1, 0, 1, 2]
+                  diff -= total;
                 }
 
                 const isCenter = diff === 0;
@@ -440,44 +481,64 @@ export default function HeroBanner() {
                 let scale = 1;
                 let zIndex = 10;
                 let opacity = 1;
+                let pointerEvents: "auto" | "none" = "auto";
 
                 if (isCenter) {
                   translateX = 0;
                   translateY = -8;
-                  translateZ = 60;
+                  translateZ = 70;
                   rotateY = -3;
                   rotateZ = -1;
-                  scale = 1.03;
+                  scale = 1.04;
                   zIndex = 50;
                   opacity = 1;
                 } else if (diff === 1) {
-                  translateX = 100;
+                  translateX = 110;
                   translateY = -2;
-                  translateZ = 15;
+                  translateZ = 20;
                   rotateY = -18;
                   rotateZ = 10;
                   scale = 0.94;
                   zIndex = 35;
                   opacity = 0.92;
                 } else if (diff === -1) {
-                  translateX = -100;
+                  translateX = -110;
                   translateY = -2;
-                  translateZ = 15;
+                  translateZ = 20;
                   rotateY = 18;
                   rotateZ = -10;
                   scale = 0.94;
                   zIndex = 35;
                   opacity = 0.92;
-                } else {
-                  // diff === 2
-                  translateX = 175;
-                  translateY = 14;
-                  translateZ = -35;
-                  rotateY = -25;
+                } else if (diff === 2) {
+                  translateX = 185;
+                  translateY = 12;
+                  translateZ = -30;
+                  rotateY = -26;
                   rotateZ = 18;
-                  scale = 0.86;
+                  scale = 0.85;
                   zIndex = 20;
-                  opacity = 0.8;
+                  opacity = 0.75;
+                } else if (diff === -2) {
+                  translateX = -185;
+                  translateY = 12;
+                  translateZ = -30;
+                  rotateY = 26;
+                  rotateZ = -18;
+                  scale = 0.85;
+                  zIndex = 20;
+                  opacity = 0.75;
+                } else {
+                  // Far background items
+                  translateX = diff > 0 ? 220 : -220;
+                  translateY = 20;
+                  translateZ = -80;
+                  rotateY = diff > 0 ? -35 : 35;
+                  rotateZ = diff > 0 ? 22 : -22;
+                  scale = 0.75;
+                  zIndex = 5;
+                  opacity = 0;
+                  pointerEvents = "none";
                 }
 
                 return (
@@ -489,13 +550,11 @@ export default function HeroBanner() {
                     title={`Click to bring ${item.product.name} to front`}
                     style={{
                       position: "absolute",
-                      width: isCenter ? "220px" : "186px",
-                      height: isCenter ? "450px" : "380px",
-                      borderRadius: isCenter ? "44px" : "38px",
-                      backgroundColor: "#0d0d10",
-                      boxShadow: isCenter
-                        ? "0 32px 70px -10px rgba(0, 0, 0, 0.95), 0 0 35px var(--tadka-red-glow)"
-                        : "0 22px 48px -10px rgba(0, 0, 0, 0.85)",
+                      width: isCenter ? "206px" : "176px",
+                      height: isCenter ? "422px" : "360px",
+                      filter: isCenter
+                        ? "drop-shadow(0 28px 55px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 35px var(--tadka-red-glow))"
+                        : "drop-shadow(0 18px 38px rgba(0, 0, 0, 0.85))",
                       transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
                       zIndex,
                       opacity,
@@ -503,17 +562,21 @@ export default function HeroBanner() {
                       cursor: "pointer",
                       display: "flex",
                       flexDirection: "column",
+                      pointerEvents,
                     }}
                   >
-                    {/* Outer Bumper Frame & Inner Artwork Container */}
+                    {/* Inner Recessed Artwork Print Bed - strictly inset inside the bumper so edges never extend out */}
                     <div
                       style={{
-                        position: "relative",
-                        width: "100%",
-                        height: "100%",
-                        borderRadius: isCenter ? "44px" : "38px",
+                        position: "absolute",
+                        top: "2.2%",
+                        bottom: "3.2%",
+                        left: "4.2%",
+                        right: "4.2%",
+                        borderRadius: isCenter ? "38px" : "32px",
                         overflow: "hidden",
-                        backgroundColor: "#111114",
+                        background: "radial-gradient(ellipse at center, #1c1d26 0%, #0b0c10 100%)",
+                        zIndex: 2,
                       }}
                     >
                       {/* High Resolution Case Artwork */}
@@ -525,6 +588,7 @@ export default function HeroBanner() {
                         style={{
                           objectFit: item.product.artworkFit || "cover",
                           objectPosition: item.product.artworkPosition || "center",
+                          transform: `scale(${Math.max(1.02, item.product.artworkScale || 1)})`,
                         }}
                         priority={isCenter}
                       />
@@ -535,68 +599,83 @@ export default function HeroBanner() {
                           position: "absolute",
                           inset: 0,
                           background:
-                            "linear-gradient(130deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.1) 22%, transparent 44%, rgba(255,255,255,0.03) 68%, rgba(255,255,255,0.16) 100%)",
+                            "linear-gradient(130deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.08) 22%, transparent 44%, rgba(255,255,255,0.02) 68%, rgba(255,255,255,0.14) 100%)",
                           pointerEvents: "none",
                           zIndex: 4,
-                          borderRadius: isCenter ? "44px" : "38px",
                         }}
                       />
 
-                      {/* Authentic Transparent PSD Glass Case Frame & Camera Module Overlay */}
+                      {/* Subtle Inward Edge Shade to blend under the bumper rim */}
                       <div
                         style={{
                           position: "absolute",
                           inset: 0,
-                          zIndex: 10,
+                          boxShadow: `
+                            inset 0 3px 6px rgba(0, 0, 0, 0.9),
+                            inset 0 -3px 6px rgba(0, 0, 0, 0.8),
+                            inset 3px 0 6px rgba(0, 0, 0, 0.8),
+                            inset -3px 0 6px rgba(0, 0, 0, 0.8)
+                          `,
                           pointerEvents: "none",
+                          zIndex: 5,
+                        }}
+                      />
+                    </div>
+
+                    {/* Authentic Photorealistic Glass Case Frame & Camera Module Overlay (On Top of Artwork) */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 10,
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <Image
+                        src={currentMockupOverlay}
+                        alt="Photorealistic Glass Case Frame"
+                        fill
+                        sizes="(max-width: 768px) 194px, 228px"
+                        style={{ objectFit: "fill" }}
+                        priority={isCenter}
+                      />
+                    </div>
+
+                    {/* MagSafe Magnetic Array Visual on Active Phone Case */}
+                    {isCenter && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "43%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          width: "92px",
+                          height: "92px",
+                          borderRadius: "50%",
+                          border: "2px solid rgba(255, 255, 255, 0.45)",
+                          boxShadow: "0 0 14px rgba(255,255,255,0.2), inset 0 0 8px rgba(255,255,255,0.12)",
+                          pointerEvents: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0.65,
+                          zIndex: 12,
                         }}
                       >
-                        <Image
-                          src={currentMockupOverlay}
-                          alt="Photorealistic Glass Case Frame"
-                          fill
-                          sizes="(max-width: 768px) 194px, 228px"
-                          style={{ objectFit: "fill" }}
-                          priority={isCenter}
-                        />
-                      </div>
-
-                      {/* MagSafe Magnetic Array Visual on Active Phone Case */}
-                      {isCenter && (
+                        {/* Magnetic Alignment Bar */}
                         <div
                           style={{
+                            width: "5px",
+                            height: "22px",
+                            backgroundColor: "rgba(255, 255, 255, 0.55)",
                             position: "absolute",
-                            top: "43%",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                            width: "92px",
-                            height: "92px",
-                            borderRadius: "50%",
-                            border: "2px solid rgba(255, 255, 255, 0.45)",
-                            boxShadow: "0 0 14px rgba(255,255,255,0.2), inset 0 0 8px rgba(255,255,255,0.12)",
-                            pointerEvents: "none",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity: 0.65,
-                            zIndex: 12,
+                            bottom: "-27px",
+                            borderRadius: "3px",
+                            boxShadow: "0 0 8px rgba(255,255,255,0.3)",
                           }}
-                        >
-                          {/* Magnetic Alignment Bar */}
-                          <div
-                            style={{
-                              width: "5px",
-                              height: "22px",
-                              backgroundColor: "rgba(255, 255, 255, 0.55)",
-                              position: "absolute",
-                              bottom: "-27px",
-                              borderRadius: "3px",
-                              boxShadow: "0 0 8px rgba(255,255,255,0.3)",
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -609,7 +688,7 @@ export default function HeroBanner() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "8px",
-                marginTop: "18px",
+                marginTop: "16px",
                 zIndex: 10,
               }}
             >

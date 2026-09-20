@@ -251,6 +251,31 @@ export default function AdminPage() {
     return products.filter((p) => isCustom(p.id)).length;
   }, [products, isCustom]);
 
+  // Featured Top Hero Cover State
+  const [heroFeaturedId, setHeroFeaturedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setHeroFeaturedId(localStorage.getItem("casetadka_hero_featured_id"));
+      const onUpdate = () => setHeroFeaturedId(localStorage.getItem("casetadka_hero_featured_id"));
+      window.addEventListener("casetadka_products_changed", onUpdate);
+      window.addEventListener("storage", onUpdate);
+      return () => {
+        window.removeEventListener("casetadka_products_changed", onUpdate);
+        window.removeEventListener("storage", onUpdate);
+      };
+    }
+  }, []);
+
+  const handleSetHeroFeatured = (prod: Product) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("casetadka_hero_featured_id", prod.id);
+      setHeroFeaturedId(prod.id);
+      window.dispatchEvent(new Event("casetadka_products_changed"));
+      showToast(`"${prod.name}" is now featured on the top Hero banner!`);
+    }
+  };
+
   // Derive Unique Customer Database from orders
   const customerDatabase = useMemo(() => {
     const map = new Map<string, {
@@ -415,6 +440,7 @@ export default function AdminPage() {
       artworkScale: modalArtworkScale,
       artworkOffsetX: modalArtworkOffsetX,
       artworkOffsetY: modalArtworkOffsetY,
+      isCustom: true,
     };
 
     addProduct(createdProduct);
@@ -1692,152 +1718,243 @@ export default function AdminPage() {
                   </button>
                 </div>
               ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                    gap: "20px",
-                  }}
-                >
-                  {myUploadedCases.map((prod) => (
-                    <div
-                      key={prod.id}
+                <div>
+                  {/* Hero Showcase Feature Control Banner */}
+                  <div
+                    style={{
+                      padding: "14px 18px",
+                      backgroundColor: "rgba(255, 42, 58, 0.08)",
+                      border: "1px solid rgba(255, 42, 58, 0.25)",
+                      borderRadius: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: "12px",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "1.4rem" }}>🌶️</span>
+                      <div>
+                        <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--foreground)" }}>
+                          Top Hero Showcase Control
+                        </div>
+                        <div style={{ fontSize: "0.78rem", color: "var(--foreground-muted)" }}>
+                          Choose which cover appears #1 front-and-center on your homepage banner. Click <strong style={{ color: "var(--main-accent)" }}>"Set as Top Hero Cover"</strong> on any case.
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      href="/"
+                      target="_blank"
                       style={{
-                        backgroundColor: "var(--surface)",
-                        border: "1px solid var(--surface-border)",
-                        borderRadius: "14px",
-                        overflow: "hidden",
-                        display: "flex",
-                        flexDirection: "column",
-                        boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
-                        transition: "all 0.2s ease",
+                        padding: "7px 14px",
+                        borderRadius: "8px",
+                        backgroundColor: "var(--main-accent)",
+                        color: "#fff",
+                        fontSize: "0.8rem",
+                        fontWeight: 800,
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
                       }}
                     >
-                      {/* Phone Case Stage */}
+                      <span>Preview Live Home Banner</span>
+                      <span>↗</span>
+                    </Link>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: "20px",
+                    }}
+                  >
+                    {myUploadedCases.map((prod) => (
                       <div
-                        onClick={() => handleOpenEditModal(prod)}
-                        title="Click to edit case"
+                        key={prod.id}
                         style={{
-                          position: "relative",
-                          background: "radial-gradient(ellipse at 50% 30%, #1e2029 0%, #0a0b0d 100%)",
-                          padding: "24px 16px 18px",
+                          backgroundColor: "var(--surface)",
+                          border: "1px solid var(--surface-border)",
+                          borderRadius: "14px",
+                          overflow: "hidden",
                           display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          cursor: "pointer",
-                          minHeight: "260px",
+                          flexDirection: "column",
+                          boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
+                          transition: "all 0.2s ease",
                         }}
                       >
-                        <DynamicPhoneCase
-                          artworkUrl={prod.image}
-                          phoneModel="iPhone 16 Pro Max"
-                          caseType="9H Tempered Glass Back"
-                          artworkFit={prod.artworkFit}
-                          artworkPosition={prod.artworkPosition}
-                          artworkScale={prod.artworkScale}
-                          artworkOffsetX={prod.artworkOffsetX}
-                          artworkOffsetY={prod.artworkOffsetY}
-                          width={130}
-                          height={260}
-                          interactive={true}
-                          allowClickToTilt={true}
-                          showModelBadge={false}
-                        />
-                        <span
+                        {/* Phone Case Stage */}
+                        <div
+                          onClick={() => handleOpenEditModal(prod)}
+                          title="Click to edit case"
                           style={{
-                            position: "absolute",
-                            top: "10px",
-                            right: "10px",
-                            backgroundColor: "rgba(46, 213, 115, 0.2)",
-                            color: "#2ed573",
-                            border: "1px solid rgba(46, 213, 115, 0.4)",
-                            borderRadius: "4px",
-                            padding: "2px 8px",
-                            fontSize: "0.68rem",
-                            fontWeight: 800,
+                            position: "relative",
+                            background: "radial-gradient(ellipse at 50% 30%, #1e2029 0%, #0a0b0d 100%)",
+                            padding: "24px 16px 18px",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            cursor: "pointer",
+                            minHeight: "260px",
                           }}
                         >
-                          ADMIN UPLOAD
-                        </span>
-                        {prod.badge && (
+                          <DynamicPhoneCase
+                            artworkUrl={prod.image}
+                            phoneModel="iPhone 16 Pro Max"
+                            caseType="9H Tempered Glass Back"
+                            artworkFit={prod.artworkFit}
+                            artworkPosition={prod.artworkPosition}
+                            artworkScale={prod.artworkScale}
+                            artworkOffsetX={prod.artworkOffsetX}
+                            artworkOffsetY={prod.artworkOffsetY}
+                            width={130}
+                            height={260}
+                            interactive={true}
+                            allowClickToTilt={true}
+                            showModelBadge={false}
+                          />
                           <span
                             style={{
                               position: "absolute",
                               top: "10px",
-                              left: "10px",
-                              backgroundColor: "var(--main-accent)",
-                              color: "#fff",
+                              right: "10px",
+                              backgroundColor: "rgba(46, 213, 115, 0.2)",
+                              color: "#2ed573",
+                              border: "1px solid rgba(46, 213, 115, 0.4)",
                               borderRadius: "4px",
                               padding: "2px 8px",
                               fontSize: "0.68rem",
                               fontWeight: 800,
                             }}
                           >
-                            {prod.badge}
+                            ADMIN UPLOAD
                           </span>
-                        )}
-                      </div>
-
-                      {/* Info & Editing Controls */}
-                      <div
-                        style={{
-                          padding: "16px",
-                          flex: 1,
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "space-between",
-                          backgroundColor: "var(--surface)",
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", textTransform: "uppercase", fontWeight: 700 }}>
-                            {prod.franchise} • {prod.theme || "Anime"}
-                          </div>
-                          <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--foreground)", margin: "4px 0 8px" }}>
-                            {prod.name}
-                          </div>
-                          <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "10px" }}>
-                            <span style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--foreground)" }}>
-                              ₹{prod.price}
+                          {heroFeaturedId === prod.id && (
+                            <span
+                              style={{
+                                position: "absolute",
+                                bottom: "10px",
+                                left: "10px",
+                                backgroundColor: "rgba(255, 42, 58, 0.95)",
+                                color: "#fff",
+                                borderRadius: "4px",
+                                padding: "2px 8px",
+                                fontSize: "0.68rem",
+                                fontWeight: 900,
+                                boxShadow: "0 2px 8px rgba(255, 42, 58, 0.5)",
+                                zIndex: 5,
+                              }}
+                            >
+                              ⭐ TOP HERO COVER
                             </span>
-                            <span style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
-                              ₹{prod.originalPrice}
+                          )}
+                          {prod.badge && (
+                            <span
+                              style={{
+                                position: "absolute",
+                                top: "10px",
+                                left: "10px",
+                                backgroundColor: "var(--main-accent)",
+                                color: "#fff",
+                                borderRadius: "4px",
+                                padding: "2px 8px",
+                                fontSize: "0.68rem",
+                                fontWeight: 800,
+                              }}
+                            >
+                              {prod.badge}
                             </span>
-                          </div>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "14px" }}>
-                            {prod.formats.slice(0, 2).map((fmt) => (
-                              <span
-                                key={fmt}
-                                style={{
-                                  fontSize: "0.68rem",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  backgroundColor: "var(--surface-raised)",
-                                  color: "var(--secondary-accent)",
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {fmt}
-                              </span>
-                            ))}
-                            {prod.formats.length > 2 && (
-                              <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)", alignSelf: "center" }}>
-                                +{prod.formats.length - 2}
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Info & Editing Controls */}
                         <div
                           style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "8px",
-                            borderTop: "1px solid var(--surface-border)",
-                            paddingTop: "12px",
+                            padding: "16px",
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            backgroundColor: "var(--surface)",
                           }}
                         >
+                          <div>
+                            <div style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                              {prod.franchise} • {prod.theme || "Anime"}
+                            </div>
+                            <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--foreground)", margin: "4px 0 8px" }}>
+                              {prod.name}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "10px" }}>
+                              <span style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--foreground)" }}>
+                                ₹{prod.price}
+                              </span>
+                              <span style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", textDecoration: "line-through" }}>
+                                ₹{prod.originalPrice}
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "14px" }}>
+                              {prod.formats.slice(0, 2).map((fmt) => (
+                                <span
+                                  key={fmt}
+                                  style={{
+                                    fontSize: "0.68rem",
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "var(--surface-raised)",
+                                    color: "var(--secondary-accent)",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {fmt}
+                                </span>
+                              ))}
+                              {prod.formats.length > 2 && (
+                                <span style={{ fontSize: "0.68rem", color: "var(--foreground-muted)", alignSelf: "center" }}>
+                                  +{prod.formats.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 1fr",
+                              gap: "8px",
+                              borderTop: "1px solid var(--surface-border)",
+                              paddingTop: "12px",
+                            }}
+                          >
+                            {/* Feature on Top Hero Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleSetHeroFeatured(prod)}
+                              style={{
+                                gridColumn: "1 / -1",
+                                padding: "9px 12px",
+                                borderRadius: "6px",
+                                backgroundColor: heroFeaturedId === prod.id ? "rgba(46, 213, 115, 0.18)" : "rgba(255, 42, 58, 0.12)",
+                                color: heroFeaturedId === prod.id ? "#2ed573" : "var(--main-accent)",
+                                border: heroFeaturedId === prod.id ? "1px solid rgba(46, 213, 115, 0.4)" : "1px solid rgba(255, 42, 58, 0.35)",
+                                fontSize: "0.82rem",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px",
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <span>{heroFeaturedId === prod.id ? "🌟" : "⭐"}</span>
+                              <span>{heroFeaturedId === prod.id ? "Featured on Top Hero (Active)" : "Set as Top Hero Cover"}</span>
+                            </button>
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(prod)}
@@ -1930,9 +2047,10 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        )}
 
           {/* ═══════════════════════════════════════════════════
               TAB 3: PHONE CASES CATALOG & UPLOAD MANAGER
@@ -2293,6 +2411,30 @@ export default function AdminPage() {
                                 paddingTop: "12px",
                               }}
                             >
+                              {/* Feature on Top Hero Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleSetHeroFeatured(prod)}
+                                style={{
+                                  gridColumn: "1 / -1",
+                                  padding: "8px 12px",
+                                  borderRadius: "6px",
+                                  backgroundColor: heroFeaturedId === prod.id ? "rgba(46, 213, 115, 0.18)" : "rgba(255, 42, 58, 0.12)",
+                                  color: heroFeaturedId === prod.id ? "#2ed573" : "var(--main-accent)",
+                                  border: heroFeaturedId === prod.id ? "1px solid rgba(46, 213, 115, 0.4)" : "1px solid rgba(255, 42, 58, 0.35)",
+                                  fontSize: "0.8rem",
+                                  fontWeight: 800,
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "6px",
+                                  transition: "all 0.2s ease",
+                                }}
+                              >
+                                <span>{heroFeaturedId === prod.id ? "🌟" : "⭐"}</span>
+                                <span>{heroFeaturedId === prod.id ? "Featured on Top Hero (Active)" : "Set as Top Hero Cover"}</span>
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(prod)}

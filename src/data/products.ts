@@ -21,6 +21,7 @@ export interface Product {
   artworkScale?: number;
   artworkOffsetX?: number;
   artworkOffsetY?: number;
+  isCustom?: boolean;
 }
 
 export const CASE_TYPES = [

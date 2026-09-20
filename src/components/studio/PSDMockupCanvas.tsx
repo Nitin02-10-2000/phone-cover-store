@@ -363,6 +363,59 @@ export default function PSDMockupCanvas({
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
+          LAYER 3.5: INWARD RECESSED BUMPER WALLS (Ambient Occlusion & Depth)
+          Simulates the physical phone case tray where the back plate sits
+          recessed inward below the raised protective TPU bumper edges.
+          ══════════════════════════════════════════════════════════════════════ */}
+      <div
+        style={{
+          position: "absolute",
+          left: `${slotLeft}px`,
+          top: `${slotTop}px`,
+          width: `${slotWidth}px`,
+          height: `${slotHeight}px`,
+          borderRadius: `${slotRadius}px`,
+          boxShadow: `
+            inset 0 6px 10px -2px rgba(0, 0, 0, 0.85),
+            inset 0 -5px 8px -2px rgba(0, 0, 0, 0.65),
+            inset 5px 0 8px -2px rgba(0, 0, 0, 0.75),
+            inset -5px 0 8px -2px rgba(0, 0, 0, 0.75),
+            inset 0 0 20px rgba(0, 0, 0, 0.6),
+            inset 0 0 0 1.5px rgba(255, 255, 255, 0.14)
+          `,
+          pointerEvents: "none",
+          zIndex: 22,
+        }}
+      />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          LAYER 3.6: RAISED PROTECTIVE CAMERA COLLAR / BEZEL LIP
+          A molded protective ridge that rises above the backplate around
+          the camera lenses, preventing camera scratching on flat surfaces
+          and casting an authentic physical drop shadow onto the artwork.
+          ══════════════════════════════════════════════════════════════════════ */}
+      {mockup.cameraWidth > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            left: `${camLeft - 3}px`,
+            top: `${camTop - 3}px`,
+            width: `${camWidth + 6}px`,
+            height: `${camHeight + 6}px`,
+            borderRadius: `${camRadius + 3}px`,
+            border: "2.5px solid #1c1c22",
+            boxShadow: `
+              0 4px 12px rgba(0, 0, 0, 0.8),
+              inset 0 2px 6px rgba(0, 0, 0, 0.9),
+              0 0 0 1px rgba(255, 255, 255, 0.16)
+            `,
+            pointerEvents: "none",
+            zIndex: 24,
+          }}
+        />
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
           LAYER 4: GLASS SHEEN & SPECULAR HIGHLIGHTS
           Simulates authentic 9H tempered glass reflection or matte finish.
           ══════════════════════════════════════════════════════════════════════ */}
@@ -382,6 +435,29 @@ export default function PSDMockupCanvas({
           boxShadow: "inset 0 0 16px rgba(255,255,255,0.1)",
           pointerEvents: "none",
           zIndex: 30,
+        }}
+      />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          LAYER 5: OUTER CASE BUMPER RIM DEFINITION & CORNER HIGHLIGHTS
+          Enhances the outer edges of the phone case so it looks like a real
+          tactile protective case rather than a flat cutout.
+          ══════════════════════════════════════════════════════════════════════ */}
+      <div
+        style={{
+          position: "absolute",
+          left: `${Math.max(0, slotLeft - 6)}px`,
+          top: `${Math.max(0, slotTop - 6)}px`,
+          width: `${slotWidth + 12}px`,
+          height: `${slotHeight + 12}px`,
+          borderRadius: `${slotRadius + 6}px`,
+          boxShadow: `
+            inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+            inset 0 1px 2px rgba(255, 255, 255, 0.28),
+            0 8px 24px rgba(0, 0, 0, 0.5)
+          `,
+          pointerEvents: "none",
+          zIndex: 32,
         }}
       />
 

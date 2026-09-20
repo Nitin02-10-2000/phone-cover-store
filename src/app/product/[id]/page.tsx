@@ -13,6 +13,7 @@ import { PRODUCTS, CASE_TYPES, CASE_ANATOMY, getProductById } from "@/data/produ
 import { BRAND_GROUPS, getPhoneModelDetails } from "@/data/phoneModels";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
+import { useAllProducts } from "@/lib/productsStorage";
 import DynamicPhoneCase from "@/components/DynamicPhoneCase";
 
 interface PageProps {
@@ -24,8 +25,9 @@ export default function ProductDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { addToCart } = useCart();
   const { selectedModel: globalModel, setDevice } = useDevice();
+  const { products } = useAllProducts();
 
-  const product = getProductById(id) || PRODUCTS[0];
+  const product = products.find((p) => p.id === id) || getProductById(id) || PRODUCTS[0];
 
   const [selectedCaseType, setSelectedCaseType] = useState(CASE_TYPES[0].name);
   const [selectedBrand, setSelectedBrand] = useState(() => getPhoneModelDetails(globalModel).brand);
@@ -62,7 +64,7 @@ export default function ProductDetailPage({ params }: PageProps) {
     router.push("/checkout");
   };
 
-  const relatedProducts = PRODUCTS.filter((p) => p.id !== product.id).slice(0, 4);
+  const relatedProducts = products.filter((p) => p.id !== product.id).slice(0, 4);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>

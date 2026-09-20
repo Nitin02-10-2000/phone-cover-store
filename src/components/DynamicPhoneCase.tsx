@@ -14,7 +14,7 @@ interface DynamicPhoneCaseProps {
   width?: number;
   height?: number;
   interactive?: boolean;
-  tiltSide?: "front" | "left" | "right";
+  tiltSide?: "front" | "left" | "right" | "threeQuarter" | "side";
   onTiltChange?: (tilt: "front" | "left" | "right") => void;
   allowClickToTilt?: boolean;
   showModelBadge?: boolean;
@@ -104,8 +104,8 @@ export default function DynamicPhoneCase({
       const dy = e.clientY - lastMouse.current.y;
       lastMouse.current = { x: e.clientX, y: e.clientY };
       // Clamp rotation to safe, realistic 3D angles so the back of the case remains the primary surface
-      targetRotY.current = Math.max(-22, Math.min(22, targetRotY.current + dx * 0.38));
-      targetRotX.current = Math.max(-12, Math.min(12, targetRotX.current - dy * 0.25));
+      targetRotY.current = Math.max(-24, Math.min(24, targetRotY.current + dx * 0.38));
+      targetRotX.current = Math.max(-14, Math.min(14, targetRotX.current - dy * 0.25));
       startAnimLoop();
     };
     const onMouseUp = () => {
@@ -134,14 +134,21 @@ export default function DynamicPhoneCase({
 
   useEffect(() => {
     if (tiltSide === undefined) return;
-    // Subtle, elegant 3/4 e-commerce angle (~12° instead of extreme -34°)
-    if (tiltSide === "left") { targetRotY.current = -12; targetRotX.current = 3; }
-    else if (tiltSide === "right") { targetRotY.current = 12; targetRotX.current = 3; }
-    else { targetRotY.current = 0; targetRotX.current = 0; }
+    // Elegant, photorealistic perspective view angles
+    if (tiltSide === "threeQuarter" || tiltSide === "left") {
+      targetRotY.current = -14;
+      targetRotX.current = 4;
+    } else if (tiltSide === "side" || tiltSide === "right") {
+      targetRotY.current = -22;
+      targetRotX.current = 2;
+    } else {
+      targetRotY.current = 0;
+      targetRotX.current = 0;
+    }
     startAnimLoop();
   }, [tiltSide, startAnimLoop]);
 
-  const currentTilt: "front" | "left" | "right" =
+  const currentTilt: "front" | "left" | "right" | "threeQuarter" | "side" =
     tiltSide !== undefined
       ? tiltSide
       : dragRotY < -12
@@ -181,6 +188,7 @@ export default function DynamicPhoneCase({
       phone.cameraType === "iphone-dual-diag" ||
       phone.cameraType === "iphone-dual-vert" ||
       phone.cameraType === "samsung-ultra" ||
+      phone.cameraType === "samsung-triple" ||
       phone.cameraType === "oneplus-dial");
 
   const glassOverlaySrc =
@@ -192,6 +200,8 @@ export default function DynamicPhoneCase({
       ? "/mockups/glass_case_iphone_16.png"
       : phone.cameraType === "samsung-ultra"
       ? "/mockups/glass_case_samsung_ultra.png"
+      : phone.cameraType === "samsung-triple"
+      ? "/mockups/glass_case_samsung_triple.png"
       : phone.cameraType === "oneplus-dial"
       ? "/mockups/glass_case_oneplus.png"
       : "/mockups/glass_case_iphone_pro.png";
@@ -1025,14 +1035,19 @@ export default function DynamicPhoneCase({
           position: "relative",
           width: "100%",
           height: "100%",
-          borderRadius: phone.corners === "sharp" ? "16px" : isGlassMockupAvailable ? "40px" : cornerRadius,
+          borderRadius: phone.corners === "sharp" ? "16px" : cornerRadius,
           backgroundColor: "#121214",
-          border: isGlassMockupAvailable
-            ? "none"
-            : hasDragRotation
-            ? "4.5px solid #2e3037"
-            : "5px solid #27272a",
-          boxShadow: currentBoxShadow,
+          border: hasDragRotation ? "6px solid #282832" : "6px solid #1a1a22",
+          outline: "1px solid rgba(255, 255, 255, 0.14)",
+          boxShadow: `
+            ${currentBoxShadow},
+            inset 0 7px 12px -2px rgba(0, 0, 0, 0.9),
+            inset 0 -5px 10px -2px rgba(0, 0, 0, 0.7),
+            inset 6px 0 10px -2px rgba(0, 0, 0, 0.8),
+            inset -6px 0 10px -2px rgba(0, 0, 0, 0.8),
+            inset 0 0 24px rgba(0, 0, 0, 0.7),
+            inset 0 0 0 1.5px rgba(255, 255, 255, 0.16)
+          `,
           overflow: "hidden",
           transform: currentTransform,
           // Only use CSS transition when NOT actively dragging (for spring-back)
@@ -1042,12 +1057,30 @@ export default function DynamicPhoneCase({
           zIndex: 1,
         }}
       >
-        {/* Full-bleed Case Artwork with Zoom / Scale and Position Offsets */}
+        {/* Inward Recessed Bumper Wall Depth (Tray Ambient Occlusion) */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${artworkScale}) translate(${artworkOffsetX}%, ${artworkOffsetY}%)`,
+            boxShadow: `
+              inset 0 7px 12px -2px rgba(0, 0, 0, 0.9),
+              inset 0 -5px 10px -2px rgba(0, 0, 0, 0.7),
+              inset 6px 0 10px -2px rgba(0, 0, 0, 0.8),
+              inset -6px 0 10px -2px rgba(0, 0, 0, 0.8),
+              inset 0 0 24px rgba(0, 0, 0, 0.65),
+              inset 0 0 0 1.5px rgba(255, 255, 255, 0.14)
+            `,
+            pointerEvents: "none",
+            zIndex: 12,
+          }}
+        />
+
+        {/* Full-bleed Case Artwork with Zoom / Scale and Position Offsets */}
+        <div
+          style={{
+            position: "absolute",
+            inset: "-3px",
+            transform: `scale(${Math.max(1.04, artworkScale || 1)}) translate(${artworkOffsetX}%, ${artworkOffsetY}%)`,
             transformOrigin: "center center",
             transition: "transform 0.12s cubic-bezier(0.2, 0.9, 0.3, 1)",
           }}
@@ -1080,6 +1113,7 @@ export default function DynamicPhoneCase({
               sizes={`${width}px`}
               style={{ objectFit: "fill" }}
               priority
+              unoptimized
             />
           </div>
         ) : (

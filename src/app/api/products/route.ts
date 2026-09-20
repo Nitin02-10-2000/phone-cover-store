@@ -1,6 +1,45 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { PRODUCTS, CASE_TYPES, UNIVERSES, Product } from "@/data/products";
+import fs from "fs";
+import path from "path";
+
+const CUSTOM_PRODUCTS_FILE = path.join(process.cwd(), "src", "data", "custom_products.json");
+
+export function getLocalCustomProducts(): Product[] {
+  try {
+    if (fs.existsSync(CUSTOM_PRODUCTS_FILE)) {
+      const content = fs.readFileSync(CUSTOM_PRODUCTS_FILE, "utf-8");
+      const parsed = JSON.parse(content);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch (err) {
+    console.error("Failed to read custom_products.json", err);
+  }
+  return [];
+}
+
+export function saveLocalCustomProduct(product: Product) {
+  try {
+    const dir = path.dirname(CUSTOM_PRODUCTS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const current = getLocalCustomProducts();
+    const updated = [product, ...current.filter((p) => p.id !== product.id)];
+    fs.writeFileSync(CUSTOM_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to write to custom_products.json", err);
+  }
+}
+
+export function deleteLocalCustomProduct(id: string) {
+  try {
+    const current = getLocalCustomProducts();
+    const updated = current.filter((p) => p.id !== id);
+    fs.writeFileSync(CUSTOM_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to delete from custom_products.json", err);
+  }
+}
 
 function formatDbProduct(p: any): Product {
   return {
@@ -23,6 +62,7 @@ function formatDbProduct(p: any): Product {
     description: p.description || "",
     supportedBrands: typeof p.supportedBrands === "string" ? p.supportedBrands.split(",") : p.supportedBrands || ["Apple iPhone", "Samsung Galaxy"],
     dropProtection: p.dropProtection || "12ft Drop Tested",
+    isCustom: Boolean(p.isCustom),
   };
 }
 
@@ -35,17 +75,23 @@ export async function GET(request: Request) {
 
     let products: Product[] = [];
 
+    const localCustom = getLocalCustomProducts();
+
     try {
       const dbProducts = await prisma.product.findMany({
         orderBy: { createdAt: "desc" },
       });
       if (dbProducts.length > 0) {
-        products = dbProducts.map(formatDbProduct);
+        const formatted = dbProducts.map(formatDbProduct);
+        const map = new Map<string, Product>();
+        localCustom.forEach((p) => map.set(p.id, p));
+        formatted.forEach((p) => map.set(p.id, p));
+        products = Array.from(map.values());
       } else {
-        products = [...PRODUCTS];
+        products = [...localCustom, ...PRODUCTS];
       }
     } catch {
-      products = [...PRODUCTS];
+      products = [...localCustom, ...PRODUCTS];
     }
 
     if (franchise && franchise !== "all") {
@@ -115,13 +161,39 @@ export async function POST(request: Request) {
     const formatsStr = Array.isArray(formats) ? formats.join(",") : formats;
     const brandsStr = Array.isArray(supportedBrands) ? supportedBrands.join(",") : supportedBrands;
 
-    const created = await prisma.product.create({
-      data: {
+    let createdProduct: Product;
+    try {
+      const created = await prisma.product.create({
+        data: {
+          id,
+          name,
+          franchise,
+          theme,
+          category,
+          tag,
+          price: Number(price),
+          originalPrice: Number(originalPrice),
+          rating: 5.0,
+          reviewsCount: 1,
+          image,
+          tiltedImage: image,
+          badge,
+          formats: formatsStr,
+          description,
+          supportedBrands: brandsStr,
+          dropProtection,
+          isCustom: true,
+        },
+      });
+      createdProduct = formatDbProduct(created);
+    } catch (dbErr) {
+      console.warn("Prisma DB create failed, saving to local file fallback:", dbErr);
+      createdProduct = {
         id,
         name,
         franchise,
         theme,
-        category,
+        category: (category as any) || "case",
         tag,
         price: Number(price),
         originalPrice: Number(originalPrice),
@@ -130,23 +202,24 @@ export async function POST(request: Request) {
         image,
         tiltedImage: image,
         badge,
-        formats: formatsStr,
+        formats: Array.isArray(formats) ? formats : [formats],
         description,
-        supportedBrands: brandsStr,
+        supportedBrands: Array.isArray(supportedBrands) ? supportedBrands : [supportedBrands],
         dropProtection,
         isCustom: true,
-      },
-    });
+      };
+      saveLocalCustomProduct(createdProduct);
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Phone case "${name}" created in database successfully.`,
-      data: formatDbProduct(created),
+      message: `Phone case "${name}" created successfully.`,
+      data: createdProduct,
     });
   } catch (error: any) {
     console.error("POST /api/products error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create phone case in database" },
+      { success: false, error: error.message || "Failed to create phone case" },
       { status: 500 }
     );
   }

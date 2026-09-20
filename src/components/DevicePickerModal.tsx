@@ -1,13 +1,25 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { ALL_PHONE_MODELS, BRAND_GROUPS, PhoneModelItem } from "@/data/phoneModels";
+import { ALL_PHONE_MODELS, BRAND_GROUPS, PhoneModelItem, getAllPhoneModels } from "@/data/phoneModels";
 import { useDevice } from "@/lib/deviceContext";
 
 export default function DevicePickerModal() {
   const { selectedModel, setDevice, isDevicePickerOpen, setIsDevicePickerOpen } = useDevice();
   const [activeBrand, setActiveBrand] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [allModels, setAllModels] = useState<PhoneModelItem[]>(ALL_PHONE_MODELS);
+
+  useEffect(() => {
+    setAllModels(getAllPhoneModels());
+    const onUpdate = () => setAllModels(getAllPhoneModels());
+    window.addEventListener("casetadka_studio_updated", onUpdate);
+    window.addEventListener("storage", onUpdate);
+    return () => {
+      window.removeEventListener("casetadka_studio_updated", onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
+  }, [isDevicePickerOpen]);
 
   // Close on ESC key
   useEffect(() => {
@@ -33,7 +45,7 @@ export default function DevicePickerModal() {
   }, [isDevicePickerOpen]);
 
   const filteredModels = useMemo(() => {
-    return ALL_PHONE_MODELS.filter((phone) => {
+    return allModels.filter((phone) => {
       if (activeBrand !== "All" && phone.brand !== activeBrand) {
         return false;
       }
@@ -45,7 +57,7 @@ export default function DevicePickerModal() {
       }
       return true;
     });
-  }, [activeBrand, searchQuery]);
+  }, [allModels, activeBrand, searchQuery]);
 
   if (!isDevicePickerOpen) return null;
 

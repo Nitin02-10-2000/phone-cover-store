@@ -198,22 +198,79 @@ export const PHONE_MODELS = BRAND_GROUPS.map((b) => ({
   models: b.models,
 }));
 
+export function getAllPhoneModels(): PhoneModelItem[] {
+  if (typeof window === "undefined") {
+    return ALL_PHONE_MODELS;
+  }
+  try {
+    const raw = localStorage.getItem("casetadka_studio_phone_models");
+    if (!raw) return ALL_PHONE_MODELS;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return ALL_PHONE_MODELS;
+
+    const existingNames = new Set(ALL_PHONE_MODELS.map((m) => m.name.toLowerCase()));
+    const customItems: PhoneModelItem[] = parsed
+      .filter((m: any) => m.active !== false && !existingNames.has((m.name || "").toLowerCase()))
+      .map((m: any) => ({
+        id: m.id || `custom-model-${Date.now()}`,
+        name: m.name,
+        brand: m.brand,
+        cameraType: (m.cameraType || "iphone-triple") as CameraArchetype,
+        corners: m.corners || "rounded",
+        hasMagSafe: Boolean(m.hasMagSafe),
+        releaseYear: m.releaseYear || new Date().getFullYear(),
+        popular: false,
+      }));
+
+    return [...customItems, ...ALL_PHONE_MODELS];
+  } catch {
+    return ALL_PHONE_MODELS;
+  }
+}
+
 export function getPhoneModelDetails(modelName?: string): PhoneModelItem {
+  const allModels = getAllPhoneModels();
   if (!modelName) {
-    return ALL_PHONE_MODELS[0]; // iPhone 16 Pro Max default
+    return allModels[0]; // iPhone 16 Pro Max default
   }
   const clean = modelName.trim().toLowerCase();
-  const match = ALL_PHONE_MODELS.find(
-    (p) =>
-      p.name.toLowerCase() === clean ||
-      clean.includes(p.name.toLowerCase()) ||
-      p.name.toLowerCase().includes(clean)
+
+  // 1. Exact match by name or id (PRIORITY #1)
+  const exactMatch = allModels.find(
+    (p) => p.name.toLowerCase() === clean || p.id.toLowerCase() === clean
   );
-  if (match) return match;
+  if (exactMatch) return exactMatch;
+
+  // 2. Exact match when stripped of extra spaces/symbols
+  const normalizedClean = clean.replace(/[^a-z0-9]/g, "");
+  const normalizedMatch = allModels.find(
+    (p) => p.name.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedClean
+  );
+  if (normalizedMatch) return normalizedMatch;
+
+  // 3. For non-pro queries (e.g. "iphone 15", "iphone 16", "iphone 14"), NEVER match a "pro" or "max" model
+  const isProOrMax = clean.includes("pro") || clean.includes("max") || clean.includes("ultra");
+  if (!isProOrMax) {
+    const nonProMatch = allModels.find((p) => {
+      const pLower = p.name.toLowerCase();
+      const pIsPro = pLower.includes("pro") || pLower.includes("max") || pLower.includes("ultra");
+      return !pIsPro && (pLower.includes(clean) || clean.includes(pLower));
+    });
+    if (nonProMatch) return nonProMatch;
+  }
+
+  // 4. General partial match
+  const partialMatch = allModels.find(
+    (p) => clean.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(clean)
+  );
+  if (partialMatch) return partialMatch;
 
   // Archetype heuristics for unlisted variants
   if (clean.includes("iphone") && (clean.includes("pro") || clean.includes("max"))) {
     return { id: "custom-ip-pro", name: modelName, brand: "Apple", cameraType: "iphone-triple", corners: "rounded", hasMagSafe: true };
+  }
+  if (clean.includes("iphone") && clean.includes("16")) {
+    return { id: "custom-ip-16", name: modelName, brand: "Apple", cameraType: "iphone-dual-vert", corners: "rounded", hasMagSafe: true };
   }
   if (clean.includes("iphone")) {
     return { id: "custom-ip", name: modelName, brand: "Apple", cameraType: "iphone-dual-diag", corners: "rounded", hasMagSafe: true };
@@ -224,7 +281,7 @@ export function getPhoneModelDetails(modelName?: string): PhoneModelItem {
   if (clean.includes("pixel")) {
     return { id: "custom-pixel", name: modelName, brand: "Google Pixel", cameraType: "pixel-visor", corners: "extra-rounded", hasMagSafe: true };
   }
-  if (clean.includes("oneplus")) {
+  if (clean.includes("oneplus") || clean.includes("1+")) {
     return { id: "custom-oneplus", name: modelName, brand: "OnePlus", cameraType: "oneplus-dial", corners: "rounded", hasMagSafe: true };
   }
   if (clean.includes("nothing")) {

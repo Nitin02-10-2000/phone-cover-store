@@ -53,7 +53,10 @@ function ShopContent() {
     }).sort((a, b) => {
       if (sortBy === "price-asc") return a.price - b.price;
       if (sortBy === "price-desc") return b.price - a.price;
-      if (sortBy === "rating") return b.rating - a.rating;
+      if (sortBy === "featured") {
+        if (a.isCustom && !b.isCustom) return -1;
+        if (!a.isCustom && b.isCustom) return 1;
+      }
       return 0; // featured
     });
   }, [products, selectedUniverse, selectedCaseType, sortBy, searchQuery]);

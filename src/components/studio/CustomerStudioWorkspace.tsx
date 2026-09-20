@@ -1,217 +1,872 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
-import DynamicPhoneCase from "@/components/DynamicPhoneCase";
 import PhoneCase3D from "@/components/studio/PhoneCase3D";
-import PSDMockupCanvas from "@/components/studio/PSDMockupCanvas";
-import { getMockupModelByName, MockupConfig } from "@/lib/mockupData";
-import { generateProductionArtwork, generateMockupPreview } from "@/lib/productionExport";
+import CaseTadkaLogo from "@/components/CaseTadkaLogo";
+import { ALL_PHONE_MODELS, PhoneModelItem, CameraArchetype, getAllPhoneModels } from "@/data/phoneModels";
+import { getMockupModelByName } from "@/lib/mockupData";
 import {
   getStudioPhoneModels,
-  getStudioFonts,
-  getStudioAssets,
-  getStudioTemplates,
   getStudioPricing,
-  getStudioCaseTypes,
   calculateCustomPrice,
   saveCustomOrderDesign,
   generateProductionPrintCanvas,
-  StudioPhoneModel,
-  StudioCaseType,
-  StudioFontItem,
-  StudioAssetItem,
-  StudioTemplate,
-  PhotoEffectsConfig,
-  CropData,
-  STICKER_CATEGORIES,
+  StudioPricingConfig,
 } from "@/lib/studioStorage";
 
-const DEFAULT_EFFECTS: PhotoEffectsConfig = {
-  brightness: 100,
-  contrast: 100,
-  saturation: 100,
-  blur: 0,
-  sharpness: 0,
-  grayscale: 0,
-  sepia: 0,
-};
+const INITIAL_UPLOADS = [
+  {
+    id: "art-gojo",
+    name: "Gojo Limitless Void",
+    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786122801/mockups/gojo-satoru-honored-one-poster-paper-1.jpg",
+  },
+  {
+    id: "art-akira",
+    name: "Akira Neo-Tokyo",
+    url: "/mockups/akira.jpg",
+  },
+  {
+    id: "art-luffy",
+    name: "Luffy Gear 5",
+    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787153686/mockups/luffy-gear-5-one-piece-poster-paper-5.jpg",
+  },
+  {
+    id: "art-sukuna",
+    name: "Sukuna Malevolent",
+    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787407303/mockups/ryomen-sukuna-jujutsu-kaisen-poster-cinematic-anime-wall-art-sukuna-decor-paper-1.jpg",
+  },
+  {
+    id: "art-jinwoo",
+    name: "Solo Leveling Arise",
+    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786123391/mockups/sung-jinwoo-arise-poster-paper-5.jpg",
+  },
+];
 
-const STARTER_ARTWORKS = [
-  { id: "art-1", name: "Akira Neo-Tokyo", url: "/mockups/akira.jpg" },
-  { id: "art-2", name: "Gojo Limitless Void", url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786122801/mockups/gojo-satoru-honored-one-poster-paper-1.jpg" },
-  { id: "art-3", name: "Luffy Sun God Gear 5", url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787153686/mockups/luffy-gear-5-one-piece-poster-paper-5.jpg" },
-  { id: "art-4", name: "Sukuna Malevolent Shrine", url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787407303/mockups/ryomen-sukuna-jujutsu-kaisen-poster-cinematic-anime-wall-art-sukuna-decor-paper-1.jpg" },
-  { id: "art-5", name: "Solo Leveling Arise", url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786123391/mockups/sung-jinwoo-arise-poster-paper-5.jpg" },
+const CASE_FINISHES = [
+  { id: "glossy", name: "Plastic matt", subtitle: "Zero Fingerprint Velvet Touch", price: 399, tag: "POPULAR" },
+  { id: "tempered", name: "9H Tempered Glass", subtitle: "Ultra High-Gloss Scratchproof", price: 499, tag: "BESTSELLER" },
+  { id: "magsafe", name: "MagSafe Armor", subtitle: "Magnetic Ring + Clear Frame", price: 549, tag: "MAGNETIC" },
+  { id: "transparent", name: "Transparent TPU", subtitle: "Anti-Yellowing Crystal Clear", price: 349, tag: "SLIM" },
+];
+
+const PACKAGE_COLORS = [
+  { id: "white", color: "#ffffff", label: "Pure White" },
+  { id: "cream", color: "#fef3c7", label: "Linen Cream" },
+  { id: "yellow", color: "#fde047", label: "Sunset Gold" },
+  { id: "pink", color: "#fbcfe8", label: "Sakura Pink" },
+  { id: "brown", color: "#78350f", label: "Vintage Amber" },
+  { id: "green", color: "#15803d", label: "Emerald Pine" },
+  { id: "black", color: "#18181b", label: "Obsidian" },
+];
+
+// Mini Phone Case SVG Component for Layout Drawer Mockup Cards
+function SvgMiniCase({
+  x = 0,
+  y = 0,
+  w = 24,
+  h = 50,
+  rot = 0,
+  isDark = false,
+  isBack = false,
+}: {
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+  rot?: number;
+  isDark?: boolean;
+  isBack?: boolean;
+}) {
+  const transform = rot !== 0 ? `rotate(${rot} ${x + w / 2} ${y + h / 2})` : undefined;
+  return (
+    <g transform={transform}>
+      {/* Soft Drop Shadow */}
+      <rect
+        x={x + 1}
+        y={y + 1.5}
+        width={w}
+        height={h}
+        rx={5}
+        fill="rgba(0,0,0,0.08)"
+      />
+      {/* Case Body */}
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        rx={5}
+        fill={isDark ? "#27272a" : "#ffffff"}
+        stroke={isDark ? "#18181b" : "#cbd5e1"}
+        strokeWidth={0.9}
+      />
+      {isBack ? (
+        // Back Plate with Camera Cutout (Top-Left)
+        <g>
+          <rect
+            x={x + 2}
+            y={y + 2.5}
+            width={w * 0.42}
+            height={h * 0.28}
+            rx={2.5}
+            fill={isDark ? "#3f3f46" : "#e2e8f0"}
+            stroke={isDark ? "#52525b" : "#94a3b8"}
+            strokeWidth={0.5}
+          />
+          <circle cx={x + 2 + w * 0.21} cy={y + 2.5 + h * 0.08} r={1.6} fill={isDark ? "#18181b" : "#64748b"} />
+          <circle cx={x + 2 + w * 0.21} cy={y + 2.5 + h * 0.20} r={1.6} fill={isDark ? "#18181b" : "#64748b"} />
+        </g>
+      ) : (
+        // Front / Screen Mockup with Cyan Wave
+        <g>
+          {/* Dynamic Island Notch */}
+          <rect x={x + w / 2 - 3} y={y + 2} width={6} height={1.8} rx={0.9} fill="#18181b" />
+          {/* Screen Background */}
+          <rect x={x + 1.2} y={y + 1.2} width={w - 2.4} height={h - 2.4} rx={4} fill="#f0f9ff" />
+          {/* Wave Gradients */}
+          <path
+            d={`M ${x + 1.2} ${y + h * 0.58} Q ${x + w * 0.5} ${y + h * 0.48} ${x + w - 1.2} ${y + h * 0.58} L ${x + w - 1.2} ${y + h - 1.2} L ${x + 1.2} ${y + h - 1.2} Z`}
+            fill="#38bdf8"
+            opacity={0.45}
+          />
+          <path
+            d={`M ${x + 1.2} ${y + h * 0.7} Q ${x + w * 0.5} ${y + h * 0.62} ${x + w - 1.2} ${y + h * 0.68} L ${x + w - 1.2} ${y + h - 1.2} L ${x + 1.2} ${y + h - 1.2} Z`}
+            fill="#0284c7"
+            opacity={0.55}
+          />
+          <text
+            x={x + w / 2}
+            y={y + h * 0.38}
+            fontSize={2.8}
+            fontWeight="bold"
+            fill="#0369a1"
+            textAnchor="middle"
+          >
+            Phone
+          </text>
+          <text
+            x={x + w / 2}
+            y={y + h * 0.44}
+            fontSize={2.3}
+            fill="#64748b"
+            textAnchor="middle"
+          >
+            Mockup
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
+function MiniPhoneCoverModel({ model, isSelected }: { model: PhoneModelItem; isSelected: boolean }) {
+  const isSharp = model.corners === "sharp";
+  const cornerRadius = isSharp ? "4px" : "13px";
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        aspectRatio: "1 / 1.55",
+        borderRadius: "10px",
+        background: isSelected
+          ? "radial-gradient(ellipse at center, rgba(237, 233, 254, 0.95) 0%, rgba(221, 214, 254, 0.6) 100%)"
+          : "radial-gradient(ellipse at center, #ffffff 0%, #f1f5f9 100%)",
+        border: isSelected ? "1.5px solid #a855f7" : "1px solid #e2e8f0",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        overflow: "hidden",
+        padding: "6px 4px",
+      }}
+    >
+      {/* 3D Miniature Phone Case Chassis */}
+      <div
+        style={{
+          width: "54px",
+          height: "90px",
+          borderRadius: cornerRadius,
+          position: "relative",
+          background: isSelected
+            ? "linear-gradient(155deg, #4338ca 0%, #312e81 40%, #1e1b4b 100%)"
+            : "linear-gradient(155deg, #3f3f46 0%, #27272a 40%, #18181b 100%)",
+          boxShadow: isSelected
+            ? "0 8px 18px rgba(124, 58, 237, 0.4), 0 2px 5px rgba(0,0,0,0.3)"
+            : "0 6px 14px rgba(0, 0, 0, 0.28), 0 1px 3px rgba(0,0,0,0.2)",
+          border: isSelected ? "1.5px solid rgba(196, 181, 253, 0.6)" : "1.5px solid rgba(255, 255, 255, 0.2)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        {/* Specular Liquid Glass Sheen */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(125deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 35%, transparent 50%, rgba(255,255,255,0.12) 100%)",
+            pointerEvents: "none",
+            zIndex: 3,
+          }}
+        />
+
+        {/* MagSafe Array Visual if applicable */}
+        {model.hasMagSafe && (
+          <div
+            style={{
+              position: "absolute",
+              top: "52%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              border: "1px dashed rgba(255, 255, 255, 0.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+              zIndex: 2,
+            }}
+          >
+            <div
+              style={{
+                width: "2px",
+                height: "6px",
+                backgroundColor: "rgba(255, 255, 255, 0.45)",
+                position: "absolute",
+                bottom: "-8px",
+                borderRadius: "1px",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Camera Cutout Module */}
+        {(() => {
+          switch (model.cameraType) {
+            // 1. iPhone 16 / 16 Plus (Authentic Vertical Pill + Flash on right)
+            case "iphone-dual-vert":
+              return (
+                <div style={{ position: "absolute", top: "5px", left: "5px", zIndex: 4 }}>
+                  {/* Vertical Pill */}
+                  <div
+                    style={{
+                      width: "14px",
+                      height: "27px",
+                      borderRadius: "7px",
+                      backgroundColor: "#09090b",
+                      border: "1px solid rgba(255, 255, 255, 0.4)",
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.6)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "space-around",
+                      padding: "2px 0",
+                    }}
+                  >
+                    {/* Top lens */}
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                        border: "0.8px solid #52525b",
+                      }}
+                    />
+                    {/* Bottom lens */}
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                        border: "0.8px solid #52525b",
+                      }}
+                    />
+                  </div>
+                  {/* Separate circular flash hole on the right */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "6px",
+                      left: "17px",
+                      width: "4px",
+                      height: "4px",
+                      borderRadius: "50%",
+                      backgroundColor: "#fef08a",
+                      border: "0.5px solid #ca8a04",
+                      boxShadow: "0 0 3px rgba(250, 204, 21, 0.6)",
+                    }}
+                  />
+                </div>
+              );
+
+            // 2. iPhone 16 Pro / Pro Max (Triple lens in triangle + flash + LiDAR)
+            case "iphone-triple":
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "5px",
+                    left: "5px",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "6px",
+                    backgroundColor: "#09090b",
+                    border: "1px solid rgba(255, 255, 255, 0.4)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.6)",
+                    zIndex: 4,
+                  }}
+                >
+                  {/* Lens 1 (Top Left) */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "3px",
+                      left: "3px",
+                      width: "7px",
+                      height: "7px",
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                      border: "0.8px solid #52525b",
+                    }}
+                  />
+                  {/* Lens 2 (Bottom Left) */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "3px",
+                      left: "3px",
+                      width: "7px",
+                      height: "7px",
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                      border: "0.8px solid #52525b",
+                    }}
+                  />
+                  {/* Lens 3 (Middle Right) */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "8.5px",
+                      right: "3px",
+                      width: "7px",
+                      height: "7px",
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                      border: "0.8px solid #52525b",
+                    }}
+                  />
+                  {/* Flash dot */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "3.5px",
+                      right: "4.5px",
+                      width: "3px",
+                      height: "3px",
+                      borderRadius: "50%",
+                      backgroundColor: "#fef08a",
+                    }}
+                  />
+                  {/* LiDAR dot */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "4px",
+                      right: "4.5px",
+                      width: "3px",
+                      height: "3px",
+                      borderRadius: "50%",
+                      backgroundColor: "#27272a",
+                      border: "0.5px solid #52525b",
+                    }}
+                  />
+                </div>
+              );
+
+            // 3. iPhone Dual Diagonal (iPhone 15, 14, 13)
+            case "iphone-dual-diag":
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "5px",
+                    left: "5px",
+                    width: "21px",
+                    height: "21px",
+                    borderRadius: "5px",
+                    backgroundColor: "#09090b",
+                    border: "1px solid rgba(255, 255, 255, 0.4)",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.6)",
+                    zIndex: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "3px",
+                      left: "3px",
+                      width: "7px",
+                      height: "7px",
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                      border: "0.8px solid #52525b",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "3px",
+                      right: "3px",
+                      width: "7px",
+                      height: "7px",
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                      border: "0.8px solid #52525b",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "3.5px",
+                      right: "4px",
+                      width: "3px",
+                      height: "3px",
+                      borderRadius: "50%",
+                      backgroundColor: "#fef08a",
+                    }}
+                  />
+                </div>
+              );
+
+            // 4. Samsung S24 Ultra (Sharp body + vertical lenses + sensors)
+            case "samsung-ultra":
+              return (
+                <div style={{ position: "absolute", top: "5px", left: "5px", zIndex: 4 }}>
+                  {[0, 9, 18].map((topOffset, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        position: "absolute",
+                        top: `${topOffset}px`,
+                        left: "0px",
+                        width: "7.5px",
+                        height: "7.5px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                        border: "1px solid #71717a",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                      }}
+                    />
+                  ))}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                      left: "10px",
+                      width: "4.5px",
+                      height: "4.5px",
+                      borderRadius: "50%",
+                      backgroundColor: "#27272a",
+                      border: "0.8px solid #71717a",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      left: "10px",
+                      width: "4.5px",
+                      height: "4.5px",
+                      borderRadius: "50%",
+                      backgroundColor: "#27272a",
+                      border: "0.8px solid #71717a",
+                    }}
+                  />
+                </div>
+              );
+
+            // 5. Samsung Triple Floating (S24, S23, A54)
+            case "samsung-triple":
+              return (
+                <div style={{ position: "absolute", top: "6px", left: "6px", zIndex: 4 }}>
+                  {[0, 10, 20].map((topOffset, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        position: "absolute",
+                        top: `${topOffset}px`,
+                        left: "0px",
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                        border: "1.2px solid #a1a1aa",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                      }}
+                    />
+                  ))}
+                </div>
+              );
+
+            // 6. Google Pixel Visor
+            case "pixel-visor":
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "12px",
+                    left: "0",
+                    right: "0",
+                    height: "12px",
+                    backgroundColor: "#09090b",
+                    borderTop: "0.8px solid #52525b",
+                    borderBottom: "0.8px solid #52525b",
+                    display: "flex",
+                    alignItems: "center",
+                    paddingLeft: "8px",
+                    zIndex: 4,
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "6px",
+                      borderRadius: "3px",
+                      backgroundColor: "#18181b",
+                      border: "0.6px solid #3f3f46",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-around",
+                    }}
+                  >
+                    <div style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "#3b82f6" }} />
+                    <div style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "#3b82f6" }} />
+                  </div>
+                </div>
+              );
+
+            // 7. OnePlus Circular Dial
+            case "oneplus-dial":
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "6px",
+                    left: "4px",
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "50%",
+                    backgroundColor: "#09090b",
+                    border: "1.2px solid #71717a",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.6)",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    padding: "3px",
+                    gap: "2px",
+                    zIndex: 4,
+                  }}
+                >
+                  {[0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: "5px",
+                        height: "5px",
+                        borderRadius: "50%",
+                        background: "radial-gradient(circle at 35% 35%, #3b82f6 0%, #000000 80%)",
+                        border: "0.5px solid #52525b",
+                      }}
+                    />
+                  ))}
+                </div>
+              );
+
+            default:
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "5px",
+                    left: "5px",
+                    width: "14px",
+                    height: "27px",
+                    borderRadius: "7px",
+                    backgroundColor: "#09090b",
+                    border: "1px solid rgba(255, 255, 255, 0.4)",
+                    zIndex: 4,
+                  }}
+                />
+              );
+          }
+        })()}
+
+        {/* Center Brand / Armor Logo */}
+        <div
+          style={{
+            marginTop: "auto",
+            marginBottom: "8px",
+            fontSize: "0.48rem",
+            fontWeight: 800,
+            letterSpacing: "0.08em",
+            color: isSelected ? "rgba(255, 255, 255, 0.85)" : "rgba(255, 255, 255, 0.5)",
+            textTransform: "uppercase",
+            zIndex: 3,
+          }}
+        >
+          {model.brand === "Apple" ? "iPhone" : model.brand}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LAYOUT_PRESET_ITEMS = [
+  {
+    id: "solo",
+    title: "Solo Front",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={48} y={16} w={24} h={54} />
+      </svg>
+    ),
+  },
+  {
+    id: "duo-standing",
+    title: "Duo Standing",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={30} y={16} w={24} h={54} />
+        <SvgMiniCase x={66} y={16} w={24} h={54} isDark isBack />
+      </svg>
+    ),
+  },
+  {
+    id: "duo-overlap",
+    title: "Duo Overlap",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={34} y={12} w={24} h={54} isDark isBack />
+        <SvgMiniCase x={54} y={20} w={24} h={54} />
+      </svg>
+    ),
+  },
+  {
+    id: "duo-floating",
+    title: "Duo Floating",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={30} y={16} w={23} h={50} rot={16} />
+        <SvgMiniCase x={67} y={16} w={23} h={50} rot={-16} />
+      </svg>
+    ),
+  },
+  {
+    id: "isometric-duo",
+    title: "Isometric Duo",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <g transform="matrix(0.85 0.35 -0.6 0.65 42 26)">
+          <SvgMiniCase x={0} y={0} w={22} h={48} />
+        </g>
+        <SvgMiniCase x={68} y={14} w={22} h={50} isDark isBack />
+      </svg>
+    ),
+  },
+  {
+    id: "flat-duo",
+    title: "Flat Laying Duo",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <g transform="matrix(0.88 0.38 -0.52 0.7 28 20)">
+          <SvgMiniCase x={0} y={0} w={22} h={48} isDark isBack />
+        </g>
+        <g transform="matrix(0.88 0.38 -0.52 0.7 64 20)">
+          <SvgMiniCase x={0} y={0} w={22} h={48} />
+        </g>
+      </svg>
+    ),
+  },
+  {
+    id: "dynamic-duo",
+    title: "Dynamic Duo",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={32} y={18} w={22} h={50} rot={20} />
+        <SvgMiniCase x={66} y={18} w={22} h={50} isDark isBack rot={-20} />
+      </svg>
+    ),
+  },
+  {
+    id: "trio-lineup",
+    title: "Trio Lineup",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={18} y={18} w={22} h={50} />
+        <SvgMiniCase x={49} y={18} w={22} h={50} />
+        <SvgMiniCase x={80} y={18} w={22} h={50} />
+      </svg>
+    ),
+  },
+  {
+    id: "trio-pyramid",
+    title: "Trio Pyramid",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={23} y={14} w={21} h={48} />
+        <SvgMiniCase x={76} y={14} w={21} h={48} />
+        <SvgMiniCase x={49} y={22} w={22} h={50} />
+      </svg>
+    ),
+  },
+  {
+    id: "fan-4",
+    title: "Fanned 4 Cases",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={23} y={24} w={20} h={46} rot={24} />
+        <SvgMiniCase x={40} y={18} w={20} h={46} rot={9} />
+        <SvgMiniCase x={60} y={18} w={20} h={46} rot={-8} />
+        <SvgMiniCase x={77} y={24} w={20} h={46} rot={-24} />
+      </svg>
+    ),
+  },
+  {
+    id: "lineup-5",
+    title: "Lineup 5 Cases",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <SvgMiniCase x={14} y={20} w={16} h={44} />
+        <SvgMiniCase x={33} y={20} w={16} h={44} />
+        <SvgMiniCase x={52} y={20} w={16} h={44} />
+        <SvgMiniCase x={71} y={20} w={16} h={44} />
+        <SvgMiniCase x={90} y={20} w={16} h={44} />
+      </svg>
+    ),
+  },
+  {
+    id: "grid-matrix",
+    title: "Isometric Grid",
+    renderThumbnail: () => (
+      <svg viewBox="0 0 120 86" width="100%" height="100%">
+        <g transform="matrix(0.82 0.42 -0.75 0.5 50 16)">
+          <SvgMiniCase x={-24} y={-26} w={18} h={38} />
+          <SvgMiniCase x={6} y={-26} w={18} h={38} />
+          <SvgMiniCase x={-24} y={18} w={18} h={38} />
+          <SvgMiniCase x={6} y={18} w={18} h={38} />
+        </g>
+      </svg>
+    ),
+  },
 ];
 
 export default function CustomerStudioWorkspace() {
   const router = useRouter();
-  const { addToCart, saveDesign } = useCart();
-  const { selectedModel: globalModel, setDevice } = useDevice();
+  const { addToCart } = useCart();
+  const { setDevice } = useDevice();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const unfoldFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Workflow Active Step (1 to 7)
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  // Main Left Rail Navigation Tab: 'models' | 'edit' | 'layout' | 'ai-background' | 'video' | 'more'
+  const [activeRailTab, setActiveRailTab] = useState<string>("models");
+  const [activeLayout, setActiveLayout] = useState<string>("solo");
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(true);
 
-  // Studio Configurations (from Admin)
-  const [phoneModels, setPhoneModels] = useState<StudioPhoneModel[]>([]);
-  const [caseTypes, setCaseTypes] = useState<StudioCaseType[]>([]);
-  const [fonts, setFonts] = useState<StudioFontItem[]>([]);
-  const [assets, setAssets] = useState<StudioAssetItem[]>([]);
-  const [templates, setTemplates] = useState<StudioTemplate[]>([]);
-  const [pricing, setPricing] = useState(getStudioPricing());
+  // Model & Filter
+  const [selectedBrand, setSelectedBrand] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<string>("iPhone 16");
+  const [selectedFinish, setSelectedFinish] = useState<string>("glossy");
 
-  // STEP 1: Phone Selection
-  const [selectedBrand, setSelectedBrand] = useState<string>("Apple");
-  const [selectedModel, setSelectedModel] = useState<string>("iPhone 16 Pro Max");
+  // Artwork & Customization State
+  // Default to empty string so the 3D phone case shows Pacdora's signature watermark & "Upload your images 341 x 640 px"
+  const [artworkUrl, setArtworkUrl] = useState<string>("");
+  const [artworkScale, setArtworkScale] = useState<number>(1);
+  const [artworkOffsetX, setArtworkOffsetX] = useState<number>(0);
+  const [artworkOffsetY, setArtworkOffsetY] = useState<number>(0);
+  const [artworkRotation, setArtworkRotation] = useState<number>(0);
 
-  // STEP 2: Case Selection
-  const [selectedCaseType, setSelectedCaseType] = useState<string>("9H Tempered Glass");
-  const [selectedFinish, setSelectedFinish] = useState<"tough" | "transparent" | "matte" | "glossy" | "magsafe">("glossy");
+  // Base Package / Case Color
+  const [packageColor, setPackageColor] = useState<string>("#ffffff");
 
-  // STEP 3: Photo Upload
-  const [originalImageUrl, setOriginalImageUrl] = useState<string>(STARTER_ARTWORKS[0].url);
-  const [activeArtworkUrl, setActiveArtworkUrl] = useState<string>(STARTER_ARTWORKS[0].url);
+  // Uploads Library State
+  const [uploadsList, setUploadsList] = useState(INITIAL_UPLOADS);
 
-  // STEP 4: 2D Design Editor State
-  const [scale, setScale] = useState<number>(100);
-  const [lockAspectRatio, setLockAspectRatio] = useState<boolean>(true);
-  const [rotation, setRotation] = useState<number>(0);
-  const [flipH, setFlipH] = useState<boolean>(false);
-  const [flipV, setFlipV] = useState<boolean>(false);
-  const [posX, setPosX] = useState<number>(0);
-  const [posY, setPosY] = useState<number>(0);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+  // ─── 2. "Upload & Design" Full-Screen Dieline Modal State (Image 2) ───
+  const [isUploadDesignOpen, setIsUploadDesignOpen] = useState<boolean>(false);
+  const [uploadDesignTab, setUploadDesignTab] = useState<"uploads" | "elements" | "text" | "tools">("uploads");
+  const [dielineZoom, setDielineZoom] = useState<number>(100);
+
+  // Dieline Canvas Dragging State
+  const [isDielineDragging, setIsDielineDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Photo Effects
-  const [effects, setEffects] = useState<PhotoEffectsConfig>(DEFAULT_EFFECTS);
-
-  // Crop State
-  const [isCropActive, setIsCropActive] = useState<boolean>(false);
-  const [cropMode, setCropMode] = useState<CropData["mode"]>("free");
+  // UI States
+  const [stageBgColor, setStageBgColor] = useState<string>("#e2e5eb");
+  const [activeTool, setActiveTool] = useState<"select" | "pan" | "comment">("select");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // History State
   const [history, setHistory] = useState<any[]>([]);
-  const [historyIndex, setHistoryIndex] = useState<number>(-1);
-
-  // STEP 5: Text & Stickers
-  const [customText, setCustomText] = useState<string>("TADKA-01");
-  const [textColor, setTextColor] = useState<string>("#ffffff");
-  const [selectedFont, setSelectedFont] = useState<string>("'Outfit', sans-serif");
-  const [textSize, setTextSize] = useState<number>(18);
-  const [isBold, setIsBold] = useState<boolean>(true);
-  const [isItalic, setIsItalic] = useState<boolean>(false);
-  const [hasShadow, setHasShadow] = useState<boolean>(true);
-  const [hasOutline, setHasOutline] = useState<boolean>(false);
-  const [letterSpacing, setLetterSpacing] = useState<number>(2);
-
-  const [activeSticker, setActiveSticker] = useState<string | null>("⚡ CASE TADKA");
-  const [stickerCategory, setStickerCategory] = useState<string>("ALL");
-
-  // STEP 6: Real 3D Preview State
-  const [rot3dX, setRot3dX] = useState<number>(0);
-  const [rot3dY, setRot3dY] = useState<number>(0);
-  const [zoom3d, setZoom3d] = useState<number>(100);
-  const [is3dDragging, setIs3dDragging] = useState<boolean>(false);
-  const [drag3dStart, setDrag3dStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  // Guidelines Toggles
-  const [showGuidelines, setShowGuidelines] = useState<boolean>(true);
-
-  // UI state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState<boolean>(false);
-
-  // Load from Storage
-  const reloadData = () => {
-    const models = getStudioPhoneModels().filter((m) => m.active);
-    const types = getStudioCaseTypes().filter((c) => c.active);
-    const fList = getStudioFonts().filter((f) => f.enabled);
-    const aList = getStudioAssets().filter((a) => a.enabled);
-    const tList = getStudioTemplates().filter((t) => t.published);
-    const pConfig = getStudioPricing();
-
-    setPhoneModels(models);
-    setCaseTypes(types);
-    setFonts(fList);
-    setAssets(aList);
-    setTemplates(tList);
-    setPricing(pConfig);
-
-    if (fList.length > 0 && !fList.some((f) => f.family === selectedFont)) {
-      setSelectedFont(fList[0].family);
-    }
-  };
-
-  useEffect(() => {
-    reloadData();
-    if (typeof window !== "undefined") {
-      window.addEventListener("casetadka_studio_updated", reloadData);
-      return () => window.removeEventListener("casetadka_studio_updated", reloadData);
-    }
-  }, []);
+  const [historyIdx, setHistoryIdx] = useState<number>(-1);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Push to Undo/Redo History
-  const pushHistory = (stateSnapshot: any) => {
-    const next = history.slice(0, historyIndex + 1);
-    next.push(stateSnapshot);
-    if (next.length > 20) next.shift();
-    setHistory(next);
-    setHistoryIndex(next.length - 1);
-  };
+  const pushState = useCallback((state: any) => {
+    setHistory((prev) => {
+      const next = prev.slice(0, historyIdx + 1);
+      next.push(state);
+      if (next.length > 20) next.shift();
+      return next;
+    });
+    setHistoryIdx((prev) => Math.min(prev + 1, 19));
+  }, [historyIdx]);
 
   const handleUndo = () => {
-    if (historyIndex > 0) {
-      const prev = history[historyIndex - 1];
-      setHistoryIndex(historyIndex - 1);
-      restoreSnapshot(prev);
-      showToast("Undid last action");
+    if (historyIdx > 0) {
+      const prev = history[historyIdx - 1];
+      setHistoryIdx(historyIdx - 1);
+      if (prev) {
+        setArtworkScale(prev.scale);
+        setArtworkRotation(prev.rot);
+        setArtworkOffsetX(prev.ox);
+        setArtworkOffsetY(prev.oy);
+      }
+      showToast("Undone");
     }
   };
 
   const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const next = history[historyIndex + 1];
-      setHistoryIndex(historyIndex + 1);
-      restoreSnapshot(next);
-      showToast("Redid action");
+    if (historyIdx < history.length - 1) {
+      const next = history[historyIdx + 1];
+      setHistoryIdx(historyIdx + 1);
+      if (next) {
+        setArtworkScale(next.scale);
+        setArtworkRotation(next.rot);
+        setArtworkOffsetX(next.ox);
+        setArtworkOffsetY(next.oy);
+      }
+      showToast("Redone");
     }
   };
 
-  const restoreSnapshot = (snap: any) => {
-    if (!snap) return;
-    setScale(snap.scale);
-    setRotation(snap.rotation);
-    setPosX(snap.posX);
-    setPosY(snap.posY);
-    setFlipH(snap.flipH);
-    setFlipV(snap.flipV);
-    setEffects(snap.effects);
-  };
-
-  // Active target phone model
-  const activePhone = phoneModels.find((m) => m.name === selectedModel) || phoneModels[0];
-  const activeMockup = useMemo(() => getMockupModelByName(selectedModel), [selectedModel]);
-
-  // Dynamic Price Calculation
-  const priceQuote = calculateCustomPrice(
-    selectedFinish === "glossy" ? "tempered" : selectedFinish === "magsafe" ? "magsafe" : selectedFinish === "transparent" ? "transparent" : "matte",
-    activeSticker !== null,
-    Boolean(customText.trim()),
-    pricing
-  );
-
-  // File Upload
+  // Upload handler for new images
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -219,1264 +874,2526 @@ export default function CustomerStudioWorkspace() {
       reader.onload = (event) => {
         if (event.target?.result) {
           const url = event.target.result as string;
-          setOriginalImageUrl(url);
-          setActiveArtworkUrl(url);
-          // Reset positioning
-          setPosX(0);
-          setPosY(0);
-          setScale(100);
-          setRotation(0);
+          const newUpload = {
+            id: `upload-${Date.now()}`,
+            name: file.name.replace(/\.[^/.]+$/, ""),
+            url,
+          };
+          setUploadsList((prev) => [newUpload, ...prev]);
+          setArtworkUrl(url);
+          setArtworkScale(1);
+          setArtworkOffsetX(0);
+          setArtworkOffsetY(0);
+          setArtworkRotation(0);
+          pushState({ scale: 1, rot: 0, ox: 0, oy: 0 });
           showToast("Photo uploaded successfully!");
-          setCurrentStep(4); // Advance to editor
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // 2D Canvas Dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - posX, y: e.clientY - posY });
-  };
+  const [allPhoneModels, setAllPhoneModels] = useState<PhoneModelItem[]>(ALL_PHONE_MODELS);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setPosX(e.clientX - dragStart.x);
-    setPosY(e.clientY - dragStart.y);
-  };
-
-  const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      pushHistory({ scale, rotation, posX, posY, flipH, flipV, effects });
-    }
-  };
-
-  // 3D Canvas Drag Orbit
-  const handle3dMouseDown = (e: React.MouseEvent) => {
-    setIs3dDragging(true);
-    setDrag3dStart({ x: e.clientX, y: e.clientY });
-  };
-
-  const handle3dMouseMove = (e: React.MouseEvent) => {
-    if (!is3dDragging) return;
-    const deltaX = e.clientX - drag3dStart.x;
-    const deltaY = e.clientY - drag3dStart.y;
-    setRot3dY((prev) => Math.max(-65, Math.min(65, prev + deltaX * 0.5)));
-    setRot3dX((prev) => Math.max(-35, Math.min(35, prev - deltaY * 0.5)));
-    setDrag3dStart({ x: e.clientX, y: e.clientY });
-  };
-
-  const handle3dMouseUp = () => {
-    setIs3dDragging(false);
-  };
-
-  // Framing Presets
-  const handleFitToCase = () => {
-    setScale(95);
-    setPosX(0);
-    setPosY(0);
-    setRotation(0);
-    showToast("Fit artwork within case boundaries");
-  };
-
-  const handleFillCase = () => {
-    setScale(125);
-    setPosX(0);
-    setPosY(0);
-    showToast("Filled entire print surface");
-  };
-
-  const handleCenter = () => {
-    setPosX(0);
-    setPosY(0);
-    showToast("Centered on chassis");
-  };
-
-  // Rotation helpers
-  const rotateStep = (delta: number) => {
-    const next = (rotation + delta) % 360;
-    setRotation(next);
-    pushHistory({ scale, rotation: next, posX, posY, flipH, flipV, effects });
-  };
-
-  // Reset entire design
-  const handleReset = () => {
-    setScale(100);
-    setRotation(0);
-    setPosX(0);
-    setPosY(0);
-    setFlipH(false);
-    setFlipV(false);
-    setEffects(DEFAULT_EFFECTS);
-    showToast("Reset 2D design to original values");
-  };
-
-  // Structured Payload Builder
-  const getStructuredPayload = () => {
-    return {
-      phoneModel: selectedModel,
-      caseType: selectedCaseType,
-      finishType: selectedFinish,
-      originalImageUrl,
-      cropData: { mode: cropMode, x: posX, y: posY, width: scale, height: scale },
-      photoEffects: effects,
-      layers: [
-        { type: "image", source: activeArtworkUrl, scale, rotation, posX, posY, flipH, flipV },
-        customText ? { type: "text", content: customText, color: textColor, font: selectedFont, size: textSize, bold: isBold, italic: isItalic } : null,
-        activeSticker ? { type: "sticker", badge: activeSticker } : null,
-      ].filter(Boolean),
-      images: [activeArtworkUrl],
-      text: {
-        content: customText,
-        color: textColor,
-        fontFamily: selectedFont,
-        fontSize: textSize,
-        bold: isBold,
-        italic: isItalic,
-        letterSpacing,
-        hasOutline,
-        hasShadow,
-      },
-      stickers: activeSticker ? [activeSticker] : [],
-      transformations: { scale: scale / 100, rotation, offsetX: posX, offsetY: posY, flipH, flipV },
-      printArea: {
-        width: activePhone?.canvasWidth || 800,
-        height: activePhone?.canvasHeight || 1600,
-        bleedMm: activePhone?.bleedArea?.bleedMm || 3,
-        safeArea: activePhone?.safeArea || { insetX: 24, insetY: 30 },
-      },
-      pricing: {
-        base: priceQuote.base,
-        printing: priceQuote.printing,
-        finishExtra: priceQuote.finishExtra,
-        addons: priceQuote.addons,
-        total: priceQuote.total,
-      },
+  useEffect(() => {
+    setAllPhoneModels(getAllPhoneModels());
+    const onStorage = () => setAllPhoneModels(getAllPhoneModels());
+    window.addEventListener("casetadka_studio_updated", onStorage);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("casetadka_studio_updated", onStorage);
+      window.removeEventListener("storage", onStorage);
     };
-  };
+  }, []);
 
-  // Save to Saved Designs
-  const handleSaveToDesigns = async () => {
-    setIsExporting(true);
-    try {
-      // 1. Generate realistic PSD-based e-commerce product preview
-      const mockupPreviewUrl = await generateMockupPreview({
-        mockup: activeMockup,
-        artworkUrl: activeArtworkUrl,
-        transform: { x: posX, y: posY, scale: scale / 100, rotation },
-        customTexts: customText
-          ? [{ id: "txt-1", text: customText, font: selectedFont, size: textSize, color: textColor, x: 50, y: 84, rotation: 0 }]
-          : [],
-        customStickers: activeSticker
-          ? [{ id: "stk-1", name: activeSticker, x: 80, y: 20, scale: 1 }]
-          : [],
-      });
+  // Filtered phone models for models drawer
+  const filteredModels = useMemo(() => {
+    return allPhoneModels.filter((m) => {
+      const matchesBrand = selectedBrand === "All" || m.brand.toLowerCase() === selectedBrand.toLowerCase();
+      const matchesQuery = !searchQuery.trim() || m.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesBrand && matchesQuery;
+    });
+  }, [allPhoneModels, selectedBrand, searchQuery]);
 
-      // 2. Generate flat high-resolution 300 DPI production file (ONLY customer art, no phone chassis or wall)
-      const productionPrintUrl = await generateProductionArtwork({
-        mockup: activeMockup,
-        artworkUrl: activeArtworkUrl,
-        transform: { x: posX, y: posY, scale: scale / 100, rotation },
-        customTexts: customText
-          ? [{ id: "txt-1", text: customText, font: selectedFont, size: textSize, color: textColor, x: 50, y: 84, rotation: 0 }]
-          : [],
-        customStickers: activeSticker
-          ? [{ id: "stk-1", name: activeSticker, x: 80, y: 20, scale: 1 }]
-          : [],
-      });
+  const currentFinishObj = CASE_FINISHES.find((f) => f.id === selectedFinish) || CASE_FINISHES[0];
+  const totalPrice = currentFinishObj.price;
 
-      const payload = {
-        ...getStructuredPayload(),
-        mockupId: activeMockup.id,
-        mockupName: activeMockup.name,
-        productionArtworkUrl: productionPrintUrl,
-        mockupPreviewUrl: mockupPreviewUrl,
-      };
-      const orderId = `CT-${Math.floor(1000 + Math.random() * 9000)}`;
-
-      saveDesign({
-        title: `${selectedModel} — ${customText || "Custom Armor"}`,
-        productType: "phone_case",
-        phoneModel: selectedModel,
-        previewUrl: mockupPreviewUrl,
-        price: priceQuote.total,
-      });
-
-      saveCustomOrderDesign({
-        orderId,
-        customerName: "Buyer (Saved Design)",
-        phoneModel: selectedModel,
-        caseType: selectedCaseType,
-        designPreviewUrl: mockupPreviewUrl,
-        printFileUrl: productionPrintUrl,
-        customizationData: payload as any,
-        price: priceQuote.total,
-        orderStatus: "PENDING",
-        createdAt: new Date().toISOString(),
-      });
-
-      showToast("Design saved to your collection!");
-      router.push("/saved-designs");
-    } catch (err) {
-      console.error("Failed saving design:", err);
-      showToast("Error saving design. Please try again.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  // Add Custom to Cart
+  // Handle Add to Cart & Super Export
   const handleAddToCart = async () => {
     setIsExporting(true);
     try {
-      // 1. Generate realistic PSD-based e-commerce product preview
-      const mockupPreviewUrl = await generateMockupPreview({
-        mockup: activeMockup,
-        artworkUrl: activeArtworkUrl,
-        transform: { x: posX, y: posY, scale: scale / 100, rotation },
-        customTexts: customText
-          ? [{ id: "txt-1", text: customText, font: selectedFont, size: textSize, color: textColor, x: 50, y: 84, rotation: 0 }]
-          : [],
-        customStickers: activeSticker
-          ? [{ id: "stk-1", name: activeSticker, x: 80, y: 20, scale: 1 }]
-          : [],
-      });
-
-      // 2. Generate flat high-resolution 300 DPI production file (ONLY customer art, no phone chassis or wall)
-      const productionPrintUrl = await generateProductionArtwork({
-        mockup: activeMockup,
-        artworkUrl: activeArtworkUrl,
-        transform: { x: posX, y: posY, scale: scale / 100, rotation },
-        customTexts: customText
-          ? [{ id: "txt-1", text: customText, font: selectedFont, size: textSize, color: textColor, x: 50, y: 84, rotation: 0 }]
-          : [],
-        customStickers: activeSticker
-          ? [{ id: "stk-1", name: activeSticker, x: 80, y: 20, scale: 1 }]
-          : [],
-      });
-
-      const payload = {
-        ...getStructuredPayload(),
-        mockupId: activeMockup.id,
-        mockupName: activeMockup.name,
-        productionArtworkUrl: productionPrintUrl,
-        mockupPreviewUrl: mockupPreviewUrl,
-      };
-      const orderId = `CT-${Math.floor(1000 + Math.random() * 9000)}`;
-
-      saveCustomOrderDesign({
-        orderId,
-        customerName: "Custom Studio Buyer",
-        customerPhone: "+91 98200 11223",
-        phoneModel: selectedModel,
-        caseType: selectedCaseType,
-        designPreviewUrl: mockupPreviewUrl,
-        printFileUrl: productionPrintUrl,
-        customizationData: payload as any,
-        price: priceQuote.total,
-        orderStatus: "CONFIRMED",
-        createdAt: new Date().toISOString(),
-      });
+      const canvas = document.querySelector("#case-3d-viewport canvas") as HTMLCanvasElement | null;
+      const previewUrl = canvas ? canvas.toDataURL("image/png") : artworkUrl || "/mockups/akira.jpg";
 
       addToCart(
         {
           id: `custom-${Date.now()}`,
-          name: `Custom ${selectedModel} ${selectedCaseType}`,
+          name: `Custom ${selectedModel} (${currentFinishObj.name})`,
           franchise: "custom",
           category: "case",
-          tag: "Personalized Armor",
-          price: priceQuote.total,
-          originalPrice: Math.round(priceQuote.total * 1.5),
+          tag: "CaseTadka 3D Custom",
+          price: totalPrice,
+          originalPrice: Math.round(totalPrice * 1.5),
           rating: 5.0,
           reviewsCount: 1,
-          image: mockupPreviewUrl,
-          formats: [selectedCaseType],
-          description: `Custom ${selectedModel} phone case (${selectedCaseType}) with custom call-sign "${customText}".`,
+          image: previewUrl,
+          formats: [currentFinishObj.name],
+          description: `Custom ${selectedModel} phone case in ${currentFinishObj.name} finish.`,
         },
-        selectedCaseType,
+        currentFinishObj.name,
         selectedModel,
         undefined,
-        mockupPreviewUrl
+        previewUrl
       );
-      showToast("Added realistic custom case to cart!");
+
+      showToast("Added to cart! Opening checkout...");
+      setShowExportModal(false);
+      setTimeout(() => {
+        router.push("/cart");
+      }, 500);
     } catch (err) {
-      console.error("Failed adding to cart:", err);
-      showToast("Error creating product preview. Please try again.");
+      console.error(err);
+      showToast("Error exporting. Please try again.");
     } finally {
       setIsExporting(false);
     }
   };
 
-  const brands = Array.from(new Set(phoneModels.map((m) => m.brand)));
-  const modelsInBrand = phoneModels.filter((m) => m.brand === selectedBrand);
+  const handleDownloadMockup = () => {
+    const canvas = document.querySelector("#case-3d-viewport canvas") as HTMLCanvasElement | null;
+    if (canvas) {
+      const link = document.createElement("a");
+      link.download = `${selectedModel.replace(/\s+/g, "_")}_CaseTadka_Mockup.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      showToast("Mockup PNG downloaded!");
+    } else {
+      showToast("Canvas render ready.");
+    }
+  };
 
-  const filteredAssets = assets.filter((a) => {
-    if (stickerCategory === "ALL") return true;
-    return a.category === stickerCategory;
-  });
+  // Dieline Canvas Mouse Interaction
+  const handleDielineMouseDown = (e: React.MouseEvent) => {
+    if (!artworkUrl) return;
+    setIsDielineDragging(true);
+    setDragStart({ x: e.clientX - artworkOffsetX, y: e.clientY - artworkOffsetY });
+  };
 
-  // Filter effect style
-  const filterStyle = `brightness(${effects.brightness}%) contrast(${effects.contrast}%) saturate(${effects.saturation}%) blur(${effects.blur}px) grayscale(${effects.grayscale}%) sepia(${effects.sepia}%)`;
+  const handleDielineMouseMove = (e: React.MouseEvent) => {
+    if (!isDielineDragging) return;
+    setArtworkOffsetX(e.clientX - dragStart.x);
+    setArtworkOffsetY(e.clientY - dragStart.y);
+  };
+
+  const handleDielineMouseUp = () => {
+    if (isDielineDragging) {
+      setIsDielineDragging(false);
+      pushState({ scale: artworkScale, rot: artworkRotation, ox: artworkOffsetX, oy: artworkOffsetY });
+    }
+  };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--background)", color: "var(--foreground)" }}>
-      {/* Floating Toast */}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        backgroundColor: stageBgColor,
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        color: "#18181b",
+        userSelect: "none",
+        position: "relative",
+      }}
+    >
+      {/* Hidden File Inputs */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept="image/png, image/jpeg, image/webp"
+        style={{ display: "none" }}
+      />
+      <input
+        type="file"
+        ref={unfoldFileInputRef}
+        onChange={handleFileUpload}
+        accept="image/png, image/jpeg, image/webp, image/svg+xml"
+        style={{ display: "none" }}
+      />
+
+      {/* Floating Toast Notification */}
       {toastMessage && (
         <div
           style={{
             position: "fixed",
-            bottom: "30px",
-            right: "30px",
-            backgroundColor: "#111",
-            color: "#fff",
-            border: "1px solid var(--main-accent)",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-            zIndex: 9999,
+            bottom: "24px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#18181b",
+            color: "#ffffff",
+            padding: "10px 20px",
+            borderRadius: "999px",
             fontSize: "0.85rem",
-            fontWeight: 700,
+            fontWeight: 600,
+            boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
           }}
         >
-          {toastMessage}
+          <span>✨</span>
+          <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* ─── STEP PROGRESS WIZARD BAR ───────────────────────── */}
-      <div
+      {/* ─── 1. TOP NAVBAR (Pacdora Mockup Generator) ───────────────────────── */}
+      <header
         style={{
-          backgroundColor: "var(--surface)",
-          borderBottom: "1px solid var(--surface-border)",
-          padding: "12px 24px",
-          position: "sticky",
-          top: "70px",
+          height: "54px",
+          backgroundColor: "#ffffff",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
           zIndex: 40,
-          overflowX: "auto",
+          flexShrink: 0,
         }}
       >
-        <div className="container" style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "750px" }}>
-          {[
-            { step: 1, label: "1. Choose Phone", icon: "📱" },
-            { step: 2, label: "2. Choose Case", icon: "🛡️" },
-            { step: 3, label: "3. Upload Photo", icon: "📷" },
-            { step: 4, label: "4. Edit Photo", icon: "🎨" },
-            { step: 5, label: "5. Text & Stickers", icon: "✨" },
-            { step: 6, label: "6. 3D Preview", icon: "🧊" },
-            { step: 7, label: "7. Buy Case", icon: "🛒" },
-          ].map((s) => {
-            const isDone = currentStep > s.step;
-            const isCurr = currentStep === s.step;
-            return (
-              <button
-                key={s.step}
-                onClick={() => setCurrentStep(s.step)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 14px",
-                  borderRadius: "20px",
-                  backgroundColor: isCurr ? "var(--main-accent)" : isDone ? "rgba(46, 213, 115, 0.12)" : "var(--surface-raised)",
-                  color: isCurr ? "#fff" : isDone ? "#2ed573" : "var(--foreground-muted)",
-                  border: isCurr ? "none" : isDone ? "1px solid rgba(46, 213, 115, 0.3)" : "1px solid var(--surface-border)",
-                  fontSize: "0.78rem",
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s",
-                }}
-              >
-                <span>{isDone ? "✓" : s.icon}</span>
-                <span>{s.label}</span>
-              </button>
-            );
-          })}
+        {/* Left: Brand Logo & Title */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            onClick={() => router.push("/")}
+            title="CaseTadka Home"
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <CaseTadkaLogo variant="compact" size="sm" showTagline={false} />
+            <span
+              style={{
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                padding: "3px 8px",
+                borderRadius: "6px",
+                backgroundColor: "#fef2f2",
+                color: "#FF2A3A",
+                border: "1px solid #fecaca",
+              }}
+            >
+              3D STUDIO
+            </span>
+          </div>
+          <button
+            onClick={() => router.push("/")}
+            title="Home"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "6px",
+              borderRadius: "6px",
+              color: "#4b5563",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <button
+            onClick={() => setDrawerOpen((prev) => !prev)}
+            title={drawerOpen ? "Hide Drawer" : "Show Drawer"}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "6px",
+              borderRadius: "6px",
+              color: "#6b7280",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+          </button>
         </div>
-      </div>
 
-      {/* ─── WORKSPACE LAYOUT ─────────────────────────────────── */}
-      <div className="container" style={{ padding: "30px 16px 60px", flex: 1 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 440px", gap: "36px", alignItems: "start" }}>
+        {/* Right: Actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* 3D Design ↗ button */}
+          <button
+            onClick={() => router.push("/catalog")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "6px 14px",
+              borderRadius: "999px",
+              border: "1px solid #d1d5db",
+              backgroundColor: "#ffffff",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+              color: "#374151",
+              cursor: "pointer",
+            }}
+          >
+            <span>3D Design</span>
+            <span style={{ fontSize: "0.75rem" }}>↗</span>
+          </button>
 
-          {/* ════ LEFT COLUMN: REAL-TIME 2D CANVAS & 3D STAGE ════ */}
+          {/* User Collab Avatar Badge */}
           <div
             style={{
-              backgroundColor: "var(--surface)",
-              border: "1px solid var(--surface-border)",
-              borderRadius: "16px",
-              padding: "32px 24px",
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              backgroundColor: "#65a30d",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+              fontSize: "0.75rem",
+              position: "relative",
+              cursor: "pointer",
+            }}
+          >
+            P
+            <span
+              style={{
+                position: "absolute",
+                top: "-2px",
+                right: "-2px",
+                width: "12px",
+                height: "12px",
+                borderRadius: "50%",
+                backgroundColor: "#ffffff",
+                color: "#16a34a",
+                fontSize: "10px",
+                fontWeight: 900,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              +
+            </span>
+          </div>
+
+          {/* Share Button */}
+          <button
+            onClick={() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href);
+                showToast("Mockup link copied!");
+              }
+            }}
+            title="Share Mockup"
+            style={{
+              background: "none",
+              border: "none",
+              padding: "7px",
+              cursor: "pointer",
+              color: "#4b5563",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </button>
+
+          {/* Super Export Button */}
+          <button
+            onClick={() => setShowExportModal(true)}
+            style={{
+              padding: "7px 18px",
+              borderRadius: "8px",
+              backgroundColor: "#7c3aed",
+              color: "#ffffff",
+              border: "none",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(124, 58, 237, 0.35)",
+            }}
+          >
+            Super export
+          </button>
+        </div>
+      </header>
+
+      {/* ─── 2. BODY AREA: FAR-LEFT RAIL + FLOATING DRAWER + 3D VIEWPORT ───── */}
+      <div style={{ flex: 1, display: "flex", position: "relative", overflow: "hidden" }}>
+        {/* ─── 2A. FAR-LEFT VERTICAL ICON RAIL ─────────────────────── */}
+        <aside
+          style={{
+            width: "68px",
+            backgroundColor: "#ffffff",
+            borderRight: "1px solid #e5e7eb",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "14px 0",
+            zIndex: 30,
+            flexShrink: 0,
+          }}
+        >
+          {/* Top Rail Buttons */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", alignItems: "center" }}>
+            {/* Edit Icon (Image 1 Active Tab) */}
+            <button
+              onClick={() => {
+                setActiveRailTab("edit");
+                setDrawerOpen(true);
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: activeRailTab === "edit" ? "#7c3aed" : "#64748b",
+                padding: "6px 8px",
+                borderRadius: "8px",
+                width: "56px",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              <span style={{ fontSize: "0.7rem", fontWeight: activeRailTab === "edit" ? 700 : 500 }}>Edit</span>
+            </button>
+
+            {/* Models Icon */}
+            <button
+              onClick={() => {
+                setActiveRailTab("models");
+                setDrawerOpen(true);
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: activeRailTab === "models" ? "#7c3aed" : "#64748b",
+                padding: "6px 8px",
+                borderRadius: "8px",
+                width: "56px",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              <span style={{ fontSize: "0.7rem", fontWeight: activeRailTab === "models" ? 700 : 500 }}>Models</span>
+            </button>
+
+            {/* Layout Icon */}
+            <button
+              onClick={() => {
+                setActiveRailTab("layout");
+                setDrawerOpen(true);
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: activeRailTab === "layout" ? "#7c3aed" : "#64748b",
+                padding: "6px 8px",
+                borderRadius: "8px",
+                width: "56px",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+              <span style={{ fontSize: "0.7rem", fontWeight: activeRailTab === "layout" ? 700 : 500 }}>Layout</span>
+            </button>
+
+            {/* AI Background Icon */}
+            <button
+              onClick={() => {
+                setActiveRailTab("ai-background");
+                setDrawerOpen(true);
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: activeRailTab === "ai-background" ? "#7c3aed" : "#64748b",
+                padding: "6px 8px",
+                borderRadius: "8px",
+                width: "56px",
+                textAlign: "center",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"></path>
+                <path d="m14 7 3 3"></path>
+                <path d="M5 6v4"></path>
+              </svg>
+              <span style={{ fontSize: "0.65rem", fontWeight: activeRailTab === "ai-background" ? 700 : 500, lineHeight: 1.1 }}>
+                AI Backdrop
+              </span>
+            </button>
+
+            {/* Video Icon */}
+            <button
+              onClick={() => showToast("Auto-spin turntable video mode ready")}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#64748b",
+                padding: "6px 8px",
+                borderRadius: "8px",
+                width: "56px",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
+              <span style={{ fontSize: "0.7rem", fontWeight: 500 }}>Video</span>
+            </button>
+
+            {/* More Icon */}
+            <button
+              onClick={() => setDrawerOpen((prev) => !prev)}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#64748b",
+                padding: "6px 8px",
+                borderRadius: "8px",
+                width: "56px",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="19" cy="12" r="1"></circle>
+                <circle cx="5" cy="12" r="1"></circle>
+              </svg>
+              <span style={{ fontSize: "0.7rem", fontWeight: 500 }}>More</span>
+            </button>
+          </div>
+
+          {/* Bottom AI Design Button */}
+          <button
+            onClick={() => {
+              setActiveRailTab("edit");
+              setDrawerOpen(true);
+              setIsUploadDesignOpen(true);
+            }}
+            style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
-              minHeight: "680px",
-              position: "relative",
-              boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+              gap: "4px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#7c3aed",
+              padding: "6px 8px",
+              borderRadius: "8px",
+              width: "56px",
             }}
           >
-            {/* View Mode Toggle: Realistic PSD Mockup vs 3D Angles */}
             <div
               style={{
-                position: "absolute",
-                top: "18px",
+                width: "28px",
+                height: "28px",
+                borderRadius: "8px",
+                backgroundColor: "#f5f3ff",
                 display: "flex",
-                gap: "6px",
-                backgroundColor: "rgba(10, 10, 12, 0.85)",
-                backdropFilter: "blur(12px)",
-                padding: "4px",
-                borderRadius: "999px",
-                border: "1px solid var(--surface-border)",
-                zIndex: 30,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <button
-                type="button"
-                onClick={() => setCurrentStep(4)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: "999px",
-                  fontSize: "0.78rem",
-                  fontWeight: 800,
-                  backgroundColor: currentStep !== 6 ? "var(--main-accent)" : "transparent",
-                  color: currentStep !== 6 ? "#fff" : "var(--foreground-muted)",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                📱 Realistic PSD Mockup
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentStep(6)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: "999px",
-                  fontSize: "0.78rem",
-                  fontWeight: 800,
-                  backgroundColor: currentStep === 6 ? "var(--main-accent)" : "transparent",
-                  color: currentStep === 6 ? "#fff" : "var(--foreground-muted)",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                🧊 3D Case Angles
-              </button>
+              <span style={{ fontSize: "1rem" }}>🪄</span>
             </div>
+            <span style={{ fontSize: "0.68rem", fontWeight: 700 }}>AI Design</span>
+          </button>
+        </aside>
 
-            {/* Visual Guidelines Indicator Pill */}
-            {currentStep !== 6 && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "18px",
-                  left: "20px",
-                  display: "flex",
-                  gap: "12px",
-                  fontSize: "0.7rem",
-                  fontWeight: 700,
-                  backgroundColor: "var(--surface-raised)",
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  border: "1px solid var(--surface-border)",
-                  zIndex: 25,
-                }}
-              >
-                <span style={{ color: "#22c55e", display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#22c55e" }} />
-                  Safe Zone
-                </span>
-                <span style={{ color: "#3b82f6", display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#3b82f6" }} />
-                  Printable Slot
-                </span>
-                <span style={{ color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ef4444" }} />
-                  Camera Protected
-                </span>
-              </div>
-            )}
+        {/* ─── 2B. FLOATING SECONDARY DRAWER ───────────────────────────────── */}
+        {drawerOpen && (
+          <div
+            style={{
+              position: "absolute",
+              left: "80px",
+              top: "14px",
+              bottom: "14px",
+              width: "330px",
+              backgroundColor: "#ffffff",
+              borderRadius: "16px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)",
+              border: "1px solid #e5e7eb",
+              display: "flex",
+              flexDirection: "column",
+              zIndex: 25,
+              overflow: "hidden",
+            }}
+          >
+            {/* ─── DRAWER VIEW 1: UPLOAD IMAGES SECTION (EXACT MATCH TO IMAGE 1) ─── */}
+            {activeRailTab === "edit" && (
+              <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "18px 16px", overflowY: "auto" }}>
+                {/* Section Title */}
+                <h3 style={{ margin: "0 0 14px", fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
+                  Upload images
+                </h3>
 
-            {/* ─── STAGE A: REAL PSD-BASED PHONE CASE MOCKUP CANVAS ─── */}
-            {currentStep !== 6 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                  position: "relative",
-                }}
-              >
-                <PSDMockupCanvas
-                  mockup={activeMockup}
-                  artworkUrl={activeArtworkUrl}
-                  transform={{
-                    x: posX,
-                    y: posY,
-                    scale: scale / 100,
-                    rotation: rotation,
-                  }}
-                  onTransformChange={(t) => {
-                    setPosX(t.x);
-                    setPosY(t.y);
-                    setScale(Math.round(t.scale * 100));
-                    setRotation(t.rotation);
-                  }}
-                  customTexts={
-                    customText
-                      ? [
-                          {
-                            id: "user-text",
-                            text: customText,
-                            font: selectedFont,
-                            size: textSize,
-                            color: textColor,
-                            x: 50,
-                            y: 84,
-                            rotation: 0,
-                          },
-                        ]
-                      : []
-                  }
-                  customStickers={
-                    activeSticker
-                      ? [
-                          {
-                            id: "user-sticker",
-                            name: activeSticker,
-                            x: 80,
-                            y: 20,
-                            scale: 1,
-                          },
-                        ]
-                      : []
-                  }
-                  filterStyle={filterStyle}
-                  caseType={selectedCaseType}
-                  interactive={true}
-                  showGuidelines={showGuidelines}
-                  displayScale={0.72}
-                />
-
-                {/* Floating Canvas Quick Tools */}
+                {/* Dashed Lavender Upload Dropzone (matching Image 1) */}
                 <div
+                  onClick={() => setIsUploadDesignOpen(true)}
                   style={{
+                    border: "1.5px dashed #c084fc",
+                    backgroundColor: "#f8f5ff",
+                    borderRadius: "14px",
+                    padding: "36px 16px",
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    gap: "8px",
-                    marginTop: "16px",
-                    backgroundColor: "rgba(10, 10, 14, 0.85)",
-                    backdropFilter: "blur(12px)",
-                    padding: "6px 14px",
-                    borderRadius: "24px",
-                    border: "1px solid var(--surface-border)",
-                    zIndex: 25,
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    marginBottom: "16px",
+                    transition: "all 0.15s ease",
                   }}
+                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f3e8ff")}
+                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#f8f5ff")}
                 >
+                  {/* Purple Picture Icon */}
+                  <div style={{ color: "#7c3aed", marginBottom: "14px" }}>
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
+                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                      <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                  </div>
+
+                  {/* Solid Purple Upload Button */}
                   <button
-                    type="button"
-                    onClick={handleFitToCase}
-                    title="Fit photo inside case"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsUploadDesignOpen(true);
+                    }}
                     style={{
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.72rem",
-                      fontWeight: 800,
-                      backgroundColor: "var(--surface-raised)",
-                      border: "1px solid var(--surface-border)",
-                      color: "var(--foreground)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "8px 22px",
+                      borderRadius: "8px",
+                      backgroundColor: "#7c3aed",
+                      color: "#ffffff",
+                      border: "none",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
                       cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(124, 58, 237, 0.3)",
+                      marginBottom: "12px",
                     }}
                   >
-                    Fit Case
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Upload</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleFillCase}
-                    title="Fill entire phone case"
+
+                  {/* Dimension Subtitle */}
+                  <span style={{ fontSize: "0.78rem", color: "#7c3aed", fontWeight: 500 }}>
+                    341 × 640 px
+                  </span>
+                </div>
+
+                {/* Specification Cards List (Image 1) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "14px" }}>
+                  {/* Row 1: Custom material */}
+                  <div
+                    onClick={() => setActiveRailTab("layout")}
                     style={{
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.72rem",
-                      fontWeight: 800,
-                      backgroundColor: "var(--surface-raised)",
-                      border: "1px solid var(--surface-border)",
-                      color: "var(--foreground)",
+                      backgroundColor: "#f9fafb",
+                      borderRadius: "10px",
+                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                       cursor: "pointer",
+                      border: "1px solid #f3f4f6",
                     }}
                   >
-                    Fill Case
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCenter}
-                    title="Center image"
+                    <div>
+                      <div style={{ fontSize: "0.72rem", color: "#6b7280", marginBottom: "2px" }}>Custom material</div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>{currentFinishObj.name}</div>
+                    </div>
+                    <span style={{ color: "#9ca3af", fontSize: "0.9rem" }}>›</span>
+                  </div>
+
+                  {/* Row 2: Size */}
+                  <div
                     style={{
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.72rem",
-                      fontWeight: 800,
-                      backgroundColor: "var(--surface-raised)",
-                      border: "1px solid var(--surface-border)",
-                      color: "var(--foreground)",
-                      cursor: "pointer",
+                      backgroundColor: "#f9fafb",
+                      borderRadius: "10px",
+                      padding: "12px 14px",
+                      border: "1px solid #f3f4f6",
                     }}
                   >
-                    Center
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => rotateStep(90)}
-                    title="Rotate 90 degrees"
+                    <div style={{ fontSize: "0.72rem", color: "#6b7280", marginBottom: "2px" }}>Size</div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
+                      5.91 × 2.7974 × 0.3152 in
+                    </div>
+                  </div>
+
+                  {/* Row: Case Color with Spectrum Picker */}
+                  <div
                     style={{
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.72rem",
-                      fontWeight: 800,
-                      backgroundColor: "var(--surface-raised)",
-                      border: "1px solid var(--surface-border)",
-                      color: "var(--foreground)",
-                      cursor: "pointer",
+                      backgroundColor: "#f9fafb",
+                      borderRadius: "10px",
+                      padding: "12px 14px",
+                      border: "1px solid #f3f4f6",
                     }}
                   >
-                    ↻ 90°
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowGuidelines(!showGuidelines)}
-                    title="Toggle Print/Camera Guidelines"
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#6b7280" }}>Case Color</div>
+                      <span style={{ fontSize: "0.72rem", fontFamily: "monospace", fontWeight: 700, color: "#334155", textTransform: "uppercase" }}>
+                        {packageColor}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      {/* Rainbow Spectrum Picker */}
+                      <div
+                        title="Pick from Color Spectrum"
+                        style={{
+                          position: "relative",
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "50%",
+                          background:
+                            "conic-gradient(from 0deg, #ff0000, #ffa500, #ffff00, #008000, #00ffff, #0000ff, #800080, #ff00ff, #ff0000)",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                          cursor: "pointer",
+                          border: "2px solid #ffffff",
+                          flexShrink: 0,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <input
+                          type="color"
+                          value={packageColor}
+                          onChange={(e) => setPackageColor(e.target.value)}
+                          style={{
+                            position: "absolute",
+                            inset: -8,
+                            width: "200%",
+                            height: "200%",
+                            opacity: 0,
+                            cursor: "pointer",
+                          }}
+                        />
+                      </div>
+
+                      {/* Swatches */}
+                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", flex: 1 }}>
+                        {[
+                          { name: "Ultramarine Blue", color: "#2e3d7a" },
+                          { name: "Pure White", color: "#ffffff" },
+                          { name: "Midnight Black", color: "#18181b" },
+                          { name: "Hot Pink", color: "#ec4899" },
+                          { name: "Teal Green", color: "#10b981" },
+                          { name: "Desert Titanium", color: "#c5a880" },
+                        ].map((c) => {
+                          const isSelected = packageColor.toLowerCase() === c.color.toLowerCase();
+                          return (
+                            <button
+                              key={c.name}
+                              onClick={() => {
+                                setPackageColor(c.color);
+                                showToast(`Color: ${c.name}`);
+                              }}
+                              title={c.name}
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                backgroundColor: c.color,
+                                border: isSelected ? "2px solid #7c3aed" : "1px solid rgba(0,0,0,0.15)",
+                                cursor: "pointer",
+                                transform: isSelected ? "scale(1.15)" : "scale(1)",
+                                padding: 0,
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Find similar with AI */}
+                  <div
+                    onClick={() => setIsUploadDesignOpen(true)}
                     style={{
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.72rem",
-                      fontWeight: 800,
-                      backgroundColor: showGuidelines ? "rgba(230, 57, 70, 0.2)" : "var(--surface-raised)",
-                      border: showGuidelines ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)",
-                      color: showGuidelines ? "var(--main-accent)" : "var(--foreground-muted)",
+                      backgroundColor: "#f9fafb",
+                      borderRadius: "10px",
+                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                       cursor: "pointer",
+                      border: "1px solid #f3f4f6",
                     }}
                   >
-                    {showGuidelines ? "Hide Guides" : "Show Guides"}
-                  </button>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
+                      Find similar with AI
+                    </div>
+                    <span style={{ color: "#9ca3af", fontSize: "0.9rem" }}>›</span>
+                  </div>
+                </div>
+
+                {/* Model ID Footnote */}
+                <div style={{ marginTop: "auto", paddingTop: "12px", display: "flex", alignItems: "center", gap: "6px", color: "#9ca3af", fontSize: "0.72rem" }}>
+                  <span>ⓘ</span>
+                  <span>Model ID: 802030</span>
                 </div>
               </div>
             )}
 
-            {/* ─── STAGE B: REAL 3D PREVIEW ─── */}
-            {currentStep === 6 && (
-              <PhoneCase3D
-                artworkUrl={activeArtworkUrl}
-                phoneModel={selectedModel}
-                caseType={selectedCaseType}
-                width={280}
-                height={570}
-                rotY={rot3dY}
-                rotX={rot3dX}
-                onRotate={(y, x) => {
-                  setRot3dY(y);
-                  setRot3dX(x);
-                }}
-                customOverlay={
-                  <>
-                    {/* Text overlay in 3D */}
-                    {customText && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: "38px",
-                          left: "20px",
-                          right: "20px",
-                          textAlign: "center",
-                          color: textColor,
-                          fontFamily: selectedFont,
-                          fontSize: "1.1rem",
-                          fontWeight: 900,
-                          letterSpacing: "0.15em",
-                          textTransform: "uppercase",
-                          textShadow: "0 2px 10px rgba(0,0,0,0.9)",
-                          backgroundColor: "rgba(0,0,0,0.45)",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          backdropFilter: "blur(4px)",
-                        }}
-                      >
-                        {customText}
-                      </div>
-                    )}
+            {/* ─── DRAWER VIEW 2: MODELS LIBRARY ─── */}
+            {activeRailTab === "models" && (
+              <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "16px" }}>
+                {/* Top Tabs: Library, Projects, Custom */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+                  <button
+                    style={{
+                      padding: "6px 16px",
+                      borderRadius: "999px",
+                      backgroundColor: "#7c3aed",
+                      color: "#ffffff",
+                      fontWeight: 600,
+                      fontSize: "0.8rem",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Library
+                  </button>
+                  <button
+                    onClick={() => showToast("Projects saved locally")}
+                    style={{
+                      padding: "6px 14px",
+                      borderRadius: "999px",
+                      backgroundColor: "transparent",
+                      color: "#4b5563",
+                      fontWeight: 600,
+                      fontSize: "0.8rem",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Projects
+                  </button>
+                  <button
+                    onClick={() => setActiveRailTab("edit")}
+                    style={{
+                      padding: "6px 14px",
+                      borderRadius: "999px",
+                      backgroundColor: "transparent",
+                      color: "#4b5563",
+                      fontWeight: 600,
+                      fontSize: "0.8rem",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Custom
+                  </button>
+                </div>
 
-                    {/* Sticker overlay in 3D */}
-                    {activeSticker && (
-                      <div
+                {/* Search Bar */}
+                <div
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    backgroundColor: "#f3f4f6",
+                    borderRadius: "10px",
+                    padding: "8px 12px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <span style={{ color: "#9ca3af", marginRight: "8px", fontSize: "0.85rem" }}>🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Try 4+ words to describe..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      outline: "none",
+                      fontSize: "0.82rem",
+                      width: "100%",
+                      color: "#1f2937",
+                    }}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Upload reference photo"
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "#6b7280" }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                      <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Horizontal Category Chips */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    overflowX: "auto",
+                    paddingBottom: "8px",
+                    marginBottom: "10px",
+                    scrollbarWidth: "none",
+                  }}
+                >
+                  {["All", "Apple", "Samsung", "OnePlus", "Google"].map((brand) => {
+                    const isSelected = selectedBrand.toLowerCase() === brand.toLowerCase();
+                    return (
+                      <button
+                        key={brand}
+                        onClick={() => setSelectedBrand(brand)}
                         style={{
-                          position: "absolute",
-                          top: "130px",
-                          right: "16px",
-                          backgroundColor: "var(--shinra-red)",
-                          color: "#ffffff",
-                          fontFamily: selectedFont,
-                          fontSize: "0.7rem",
-                          fontWeight: 900,
-                          padding: "4px 8px",
-                          borderRadius: "3px",
-                          boxShadow: "0 4px 10px rgba(0,0,0,0.8)",
+                          padding: "4px 10px",
+                          borderRadius: "6px",
+                          backgroundColor: isSelected ? "#f3f4f6" : "transparent",
+                          color: isSelected ? "#111827" : "#6b7280",
+                          fontWeight: isSelected ? 700 : 500,
+                          fontSize: "0.75rem",
+                          border: "none",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {activeSticker}
+                        {brand === "Apple" ? "iPhone" : brand}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 3-Column Phone Model Grid */}
+                <div
+                  style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: "10px",
+                    paddingRight: "4px",
+                  }}
+                >
+                  {filteredModels.map((model) => {
+                    const isSelected = selectedModel === model.name;
+                    return (
+                      <div
+                        key={model.id}
+                        onClick={() => {
+                          setSelectedModel(model.name);
+                          setDevice(model.brand, model.name);
+                          showToast(`Loaded ${model.name}`);
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          borderRadius: "10px",
+                          padding: "6px",
+                          border: isSelected ? "2px solid #7c3aed" : "1px solid #f1f5f9",
+                          backgroundColor: isSelected ? "#faf5ff" : "#ffffff",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {/* Miniature 3D Phone Cover Model */}
+                        <MiniPhoneCoverModel model={model} isSelected={isSelected} />
+
+                        {/* Title */}
+                        <span
+                          style={{
+                            fontSize: "0.68rem",
+                            fontWeight: isSelected ? 700 : 500,
+                            color: isSelected ? "#7c3aed" : "#334155",
+                            marginTop: "6px",
+                            textAlign: "center",
+                            width: "100%",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {model.name.replace(/^(Apple |Samsung )/, "")}
+                        </span>
+
+                        {/* Color dots */}
+                        <div style={{ display: "flex", gap: "3px", marginTop: "4px" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#e2e8f0" }} />
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1e293b" }} />
+                        </div>
                       </div>
-                    )}
-                  </>
-                }
-              />
+                    );
+                  })}
+                </div>
+              </div>
             )}
 
-            {/* 3D View Angle Controls */}
-            {currentStep === 6 && (
-              <div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap", justifyContent: "center" }}>
-                <button
-                  onClick={() => {
-                    setRot3dY(0);
-                    setRot3dX(0);
+            {/* ─── DRAWER VIEW 3: LAYOUT (EXACT MATCH TO PACDORA SCREENSHOT) ─── */}
+            {activeRailTab === "layout" && (
+              <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+                {/* Header */}
+                <div style={{ padding: "18px 18px 12px", borderBottom: "1px solid #f1f5f9" }}>
+                  <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#111827", letterSpacing: "-0.01em" }}>
+                    Layout
+                  </h3>
+                </div>
+
+                {/* 2-Column Preset Cards Grid (12 items) */}
+                <div
+                  style={{
+                    flex: 1,
+                    padding: "16px",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "12px",
+                    overflowY: "auto",
                   }}
-                  style={{ padding: "6px 12px", borderRadius: "6px", backgroundColor: rot3dY === 0 ? "var(--main-accent)" : "var(--surface-raised)", color: rot3dY === 0 ? "#fff" : "var(--foreground)", border: "1px solid var(--surface-border)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                 >
-                  Front View
-                </button>
-                <button
-                  onClick={() => {
-                    setRot3dY(-28);
-                    setRot3dX(8);
-                  }}
-                  style={{ padding: "6px 12px", borderRadius: "6px", backgroundColor: rot3dY === -28 ? "var(--main-accent)" : "var(--surface-raised)", color: rot3dY === -28 ? "#fff" : "var(--foreground)", border: "1px solid var(--surface-border)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                >
-                  Left Tilt 3D
-                </button>
-                <button
-                  onClick={() => {
-                    setRot3dY(28);
-                    setRot3dX(8);
-                  }}
-                  style={{ padding: "6px 12px", borderRadius: "6px", backgroundColor: rot3dY === 28 ? "var(--main-accent)" : "var(--surface-raised)", color: rot3dY === 28 ? "#fff" : "var(--foreground)", border: "1px solid var(--surface-border)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                >
-                  Right Tilt 3D
-                </button>
-                <button
-                  onClick={() => {
-                    setRot3dY(0);
-                    setRot3dX(0);
-                    setZoom3d(100);
-                  }}
-                  style={{ padding: "6px 12px", borderRadius: "6px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                >
-                  ↺ Reset Angle
-                </button>
+                  {LAYOUT_PRESET_ITEMS.map((preset) => {
+                    const isSelected = activeLayout === preset.id;
+                    return (
+                      <div
+                        key={preset.id}
+                        id={`layout-preset-${preset.id}`}
+                        onClick={() => {
+                          setActiveLayout(preset.id);
+                          showToast(`Layout: ${preset.title}`);
+                        }}
+                        title={preset.title}
+                        style={{
+                          height: "92px",
+                          borderRadius: "14px",
+                          backgroundColor: "#ffffff",
+                          border: isSelected ? "2px solid #7c3aed" : "1px solid #e2e8f0",
+                          boxShadow: isSelected
+                            ? "0 0 0 1px #7c3aed, 0 4px 14px rgba(124, 58, 237, 0.16)"
+                            : "0 1px 3px rgba(0,0,0,0.03)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "6px",
+                          position: "relative",
+                          transition: "all 0.15s ease",
+                          overflow: "hidden",
+                        }}
+                        onMouseOver={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.borderColor = "#c4b5fd";
+                            e.currentTarget.style.backgroundColor = "#faf5ff";
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.borderColor = "#e2e8f0";
+                            e.currentTarget.style.backgroundColor = "#ffffff";
+                          }
+                        }}
+                      >
+                        {preset.renderThumbnail()}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ─── DRAWER VIEW 4: AI BACKDROP ─── */}
+            {activeRailTab === "ai-background" && (
+              <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "16px" }}>
+                <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#111827", marginBottom: "12px" }}>
+                  Studio Stage Background
+                </span>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                  {[
+                    { name: "Studio Grey", color: "#e2e5eb" },
+                    { name: "Pure White", color: "#ffffff" },
+                    { name: "Midnight Obsidian", color: "#18181b" },
+                    { name: "Cyber Lavender", color: "#ede9fe" },
+                  ].map((bg) => {
+                    const isSelected = stageBgColor === bg.color;
+                    return (
+                      <div
+                        key={bg.name}
+                        onClick={() => setStageBgColor(bg.color)}
+                        style={{
+                          padding: "10px",
+                          borderRadius: "8px",
+                          border: isSelected ? "2px solid #7c3aed" : "1px solid #cbd5e1",
+                          cursor: "pointer",
+                          backgroundColor: "#ffffff",
+                        }}
+                      >
+                        <div style={{ height: "36px", borderRadius: "6px", backgroundColor: bg.color, marginBottom: "6px" }} />
+                        <span style={{ fontSize: "0.72rem", fontWeight: 600 }}>{bg.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
+        )}
 
-          {/* ════ RIGHT COLUMN: 7-STEP INTERACTIVE CONTROLS ════ */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        {/* ─── 2C. CENTER STAGE (3D PHONE CASE VIEWPORT) ───────────────────── */}
+        <div
+          id="case-3d-viewport"
+          style={{
+            flex: 1,
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* PhoneCase3D component: full-bleed interactive 3D case */}
+          <div style={{ width: "100%", height: "100%", position: "absolute", inset: 0 }}>
+            <PhoneCase3D
+              artworkUrl={artworkUrl}
+              phoneModel={selectedModel}
+              caseType={currentFinishObj.name}
+              caseColor={packageColor}
+              layout={activeLayout}
+              hideControls={true}
+              artworkScale={artworkScale}
+              artworkOffsetX={artworkOffsetX}
+              artworkOffsetY={artworkOffsetY}
+              artworkRotation={artworkRotation}
+              style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
+            />
+          </div>
 
-            {/* ─── STEP 1: CHOOSE PHONE ─── */}
-            <div
+          {/* ─── 2D. FLOATING RIGHT TOOLBAR ─── */}
+          <div
+            style={{
+              position: "absolute",
+              right: "16px",
+              top: "100px",
+              backgroundColor: "#ffffff",
+              borderRadius: "10px",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+              border: "1px solid #e5e7eb",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "4px",
+              gap: "4px",
+              zIndex: 30,
+            }}
+          >
+            <button
+              onClick={() => setActiveTool("select")}
               style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--surface-border)",
-                borderRadius: "14px",
-                padding: "20px",
+                width: "36px",
+                height: "36px",
+                borderRadius: "6px",
+                border: "none",
+                backgroundColor: activeTool === "select" ? "#f5f3ff" : "transparent",
+                color: activeTool === "select" ? "#7c3aed" : "#64748b",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--main-accent)" }}>
-                  STEP 1: Choose Your Phone
-                </span>
-                <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", fontWeight: 700 }}>
-                  {phoneModels.length} Models in Database
-                </span>
-              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <polygon points="3 3 10.07 19.97 12.58 12.58 19.97 10.07 3 3"></polygon>
+              </svg>
+            </button>
+            <button
+              onClick={() => setActiveTool("pan")}
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "6px",
+                border: "none",
+                backgroundColor: activeTool === "pan" ? "#f5f3ff" : "transparent",
+                color: activeTool === "pan" ? "#7c3aed" : "#64748b",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+                <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+                <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+              </svg>
+            </button>
+            <div style={{ width: "24px", height: "1px", backgroundColor: "#e5e7eb", margin: "2px 0" }} />
+            <button
+              onClick={handleUndo}
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "6px",
+                border: "none",
+                backgroundColor: "transparent",
+                color: "#64748b",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 7v6h6"></path>
+                <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+              </svg>
+            </button>
+            <button
+              onClick={handleRedo}
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "6px",
+                border: "none",
+                backgroundColor: "transparent",
+                color: "#64748b",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 7v6h-6"></path>
+                <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+              </svg>
+            </button>
+          </div>
 
-              {/* Brand Chips */}
-              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
-                {brands.map((b) => (
+          {/* ─── 2G. FLOATING CASE COLOR SPECTRUM BAR ─── */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: "64px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              backgroundColor: "rgba(255, 255, 255, 0.96)",
+              backdropFilter: "blur(14px)",
+              padding: "6px 14px",
+              borderRadius: "999px",
+              boxShadow: "0 6px 22px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)",
+              border: "1px solid rgba(229, 231, 235, 0.9)",
+              zIndex: 35,
+              transition: "all 0.2s ease",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "2px" }}>
+              <span style={{ fontSize: "0.85rem" }}>🎨</span>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1e293b", letterSpacing: "0.02em" }}>
+                Color
+              </span>
+            </div>
+
+            <div style={{ width: "1px", height: "18px", backgroundColor: "#e2e8f0" }} />
+
+            {/* Quick Swatches */}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              {[
+                { name: "Ultramarine Blue", color: "#2e3d7a" },
+                { name: "Pure White", color: "#ffffff" },
+                { name: "Midnight Black", color: "#18181b" },
+                { name: "Hot Pink", color: "#ec4899" },
+                { name: "Teal Green", color: "#10b981" },
+                { name: "Desert Titanium", color: "#c5a880" },
+                { name: "Canary Yellow", color: "#facc15" },
+                { name: "Cyber Red", color: "#dc2626" },
+              ].map((c) => {
+                const isSelected = packageColor.toLowerCase() === c.color.toLowerCase();
+                return (
                   <button
-                    key={b}
+                    key={c.name}
                     onClick={() => {
-                      setSelectedBrand(b);
-                      const first = phoneModels.find((m) => m.brand === b);
-                      if (first) {
-                        setSelectedModel(first.name);
-                        setDevice(b, first.name);
-                      }
+                      setPackageColor(c.color);
+                      showToast(`Color: ${c.name}`);
                     }}
+                    title={c.name}
                     style={{
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                      backgroundColor: selectedBrand === b ? "var(--main-accent)" : "var(--surface-raised)",
-                      color: selectedBrand === b ? "#fff" : "var(--foreground-muted)",
-                      border: "1px solid var(--surface-border)",
+                      width: "22px",
+                      height: "22px",
+                      borderRadius: "50%",
+                      backgroundColor: c.color,
+                      border: isSelected ? "2.5px solid #7c3aed" : "1.5px solid rgba(0, 0, 0, 0.15)",
+                      boxShadow: isSelected
+                        ? "0 0 0 2px rgba(124, 58, 237, 0.35), 0 2px 6px rgba(0,0,0,0.2)"
+                        : "0 1px 3px rgba(0,0,0,0.1)",
                       cursor: "pointer",
-                      transition: "all 0.15s",
+                      transform: isSelected ? "scale(1.15)" : "scale(1)",
+                      transition: "all 0.15s ease",
+                      padding: 0,
                     }}
-                  >
-                    {b}
-                  </button>
-                ))}
-              </div>
+                  />
+                );
+              })}
+            </div>
 
-              {/* Model Select */}
-              <select
-                value={selectedModel}
+            <div style={{ width: "1px", height: "18px", backgroundColor: "#e2e8f0" }} />
+
+            {/* Rainbow Spectrum Picker Button */}
+            <div
+              title="Open Color Spectrum Picker"
+              style={{
+                position: "relative",
+                width: "26px",
+                height: "26px",
+                borderRadius: "50%",
+                background:
+                  "conic-gradient(from 0deg, #ff0000, #ffa500, #ffff00, #008000, #00ffff, #0000ff, #800080, #ff00ff, #ff0000)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
+                cursor: "pointer",
+                border: "2px solid #ffffff",
+                overflow: "hidden",
+              }}
+            >
+              <input
+                type="color"
+                value={packageColor}
                 onChange={(e) => {
-                  setSelectedModel(e.target.value);
-                  setDevice(selectedBrand, e.target.value);
+                  setPackageColor(e.target.value);
                 }}
                 style={{
-                  width: "100%",
-                  padding: "10px 14px",
+                  position: "absolute",
+                  inset: -8,
+                  width: "200%",
+                  height: "200%",
+                  opacity: 0,
+                  cursor: "pointer",
+                }}
+              />
+            </div>
+
+            {/* Hex Code Input */}
+            <input
+              type="text"
+              value={packageColor}
+              onChange={(e) => setPackageColor(e.target.value)}
+              style={{
+                fontSize: "0.72rem",
+                fontFamily: "monospace",
+                fontWeight: 700,
+                color: "#334155",
+                backgroundColor: "#f1f5f9",
+                padding: "3px 6px",
+                borderRadius: "4px",
+                textTransform: "uppercase",
+                border: "1px solid #e2e8f0",
+                width: "68px",
+                textAlign: "center",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          {/* ─── 2F. FLOATING BOTTOM BAR (MATCHING PACDORA SCREENSHOT) ─── */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: "16px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(12px)",
+              padding: "5px 12px",
+              borderRadius: "999px",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
+              border: "1px solid #e5e7eb",
+              zIndex: 30,
+            }}
+          >
+            <button
+              onClick={() => showToast("3D View Active")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "5px 10px",
+                borderRadius: "999px",
+                border: "none",
+                backgroundColor: "#f5f3ff",
+                color: "#7c3aed",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+              <span>3D</span>
+            </button>
+
+            <button
+              onClick={() => setIsUploadDesignOpen(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "5px 10px",
+                borderRadius: "999px",
+                border: "none",
+                backgroundColor: "transparent",
+                color: "#475569",
+                fontSize: "0.78rem",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>Dieline</span>
+            </button>
+
+            <button
+              onClick={() => showToast("Model Specs: 5.91 × 2.79 × 0.31 in")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "5px 10px",
+                borderRadius: "999px",
+                border: "none",
+                backgroundColor: "transparent",
+                color: "#475569",
+                fontSize: "0.78rem",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+              <span>Specs</span>
+            </button>
+
+            <div style={{ width: "1px", height: "14px", backgroundColor: "#e2e8f0" }} />
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "5px 8px",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: "#1e293b",
+              }}
+            >
+              <span style={{ fontSize: "0.85rem" }}>🟡</span>
+              <span>Watermark free</span>
+            </div>
+          </div>
+
+          {/* ─── 2E. BOTTOM-RIGHT CIRCULAR CHAT WIDGET ─── */}
+          <div
+            onClick={() => showToast("Live 3D design support ready")}
+            style={{
+              position: "absolute",
+              right: "20px",
+              bottom: "20px",
+              width: "42px",
+              height: "42px",
+              borderRadius: "50%",
+              backgroundColor: "#111827",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+              cursor: "pointer",
+              zIndex: 30,
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2.1 21.2a1 1 0 0 0 1.2 1.2l4.2-1.238A9.957 9.957 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* ═════════════════════════════════════════════════════════════════════ */}
+      {/* ─── 3. "UPLOAD & DESIGN" FULL-SCREEN WORKSPACE (EXACT MATCH IMAGE 2) ── */}
+      {/* ═════════════════════════════════════════════════════════════════════ */}
+      {isUploadDesignOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "#f5f5f7",
+            zIndex: 100,
+            display: "flex",
+            flexDirection: "column",
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          }}
+        >
+          {/* Top Bar: Close ✕ + 'Upload & Design' + Purple 'Save' */}
+          <header
+            style={{
+              height: "54px",
+              backgroundColor: "#ffffff",
+              borderBottom: "1px solid #e5e7eb",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0 20px",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <button
+                onClick={() => setIsUploadDesignOpen(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.2rem",
+                  cursor: "pointer",
+                  color: "#374151",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "4px",
+                }}
+              >
+                ✕
+              </button>
+              <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
+                Upload & Design
+              </h2>
+            </div>
+
+            <button
+              onClick={() => {
+                setIsUploadDesignOpen(false);
+                showToast("Design applied to 3D mockup!");
+              }}
+              style={{
+                padding: "8px 24px",
+                borderRadius: "8px",
+                backgroundColor: "#7c3aed",
+                color: "#ffffff",
+                border: "none",
+                fontWeight: 700,
+                fontSize: "0.88rem",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(124, 58, 237, 0.35)",
+              }}
+            >
+              Save
+            </button>
+          </header>
+
+          {/* Workspace Body */}
+          <div style={{ flex: 1, display: "flex", position: "relative", overflow: "hidden" }}>
+            {/* Leftmost Rail: Uploads | Elements | Text | Tools */}
+            <aside
+              style={{
+                width: "64px",
+                backgroundColor: "#ffffff",
+                borderRight: "1px solid #e5e7eb",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: "16px 0",
+                gap: "20px",
+                flexShrink: 0,
+              }}
+            >
+              {/* Uploads Tab */}
+              <button
+                onClick={() => setUploadDesignTab("uploads")}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: uploadDesignTab === "uploads" ? "#7c3aed" : "#64748b",
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    backgroundColor: uploadDesignTab === "uploads" ? "#f5f3ff" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                    <path d="M12 12v9"></path>
+                    <path d="m16 16-4-4-4 4"></path>
+                  </svg>
+                </div>
+                <span style={{ fontSize: "0.68rem", fontWeight: uploadDesignTab === "uploads" ? 700 : 500 }}>Uploads</span>
+              </button>
+
+              {/* Elements Tab */}
+              <button
+                onClick={() => setUploadDesignTab("elements")}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: uploadDesignTab === "elements" ? "#7c3aed" : "#64748b",
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    backgroundColor: uploadDesignTab === "elements" ? "#f5f3ff" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                </div>
+                <span style={{ fontSize: "0.68rem", fontWeight: uploadDesignTab === "elements" ? 700 : 500 }}>Elements</span>
+              </button>
+
+              {/* Text Tab */}
+              <button
+                onClick={() => setUploadDesignTab("text")}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: uploadDesignTab === "text" ? "#7c3aed" : "#64748b",
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    backgroundColor: uploadDesignTab === "text" ? "#f5f3ff" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>T</span>
+                </div>
+                <span style={{ fontSize: "0.68rem", fontWeight: uploadDesignTab === "text" ? 700 : 500 }}>Text</span>
+              </button>
+
+              {/* Tools Tab */}
+              <button
+                onClick={() => setUploadDesignTab("tools")}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: uploadDesignTab === "tools" ? "#7c3aed" : "#64748b",
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    backgroundColor: uploadDesignTab === "tools" ? "#f5f3ff" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </div>
+                <span style={{ fontSize: "0.68rem", fontWeight: uploadDesignTab === "tools" ? 700 : 500 }}>Tools</span>
+              </button>
+            </aside>
+
+            {/* Left Secondary Panel (Uploads List matching Image 2) */}
+            <div
+              style={{
+                width: "210px",
+                backgroundColor: "#ffffff",
+                borderRight: "1px solid #e5e7eb",
+                padding: "16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "14px",
+                flexShrink: 0,
+              }}
+            >
+              {/* Black Upload Pill Button: ↑ JPG, PNG, SVG */}
+              <button
+                onClick={() => unfoldFileInputRef.current?.click()}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  padding: "10px",
                   borderRadius: "8px",
-                  backgroundColor: "var(--surface-raised)",
-                  border: "1px solid var(--surface-border)",
-                  color: "var(--foreground)",
-                  fontSize: "0.85rem",
-                  fontWeight: 700,
-                  outline: "none",
+                  backgroundColor: "#18181b",
+                  color: "#ffffff",
+                  border: "none",
+                  fontWeight: 600,
+                  fontSize: "0.78rem",
                   cursor: "pointer",
                 }}
               >
-                {modelsInBrand.map((m) => (
-                  <option key={m.id} value={m.name}>
-                    {m.name} ({m.canvasWidth}x{m.canvasHeight}px)
-                  </option>
-                ))}
-              </select>
-            </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>JPG, PNG, SVG</span>
+              </button>
 
-            {/* ─── STEP 2: CHOOSE CASE FINISH ─── */}
-            <div
-              style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--surface-border)",
-                borderRadius: "14px",
-                padding: "20px",
-              }}
-            >
-              <div style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--main-accent)", marginBottom: "12px" }}>
-                STEP 2: Select Armor Finish & Grade
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
-                {caseTypes.map((c) => {
-                  const isSel = selectedFinish === c.finishType;
+              {/* Uploaded Photos Grid (Shows Gojo, etc.) */}
+              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+                {uploadsList.map((item) => {
+                  const isCurrent = artworkUrl === item.url;
                   return (
-                    <button
-                      key={c.id}
+                    <div
+                      key={item.id}
                       onClick={() => {
-                        setSelectedFinish(c.finishType);
-                        setSelectedCaseType(c.name);
+                        setArtworkUrl(item.url);
+                        showToast(`Placed ${item.name}`);
                       }}
                       style={{
-                        padding: "12px",
-                        borderRadius: "8px",
-                        textAlign: "left",
-                        backgroundColor: isSel ? "rgba(230, 57, 70, 0.12)" : "var(--surface-raised)",
-                        border: isSel ? "2px solid var(--main-accent)" : "1px solid var(--surface-border)",
+                        borderRadius: "10px",
+                        overflow: "hidden",
+                        border: isCurrent ? "2px solid #7c3aed" : "1px solid #e5e7eb",
                         cursor: "pointer",
-                        color: "var(--foreground)",
-                        transition: "all 0.15s",
+                        aspectRatio: "1 / 1.25",
+                        backgroundColor: "#f3f4f6",
+                        position: "relative",
+                        transition: "all 0.15s ease",
                       }}
                     >
-                      <div style={{ fontWeight: 800, fontSize: "0.82rem" }}>{c.name}</div>
-                      <div style={{ fontSize: "0.72rem", color: "var(--main-accent)", fontWeight: 900, marginTop: "2px" }}>
-                        ₹{c.price}
-                      </div>
-                      <div style={{ fontSize: "0.68rem", color: "var(--foreground-muted)", marginTop: "2px" }}>
-                        {c.dropProtection}
-                      </div>
-                    </button>
+                      <img
+                        src={item.url}
+                        alt={item.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* ─── STEP 3: UPLOAD PHOTO ─── */}
+            {/* ─── CENTER: 2D FLAT DIELINE UNFOLD CANVAS (Image 2) ─── */}
             <div
+              onMouseDown={handleDielineMouseDown}
+              onMouseMove={handleDielineMouseMove}
+              onMouseUp={handleDielineMouseUp}
               style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--surface-border)",
-                borderRadius: "14px",
-                padding: "20px",
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                position: "relative",
+                backgroundColor: "#f5f5f7",
+                cursor: isDielineDragging ? "grabbing" : "grab",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--main-accent)" }}>
-                  STEP 3: Upload Your Photo
-                </span>
-                <span style={{ fontSize: "0.7rem", color: "var(--foreground-muted)" }}>
-                  JPG, JPEG, PNG, WEBP
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
+              {/* Dieline Wrap SVG Component */}
+              <div
                 style={{
-                  width: "100%",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  border: "2px dashed var(--main-accent)",
-                  backgroundColor: "rgba(230, 57, 70, 0.05)",
-                  color: "var(--foreground)",
-                  fontWeight: 800,
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "6px",
-                  transition: "all 0.15s",
+                  position: "relative",
+                  width: "420px",
+                  height: "720px",
+                  transform: `scale(${dielineZoom / 100})`,
+                  transformOrigin: "center center",
+                  transition: isDielineDragging ? "none" : "transform 0.1s ease",
                 }}
               >
-                <span style={{ fontSize: "1.6rem" }}>📤</span>
-                <span>+ UPLOAD YOUR PHOTO</span>
-                <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", fontWeight: 500 }}>
-                  High-resolution photo for maximum 300 DPI clarity
-                </span>
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept="image/png, image/jpeg, image/jpg, image/webp"
-                style={{ display: "none" }}
-              />
-
-
-            </div>
-
-            {/* ─── STEP 4: 2D DESIGN EDITOR ─── */}
-            <div
-              style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--surface-border)",
-                borderRadius: "14px",
-                padding: "20px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--main-accent)" }}>
-                  STEP 4: 2D Photo Editor
-                </span>
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <button onClick={handleUndo} disabled={historyIndex <= 0} style={{ padding: "4px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: 700, backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--foreground)", cursor: "pointer", opacity: historyIndex <= 0 ? 0.4 : 1 }}>
-                    ↺ Undo
-                  </button>
-                  <button onClick={handleRedo} disabled={historyIndex >= history.length - 1} style={{ padding: "4px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: 700, backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--foreground)", cursor: "pointer", opacity: historyIndex >= history.length - 1 ? 0.4 : 1 }}>
-                    ↻ Redo
-                  </button>
-                  <button onClick={handleReset} style={{ padding: "4px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: 700, backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--foreground)", cursor: "pointer" }}>
-                    Reset
-                  </button>
-                </div>
-              </div>
-
-              {/* Framing Shortcuts */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginBottom: "16px" }}>
-                <button
-                  onClick={handleFitToCase}
-                  style={{ padding: "8px", borderRadius: "6px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", fontSize: "0.75rem", fontWeight: 800, cursor: "pointer", color: "var(--foreground)" }}
-                >
-                  FIT TO CASE
-                </button>
-                <button
-                  onClick={handleFillCase}
-                  style={{ padding: "8px", borderRadius: "6px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", fontSize: "0.75rem", fontWeight: 800, cursor: "pointer", color: "var(--foreground)" }}
-                >
-                  FILL CASE
-                </button>
-                <button
-                  onClick={handleCenter}
-                  style={{ padding: "8px", borderRadius: "6px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", fontSize: "0.75rem", fontWeight: 800, cursor: "pointer", color: "var(--foreground)" }}
-                >
-                  CENTER
-                </button>
-              </div>
-
-              {/* Resize & Zoom Slider */}
-              <div style={{ marginBottom: "14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontWeight: 700, marginBottom: "4px" }}>
-                  <span>Scale / Zoom</span>
-                  <span>{scale}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="60"
-                  max="200"
-                  value={scale}
-                  onChange={(e) => setScale(parseInt(e.target.value))}
-                  style={{ width: "100%", accentColor: "var(--main-accent)" }}
-                />
-              </div>
-
-              {/* Rotation Sliders & 90deg buttons */}
-              <div style={{ marginBottom: "14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 700 }}>Rotation</span>
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => rotateStep(-90)} style={{ padding: "2px 8px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer" }}>
-                      -90°
-                    </button>
-                    <button onClick={() => rotateStep(90)} style={{ padding: "2px 8px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer" }}>
-                      +90°
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="-180"
-                  max="180"
-                  value={rotation}
-                  onChange={(e) => setRotation(parseInt(e.target.value))}
-                  style={{ width: "100%", accentColor: "var(--main-accent)" }}
-                />
-              </div>
-
-              {/* Flip Horizontal / Vertical */}
-              <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
-                <button
-                  onClick={() => setFlipH(!flipH)}
-                  style={{ flex: 1, padding: "7px", borderRadius: "6px", backgroundColor: flipH ? "rgba(230, 57, 70, 0.15)" : "var(--surface-raised)", border: flipH ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)", color: flipH ? "var(--main-accent)" : "var(--foreground)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                >
-                  ⇄ Flip Horizontal
-                </button>
-                <button
-                  onClick={() => setFlipV(!flipV)}
-                  style={{ flex: 1, padding: "7px", borderRadius: "6px", backgroundColor: flipV ? "rgba(230, 57, 70, 0.15)" : "var(--surface-raised)", border: flipV ? "1px solid var(--main-accent)" : "1px solid var(--surface-border)", color: flipV ? "var(--main-accent)" : "var(--foreground)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                >
-                  ⇅ Flip Vertical
-                </button>
-              </div>
-
-              {/* Photo Effects Sliders */}
-              <div style={{ backgroundColor: "var(--surface-raised)", borderRadius: "8px", padding: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", color: "var(--main-accent)" }}>
-                  Photo Effects & Filters
-                </div>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", fontWeight: 700 }}>
-                    <span>Brightness</span>
-                    <span>{effects.brightness}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="50"
-                    max="150"
-                    value={effects.brightness}
-                    onChange={(e) => setEffects({ ...effects, brightness: parseInt(e.target.value) })}
-                    style={{ width: "100%", accentColor: "var(--main-accent)" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", fontWeight: 700 }}>
-                    <span>Contrast</span>
-                    <span>{effects.contrast}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="50"
-                    max="150"
-                    value={effects.contrast}
-                    onChange={(e) => setEffects({ ...effects, contrast: parseInt(e.target.value) })}
-                    style={{ width: "100%", accentColor: "var(--main-accent)" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", fontWeight: 700 }}>
-                    <span>Grayscale</span>
-                    <span>{effects.grayscale}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={effects.grayscale}
-                    onChange={(e) => setEffects({ ...effects, grayscale: parseInt(e.target.value) })}
-                    style={{ width: "100%", accentColor: "var(--main-accent)" }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* ─── STEP 5: OPTIONAL TEXT & STICKERS ─── */}
-            <div
-              style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--surface-border)",
-                borderRadius: "14px",
-                padding: "20px",
-              }}
-            >
-              <div style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--main-accent)", marginBottom: "12px" }}>
-                STEP 5: Custom Typography & Stickers
-              </div>
-
-              {/* Text Input & Color Picker */}
-              <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
-                <input
-                  type="text"
-                  value={customText}
-                  onChange={(e) => setCustomText(e.target.value)}
-                  placeholder="Enter name, gamertag, kanji..."
-                  maxLength={20}
+                {/* SVG Dieline Mask & Outlines (CaseTadka unfold cut) */}
+                <svg
+                  viewBox="0 0 440 760"
                   style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    backgroundColor: "var(--surface-raised)",
-                    border: "1px solid var(--surface-border)",
-                    color: "var(--foreground)",
-                    fontSize: "0.85rem",
-                    fontFamily: selectedFont,
+                    width: "100%",
+                    height: "100%",
+                    filter: "drop-shadow(0 12px 30px rgba(0,0,0,0.07))",
                   }}
-                />
-                <input
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  style={{ width: "42px", height: "42px", borderRadius: "6px", border: "1px solid var(--surface-border)", padding: "2px", cursor: "pointer", backgroundColor: "var(--surface-raised)" }}
-                />
-              </div>
-
-              {/* Font Selector */}
-              <div style={{ marginBottom: "14px" }}>
-                <select
-                  value={selectedFont}
-                  onChange={(e) => setSelectedFont(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--foreground)", fontSize: "0.82rem", fontWeight: 700 }}
                 >
-                  {fonts.map((f) => (
-                    <option key={f.id} value={f.family}>
-                      {f.name}
+                  <defs>
+                    {/* Exact flat unfold die-cut path */}
+                    <clipPath id="caseUnfoldClip">
+                      <path
+                        d="
+                          M 70 102
+                          A 7 7 0 0 1 77 95
+                          L 105 95
+                          A 4 4 0 0 1 109 99
+                          L 109 146
+                          A 4 4 0 0 0 113 150
+                          L 141 150
+                          A 4 4 0 0 0 145 146
+                          L 145 95
+                          A 6 6 0 0 1 151 89
+                          L 289 89
+                          A 6 6 0 0 1 295 95
+                          L 295 146
+                          A 4 4 0 0 0 299 150
+                          L 327 150
+                          A 4 4 0 0 0 331 146
+                          L 331 99
+                          A 4 4 0 0 1 335 95
+                          L 363 95
+                          A 7 7 0 0 1 370 102
+                          L 370 698
+                          A 7 7 0 0 1 363 705
+                          L 335 705
+                          A 4 4 0 0 1 331 701
+                          L 331 654
+                          A 4 4 0 0 0 327 650
+                          L 299 650
+                          A 4 4 0 0 0 295 654
+                          L 295 705
+                          A 6 6 0 0 1 289 711
+                          L 151 711
+                          A 6 6 0 0 1 145 705
+                          L 145 654
+                          A 4 4 0 0 0 141 650
+                          L 113 650
+                          A 4 4 0 0 0 109 654
+                          L 109 701
+                          A 4 4 0 0 1 105 705
+                          L 77 705
+                          A 7 7 0 0 1 70 698
+                          Z
+                        "
+                      />
+                    </clipPath>
+
+                    {/* Camera cutout mask (iPhone 16 organic silhouette with flash lobe) */}
+                    <mask id="dielineMask">
+                      <rect width="440" height="760" fill="white" />
+                      {/* Top-Left Camera Cutout with organic right flash lobe */}
+                      <path
+                        d="
+                          M 148 178
+                          L 172 178
+                          C 192 178, 204 188, 204 204
+                          C 204 212, 210 218, 222 222
+                          C 236 226, 244 236, 244 248
+                          C 244 260, 236 270, 222 274
+                          C 210 278, 204 284, 204 292
+                          C 204 308, 192 318, 172 318
+                          L 148 318
+                          C 128 318, 116 308, 116 292
+                          L 116 204
+                          C 116 188, 128 178, 148 178
+                          Z
+                        "
+                        fill="black"
+                      />
+                    </mask>
+                  </defs>
+
+                  {/* 1. Case Base Solid Fill (Package Color) */}
+                  <path
+                    d="
+                      M 70 102
+                      A 7 7 0 0 1 77 95
+                      L 105 95
+                      A 4 4 0 0 1 109 99
+                      L 109 146
+                      A 4 4 0 0 0 113 150
+                      L 141 150
+                      A 4 4 0 0 0 145 146
+                      L 145 95
+                      A 6 6 0 0 1 151 89
+                      L 289 89
+                      A 6 6 0 0 1 295 95
+                      L 295 146
+                      A 4 4 0 0 0 299 150
+                      L 327 150
+                      A 4 4 0 0 0 331 146
+                      L 331 99
+                      A 4 4 0 0 1 335 95
+                      L 363 95
+                      A 7 7 0 0 1 370 102
+                      L 370 698
+                      A 7 7 0 0 1 363 705
+                      L 335 705
+                      A 4 4 0 0 1 331 701
+                      L 331 654
+                      A 4 4 0 0 0 327 650
+                      L 299 650
+                      A 4 4 0 0 0 295 654
+                      L 295 705
+                      A 6 6 0 0 1 289 711
+                      L 151 711
+                      A 6 6 0 0 1 145 705
+                      L 145 654
+                      A 4 4 0 0 0 141 650
+                      L 113 650
+                      A 4 4 0 0 0 109 654
+                      L 109 701
+                      A 4 4 0 0 1 105 705
+                      L 77 705
+                      A 7 7 0 0 1 70 698
+                      Z
+                    "
+                    fill={packageColor}
+                  />
+
+                  {/* 2. Customer Uploaded Artwork (Clipped inside the unfold dieline & camera cutout) */}
+                  {artworkUrl && (
+                    <g clipPath="url(#caseUnfoldClip)" mask="url(#dielineMask)">
+                      <image
+                        href={artworkUrl}
+                        x={220 - 200 * artworkScale + artworkOffsetX}
+                        y={380 - 340 * artworkScale + artworkOffsetY}
+                        width={400 * artworkScale}
+                        height={680 * artworkScale}
+                        preserveAspectRatio="xMidYMid slice"
+                        style={{ pointerEvents: "none" }}
+                      />
+                    </g>
+                  )}
+
+                  {/* 3. Concentric Inner Fold Line (Double outline matching user reference) */}
+                  <path
+                    d="
+                      M 76 108
+                      L 101 108
+                      L 101 152
+                      L 149 152
+                      L 149 97
+                      L 291 97
+                      L 291 152
+                      L 339 152
+                      L 339 108
+                      L 364 108
+                      L 364 692
+                      L 339 692
+                      L 339 648
+                      L 291 648
+                      L 291 703
+                      L 149 703
+                      L 149 648
+                      L 101 648
+                      L 101 692
+                      L 76 692
+                      Z
+                    "
+                    fill="none"
+                    stroke="#cbd5e1"
+                    strokeWidth="1.2"
+                  />
+
+                  {/* 4. Inner Corner Crease Arcs (Connecting main phone body corners to notch tabs) */}
+                  <path d="M 109 195 C 109 158, 116 150, 145 150" fill="none" stroke="#94a3b8" strokeWidth="1.2" />
+                  <path d="M 295 150 C 324 150, 331 158, 331 195" fill="none" stroke="#94a3b8" strokeWidth="1.2" />
+                  <path d="M 109 605 C 109 642, 116 650, 145 650" fill="none" stroke="#94a3b8" strokeWidth="1.2" />
+                  <path d="M 295 650 C 324 650, 331 642, 331 605" fill="none" stroke="#94a3b8" strokeWidth="1.2" />
+
+                  {/* 5. Left Side Fold Cutout Slots (Volume/Mute) */}
+                  <rect x="105" y="260" width="8" height="60" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+                  <rect x="105" y="420" width="8" height="60" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+
+                  {/* 6. Right Side Fold Cutout Slots (Volume Up, Down, Power) */}
+                  <rect x="327" y="210" width="8" height="24" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+                  <rect x="327" y="250" width="8" height="24" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+                  <rect x="327" y="300" width="8" height="38" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+
+                  {/* 7. Bottom Flap Cutouts (5 Speaker holes, center hole, USB-C Port, hole, 3 Mic holes) */}
+                  <circle cx="165" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="171" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="177" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="183" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="189" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="197" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+
+                  <rect x="207" y="670" width="26" height="10" rx="5" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+
+                  <circle cx="243" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="251" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="257" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+                  <circle cx="263" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
+
+                  {/* 8. Camera Hole Outline (iPhone 16 Shape with Flash Lobe) */}
+                  <path
+                    d="
+                      M 148 178
+                      L 172 178
+                      C 192 178, 204 188, 204 204
+                      C 204 212, 210 218, 222 222
+                      C 236 226, 244 236, 244 248
+                      C 244 260, 236 270, 222 274
+                      C 210 278, 204 284, 204 292
+                      C 204 308, 192 318, 172 318
+                      L 148 318
+                      C 128 318, 116 308, 116 292
+                      L 116 204
+                      C 116 188, 128 178, 148 178
+                      Z
+                    "
+                    fill="#f5f5f7"
+                    stroke="#475569"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* 9. Outer Cut Perimeter Stroke Line */}
+                  <path
+                    d="
+                      M 70 102
+                      A 7 7 0 0 1 77 95
+                      L 105 95
+                      A 4 4 0 0 1 109 99
+                      L 109 146
+                      A 4 4 0 0 0 113 150
+                      L 141 150
+                      A 4 4 0 0 0 145 146
+                      L 145 95
+                      A 6 6 0 0 1 151 89
+                      L 289 89
+                      A 6 6 0 0 1 295 95
+                      L 295 146
+                      A 4 4 0 0 0 299 150
+                      L 327 150
+                      A 4 4 0 0 0 331 146
+                      L 331 99
+                      A 4 4 0 0 1 335 95
+                      L 363 95
+                      A 7 7 0 0 1 370 102
+                      L 370 698
+                      A 7 7 0 0 1 363 705
+                      L 335 705
+                      A 4 4 0 0 1 331 701
+                      L 331 654
+                      A 4 4 0 0 0 327 650
+                      L 299 650
+                      A 4 4 0 0 0 295 654
+                      L 295 705
+                      A 6 6 0 0 1 289 711
+                      L 151 711
+                      A 6 6 0 0 1 145 705
+                      L 145 654
+                      A 4 4 0 0 0 141 650
+                      L 113 650
+                      A 4 4 0 0 0 109 654
+                      L 109 701
+                      A 4 4 0 0 1 105 705
+                      L 77 705
+                      A 7 7 0 0 1 70 698
+                      Z
+                    "
+                    fill="none"
+                    stroke="#475569"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+
+                {/* Empty State Instructions when no artwork is uploaded */}
+                {!artworkUrl && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: "100px 80px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    <span style={{ fontSize: "1.8rem", marginBottom: "8px" }}>🎨</span>
+                    <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#334155" }}>
+                      Pick an artwork on the left
+                    </span>
+                    <span style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "4px" }}>
+                      or upload your own JPG/PNG to preview wrap
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ─── TOP-RIGHT FLOATING 3D MINI-PREVIEW (Image 2) ─── */}
+            <div
+              style={{
+                position: "absolute",
+                top: "20px",
+                right: "20px",
+                width: "180px",
+                height: "230px",
+                backgroundColor: "#ffffff",
+                borderRadius: "14px",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                border: "1px solid #e5e7eb",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                zIndex: 40,
+              }}
+            >
+              {/* Card Header with 3D ↺ icon & Layout Selector */}
+              <div
+                style={{
+                  padding: "5px 8px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  backgroundColor: "rgba(255,255,255,0.92)",
+                  backdropFilter: "blur(6px)",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 2,
+                  borderBottom: "1px solid rgba(229,231,235,0.8)",
+                }}
+              >
+                {/* Layout Selector */}
+                <select
+                  value={activeLayout}
+                  onChange={(e) => {
+                    setActiveLayout(e.target.value);
+                    showToast(`Layout: ${LAYOUT_PRESET_ITEMS.find((l) => l.id === e.target.value)?.title || e.target.value}`);
+                  }}
+                  style={{
+                    fontSize: "0.68rem",
+                    fontWeight: 700,
+                    color: "#374151",
+                    backgroundColor: "#f3f4f6",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "6px",
+                    padding: "2px 4px",
+                    cursor: "pointer",
+                    outline: "none",
+                    maxWidth: "110px",
+                  }}
+                  title="Choose 3D Model Layout"
+                >
+                  {LAYOUT_PRESET_ITEMS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.title}
                     </option>
                   ))}
                 </select>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "2px",
+                    fontSize: "0.7rem",
+                    fontWeight: 800,
+                    color: "#374151",
+                    cursor: "pointer",
+                  }}
+                  title="3D Real-time Wrap Preview"
+                >
+                  <span>3D</span>
+                  <span style={{ fontSize: "0.8rem" }}>↺</span>
+                </div>
               </div>
 
-              {/* Sticker Selector */}
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--foreground-muted)" }}>
-                    Hologram Badge:
-                  </span>
-                  <select
-                    value={stickerCategory}
-                    onChange={(e) => setStickerCategory(e.target.value)}
-                    style={{ padding: "3px 6px", borderRadius: "4px", backgroundColor: "var(--surface-raised)", border: "1px solid var(--surface-border)", fontSize: "0.7rem", color: "var(--foreground)" }}
-                  >
-                    <option value="ALL">All Categories</option>
-                    {STICKER_CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  <button
-                    onClick={() => setActiveSticker(null)}
-                    style={{ padding: "5px 10px", borderRadius: "4px", backgroundColor: activeSticker === null ? "var(--main-accent)" : "var(--surface-raised)", color: "#fff", border: "1px solid var(--surface-border)", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
-                  >
-                    None
-                  </button>
-                  {filteredAssets.map((stk) => (
-                    <button
-                      key={stk.id}
-                      onClick={() => setActiveSticker(stk.url)}
-                      style={{ padding: "5px 10px", borderRadius: "4px", backgroundColor: activeSticker === stk.url ? "var(--main-accent)" : "var(--surface-raised)", color: "#fff", border: "1px solid var(--surface-border)", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
-                    >
-                      {stk.url}
-                    </button>
-                  ))}
-                </div>
+              {/* 3D Phone Case Mini Canvas */}
+              <div style={{ flex: 1, width: "100%", height: "100%", paddingTop: "28px" }}>
+                <PhoneCase3D
+                  artworkUrl={artworkUrl}
+                  phoneModel={selectedModel}
+                  caseType={currentFinishObj.name}
+                  caseColor={packageColor}
+                  layout={activeLayout}
+                  artworkScale={artworkScale}
+                  artworkOffsetX={artworkOffsetX}
+                  artworkOffsetY={artworkOffsetY}
+                  artworkRotation={artworkRotation}
+                  hideControls={true}
+                  style={{ width: "100%", height: "100%", backgroundColor: "#f3f4f6" }}
+                />
               </div>
             </div>
 
-            {/* ─── STEP 7: PRICE & BUY ─── */}
+            {/* ─── BOTTOM-RIGHT CARD: PACKAGE COLOR (Image 2) ─── */}
             <div
               style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--surface-border)",
+                position: "absolute",
+                bottom: "80px",
+                right: "20px",
+                backgroundColor: "#ffffff",
                 borderRadius: "14px",
-                padding: "20px",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                border: "1px solid #e5e7eb",
+                padding: "14px 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                zIndex: 40,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", color: "var(--foreground-muted)", textTransform: "uppercase" }}>
-                    Total Custom Case Price
-                  </div>
-                  <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--foreground)" }}>
-                    ₹{priceQuote.total}
-                  </div>
-                </div>
-                <div style={{ textAlign: "right", fontSize: "0.72rem", color: "#22c55e", fontWeight: 700 }}>
-                  ✓ 100% Precision Mold Guarantee
-                  <br />
-                  ✓ High-Speed UV DTF Press
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  type="button"
-                  onClick={handleSaveToDesigns}
-                  disabled={isExporting}
+              <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#111827" }}>
+                Package Color
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {/* Custom Color Add (+) */}
+                <label
                   style={{
-                    flex: 1,
-                    padding: "12px",
-                    borderRadius: "8px",
-                    backgroundColor: "transparent",
-                    border: "1px solid var(--surface-border)",
-                    color: "var(--foreground)",
-                    fontSize: "0.85rem",
-                    fontWeight: 800,
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "50%",
+                    border: "1.5px dashed #7c3aed",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     cursor: "pointer",
-                    textTransform: "uppercase",
+                    fontSize: "12px",
+                    color: "#7c3aed",
+                    fontWeight: 700,
                   }}
                 >
-                  Save Design
-                </button>
+                  +
+                  <input
+                    type="color"
+                    value={packageColor}
+                    onChange={(e) => setPackageColor(e.target.value)}
+                    style={{ display: "none" }}
+                  />
+                </label>
 
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={isExporting}
-                  style={{
-                    flex: 1.5,
-                    padding: "12px",
-                    borderRadius: "8px",
-                    backgroundColor: "var(--main-accent)",
-                    border: "none",
-                    color: "#ffffff",
-                    fontSize: "0.85rem",
-                    fontWeight: 900,
-                    cursor: "pointer",
-                    textTransform: "uppercase",
-                    boxShadow: "0 4px 14px rgba(230, 57, 70, 0.3)",
-                  }}
-                >
-                  {isExporting ? "Generating Print Master..." : "Add to Cart 🛒"}
-                </button>
+                {/* Swatches */}
+                {PACKAGE_COLORS.map((pkg) => {
+                  const isSelected = packageColor === pkg.color;
+                  return (
+                    <button
+                      key={pkg.id}
+                      onClick={() => setPackageColor(pkg.color)}
+                      title={pkg.label}
+                      style={{
+                        width: "22px",
+                        height: "22px",
+                        borderRadius: "50%",
+                        backgroundColor: pkg.color,
+                        border: isSelected ? "2px solid #7c3aed" : "1px solid #cbd5e1",
+                        boxShadow: isSelected ? "0 0 0 2px rgba(124,58,237,0.3)" : "none",
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
+                    />
+                  );
+                })}
               </div>
             </div>
 
+            {/* ─── BOTTOM FLOATING TOOLBAR (Image 2) ─── */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "16px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                backgroundColor: "#ffffff",
+                borderRadius: "12px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                border: "1px solid #e5e7eb",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                padding: "8px 18px",
+                zIndex: 40,
+              }}
+            >
+              <button
+                onClick={() => showToast("Selection active")}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#7c3aed" }}
+                title="Select"
+              >
+                ↖
+              </button>
+              <button
+                onClick={() => {
+                  setArtworkUrl("");
+                  showToast("Cleared image");
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+                title="Delete"
+              >
+                🗑
+              </button>
+              <div style={{ width: "1px", height: "16px", backgroundColor: "#e5e7eb" }} />
+              <button
+                onClick={handleUndo}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+                title="Undo"
+              >
+                ↺
+              </button>
+              <button
+                onClick={handleRedo}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+                title="Redo"
+              >
+                ↷
+              </button>
+              <div style={{ width: "1px", height: "16px", backgroundColor: "#e5e7eb" }} />
+
+              {/* Zoom Controls */}
+              <button
+                onClick={() => setDielineZoom((prev) => Math.max(60, prev - 10))}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontWeight: 700 }}
+              >
+                -
+              </button>
+              <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827", minWidth: "42px", textAlign: "center" }}>
+                {dielineZoom}%
+              </span>
+              <button
+                onClick={() => setDielineZoom((prev) => Math.min(160, prev + 10))}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontWeight: 700 }}
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ─── 4. SUPER EXPORT MODAL ────────────────────────────────────────── */}
+      {showExportModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "16px",
+              padding: "24px",
+              maxWidth: "460px",
+              width: "90%",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700, color: "#111827" }}>
+                  Export & Order
+                </h3>
+                <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#64748b" }}>
+                  {selectedModel} • {currentFinishObj.name}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowExportModal(false)}
+                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#9ca3af" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Export options */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <button
+                onClick={handleDownloadMockup}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  border: "1px solid #e2e8f0",
+                  backgroundColor: "#f8fafc",
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "1.2rem" }}>📸</span>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e293b" }}>Download 3D Mockup (PNG)</div>
+                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Clean studio render with alpha channel</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#7c3aed" }}>Download ↓</span>
+              </button>
+
+              <button
+                onClick={() => showToast("300DPI production print file ready")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  border: "1px solid #e2e8f0",
+                  backgroundColor: "#f8fafc",
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "1.2rem" }}>🖨️</span>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e293b" }}>Production Print File</div>
+                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Full sublimation bleed template (300 DPI)</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#7c3aed" }}>Export ↓</span>
+              </button>
+            </div>
+
+            {/* Price & Buy Now */}
+            <div
+              style={{
+                backgroundColor: "#faf5ff",
+                border: "1px solid #e9d5ff",
+                borderRadius: "12px",
+                padding: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "0.72rem", color: "#7c3aed", fontWeight: 700, textTransform: "uppercase" }}>
+                  Total Price
+                </span>
+                <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>
+                  ₹{totalPrice}
+                  <span style={{ fontSize: "0.8rem", color: "#6b7280", fontWeight: 400, marginLeft: "6px" }}>
+                    (Free Delivery)
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleAddToCart}
+                disabled={isExporting}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  backgroundColor: "#7c3aed",
+                  color: "#ffffff",
+                  border: "none",
+                  fontWeight: 700,
+                  fontSize: "0.9rem",
+                  cursor: isExporting ? "wait" : "pointer",
+                  boxShadow: "0 4px 14px rgba(124, 58, 237, 0.4)",
+                }}
+              >
+                {isExporting ? "Processing..." : "Add to Cart 🛒"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 // Real PSD-based phone case mockup models and configurations
+import { getPhoneModelDetails } from "../data/phoneModels";
 
 export interface MockupConfig {
   id: string;
@@ -265,6 +266,56 @@ export const DEFAULT_MOCKUP_MODELS: MockupConfig[] = [
     printHeightMm: 163.1,
     dpi: 300,
     caseTypes: ["9H Tempered Glass", "Matte Slim EDC Anti-Glare"],
+  },
+  {
+    id: "sg-a54",
+    name: "Galaxy A54 5G",
+    brand: "Samsung",
+    slug: "samsung-galaxy-a54-5g",
+    active: true,
+    archetype: "samsung-triple",
+    templateUrl: "/mockups/glass_case_samsung_triple.png",
+    canvasWidth: 393,
+    canvasHeight: 805,
+    printableX: 8,
+    printableY: 8,
+    printableWidth: 377,
+    printableHeight: 789,
+    printableRadius: 36,
+    cameraX: 20,
+    cameraY: 20,
+    cameraWidth: 72,
+    cameraHeight: 180,
+    cameraRadius: 24,
+    printWidthMm: 76.7,
+    printHeightMm: 158.2,
+    dpi: 300,
+    caseTypes: ["9H Tempered Glass", "Ultra Impact MagSafe", "Matte Slim EDC Anti-Glare"],
+  },
+  {
+    id: "sg-s24",
+    name: "Galaxy S24",
+    brand: "Samsung",
+    slug: "samsung-galaxy-s24",
+    active: true,
+    archetype: "samsung-triple",
+    templateUrl: "/mockups/glass_case_samsung_triple.png",
+    canvasWidth: 393,
+    canvasHeight: 805,
+    printableX: 8,
+    printableY: 8,
+    printableWidth: 377,
+    printableHeight: 789,
+    printableRadius: 36,
+    cameraX: 20,
+    cameraY: 20,
+    cameraWidth: 72,
+    cameraHeight: 180,
+    cameraRadius: 24,
+    printWidthMm: 70.6,
+    printHeightMm: 147.0,
+    dpi: 300,
+    caseTypes: ["9H Tempered Glass", "Ultra Impact MagSafe", "Matte Slim EDC Anti-Glare"],
   }
 ];
 
@@ -279,6 +330,13 @@ export function getMockupModels(): MockupConfig[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        // Ensure all built-in archetypes are present even with older localStorage cache
+        const missing = DEFAULT_MOCKUP_MODELS.filter((dm) => !parsed.some((p: any) => p.id === dm.id));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          return merged;
+        }
         return parsed;
       }
     }
@@ -308,11 +366,61 @@ export function getMockupModelBySlug(slug: string): MockupConfig {
 
 export function getMockupModelByName(name: string): MockupConfig {
   const models = getMockupModels();
-  return (
-    models.find(
-      (m) =>
-        m.name.toLowerCase() === name.toLowerCase() ||
-        name.toLowerCase().includes(m.name.toLowerCase())
-    ) || models[0]
+  if (!name) return models[0];
+
+  const cleanName = name.trim().toLowerCase();
+
+  // 1. Exact name match or slug match
+  const directMatch = models.find(
+    (m) =>
+      m.name.toLowerCase() === cleanName ||
+      m.slug.toLowerCase() === cleanName ||
+      cleanName.includes(m.name.toLowerCase())
   );
+  if (directMatch) return directMatch;
+
+  // 2. Query phone database for archetype & brand
+  const phone = getPhoneModelDetails(name);
+  const archetype = phone.cameraType;
+  const brand = phone.brand;
+
+  // 3. Find matching model by archetype
+  const byArchetype = models.find((m) => m.archetype === archetype);
+  if (byArchetype) {
+    return {
+      ...byArchetype,
+      name: phone.name,
+      brand: phone.brand,
+    };
+  }
+
+  // 4. Fallback by brand archetype mapping
+  if (brand.toLowerCase().includes("samsung")) {
+    const isUltra = cleanName.includes("ultra");
+    const samsungModel = models.find((m) => m.archetype === (isUltra ? "samsung-ultra" : "samsung-triple")) || models.find((m) => m.brand === "Samsung");
+    if (samsungModel) {
+      return {
+        ...samsungModel,
+        name: phone.name,
+        brand: "Samsung",
+      };
+    }
+  }
+
+  if (brand.toLowerCase().includes("oneplus")) {
+    const opModel = models.find((m) => m.archetype === "oneplus-dial") || models.find((m) => m.brand === "OnePlus");
+    if (opModel) return { ...opModel, name: phone.name, brand: "OnePlus" };
+  }
+
+  if (brand.toLowerCase().includes("pixel")) {
+    const pixelModel = models.find((m) => m.archetype === "iphone-dual-vert") || models[0];
+    return { ...pixelModel, name: phone.name, brand: "Google Pixel" };
+  }
+
+  // Fallback to default model with resolved phone name
+  return {
+    ...models[0],
+    name: phone.name,
+    brand: phone.brand,
+  };
 }

@@ -1,0 +1,118 @@
+[
+  {
+    "id": "case-1789897040890",
+    "name": "LUFFY",
+    "franchise": "Anime",
+    "theme": "anime",
+    "category": "case",
+    "tag": "Anime Armor",
+    "price": 599,
+    "originalPrice": 999,
+    "rating": 5,
+    "reviewsCount": 1,
+    "image": "/uploads/case-1789897030951-xo8kr.png",
+    "tiltedImage": "/uploads/case-1789897030951-xo8kr.png",
+    "badge": "NEW DROP",
+    "formats": [
+      "Ultra Impact MagSafe",
+      "Tough Armor Dual-Layer",
+      "9H Tempered Glass Back"
+    ],
+    "description": "Military-grade dual-layer shock absorption with high-definition UV DTF print. Scratch-resistant matte finish with raised 1.8mm camera protection ring.",
+    "supportedBrands": [
+      "Apple iPhone",
+      "Samsung Galaxy",
+      "OnePlus",
+      "Google Pixel"
+    ],
+    "dropProtection": "12ft Drop Tested",
+    "isCustom": true
+  },
+  {
+    "id": "case-1789897015129",
+    "name": "ITACHI",
+    "franchise": "Anime",
+    "theme": "anime",
+    "category": "case",
+    "tag": "Anime Armor",
+    "price": 599,
+    "originalPrice": 999,
+    "rating": 5,
+    "reviewsCount": 1,
+    "image": "/uploads/case-1789897003719-rnsma.png",
+    "tiltedImage": "/uploads/case-1789897003719-rnsma.png",
+    "badge": "NEW DROP",
+    "formats": [
+      "Ultra Impact MagSafe",
+      "Tough Armor Dual-Layer",
+      "9H Tempered Glass Back"
+    ],
+    "description": "Military-grade dual-layer shock absorption with high-definition UV DTF print. Scratch-resistant matte finish with raised 1.8mm camera protection ring.",
+    "supportedBrands": [
+      "Apple iPhone",
+      "Samsung Galaxy",
+      "OnePlus",
+      "Google Pixel"
+    ],
+    "dropProtection": "12ft Drop Tested",
+    "isCustom": true
+  },
+  {
+    "id": "case-1789894310632",
+    "name": "anime",
+    "franchise": "Anime",
+    "theme": "anime",
+    "category": "case",
+    "tag": "Anime Armor",
+    "price": 599,
+    "originalPrice": 999,
+    "rating": 5,
+    "reviewsCount": 1,
+    "image": "/uploads/case-1789894296457-utnwj.png",
+    "tiltedImage": "/uploads/case-1789894296457-utnwj.png",
+    "badge": "NEW DROP",
+    "formats": [
+      "Ultra Impact MagSafe",
+      "Tough Armor Dual-Layer",
+      "9H Tempered Glass Back"
+    ],
+    "description": "Military-grade dual-layer shock absorption with high-definition UV DTF print. Scratch-resistant matte finish with raised 1.8mm camera protection ring.",
+    "supportedBrands": [
+      "Apple iPhone",
+      "Samsung Galaxy",
+      "OnePlus",
+      "Google Pixel"
+    ],
+    "dropProtection": "12ft Drop Tested",
+    "isCustom": true
+  },
+  {
+    "id": "case-1789876732915",
+    "name": "Luffy Gear 5 Anime Armor",
+    "franchise": "Anime",
+    "theme": "anime",
+    "category": "case",
+    "tag": "New Drop",
+    "price": 799,
+    "originalPrice": 1299,
+    "rating": 5,
+    "reviewsCount": 1,
+    "image": "/mockups/akira.jpg",
+    "tiltedImage": "/mockups/akira.jpg",
+    "badge": "NEW DROP",
+    "formats": [
+      "Ultra Impact MagSafe",
+      "Tough Armor Dual-Layer",
+      "9H Tempered Glass Back"
+    ],
+    "description": "",
+    "supportedBrands": [
+      "Apple iPhone",
+      "Samsung Galaxy",
+      "OnePlus",
+      "Google Pixel"
+    ],
+    "dropProtection": "12ft Drop Tested",
+    "isCustom": true
+  }
+]

@@ -44,15 +44,16 @@ export function getCustomProducts(): Product[] {
  * Retrieve all products (Custom admin-uploaded products prepended before standard catalog, excluding deleted cases)
  */
 export function getAllProducts(): Product[] {
-  const custom = getCustomProducts();
+  const custom = getCustomProducts().map((p) => ({ ...p, isCustom: true }));
   const deletedIds = new Set(getDeletedProductIds());
   return [...custom, ...PRODUCTS]
     .filter((p) => !deletedIds.has(p.id))
     .map((p) => {
+      const isCustomCase = p.isCustom || (p.id.startsWith("case-") && p.id !== "case-tadka-signature-edition");
       if (p.id === "case-tadka-signature-edition" && (p.image === "/case-tadka-logo.png" || !p.image)) {
         return { ...p, image: "/mockups/case_tadka_signature.jpg" };
       }
-      return p;
+      return isCustomCase ? { ...p, isCustom: true } : p;
     });
 }
 
@@ -62,6 +63,7 @@ export function getAllProducts(): Product[] {
 export function addCustomProduct(newProduct: Product): Product {
   if (typeof window === "undefined") return newProduct;
   try {
+    newProduct.isCustom = true;
     // Unmark as deleted if previously deleted
     const deleted = getDeletedProductIds();
     if (deleted.includes(newProduct.id)) {
@@ -70,7 +72,7 @@ export function addCustomProduct(newProduct: Product): Product {
 
     const existing = getCustomProducts();
     // Filter out if same ID already exists
-    const updated = [newProduct, ...existing.filter((p) => p.id !== newProduct.id)];
+    const updated = [{ ...newProduct, isCustom: true }, ...existing.filter((p) => p.id !== newProduct.id)];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event(EVENT_KEY));
 
@@ -78,8 +80,15 @@ export function addCustomProduct(newProduct: Product): Product {
     fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newProduct),
-    }).catch((err) => console.warn("Background product sync to DB API:", err));
+      body: JSON.stringify({ ...newProduct, isCustom: true }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          window.dispatchEvent(new Event(EVENT_KEY));
+        }
+      })
+      .catch((err) => console.warn("Background product sync to DB API:", err));
   } catch (err) {
     console.error("Failed to save custom product to localStorage", err);
   }
@@ -126,8 +135,9 @@ export const deleteProduct = deleteCustomProduct;
 export function updateCustomProduct(updatedProduct: Product): Product {
   if (typeof window === "undefined") return updatedProduct;
   try {
+    updatedProduct.isCustom = true;
     const existing = getCustomProducts();
-    const updated = existing.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
+    const updated = existing.map((p) => (p.id === updatedProduct.id ? { ...updatedProduct, isCustom: true } : p));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event(EVENT_KEY));
 
@@ -135,7 +145,7 @@ export function updateCustomProduct(updatedProduct: Product): Product {
     fetch(`/api/products/${updatedProduct.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedProduct),
+      body: JSON.stringify({ ...updatedProduct, isCustom: true }),
     }).catch((err) => console.warn("Background product update to DB API:", err));
   } catch (err) {
     console.error("Failed to update custom product in localStorage", err);
@@ -147,6 +157,7 @@ export function updateCustomProduct(updatedProduct: Product): Product {
  * Check if a product was added by admin
  */
 export function isCustomProduct(productId: string): boolean {
+  if (productId.startsWith("case-") && productId !== "case-tadka-signature-edition") return true;
   const custom = getCustomProducts();
   return custom.some((p) => p.id === productId);
 }
@@ -168,14 +179,47 @@ export function useAllProducts() {
       .then((data) => {
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
           const deletedIds = new Set(getDeletedProductIds());
+          const customLocal = getCustomProducts();
+
+          // Sync any custom products from the API back into localStorage if missing
+          const apiCustom = data.data.filter((p: Product) => p.isCustom);
+          if (apiCustom.length > 0 && typeof window !== "undefined") {
+            const localMap = new Map(customLocal.map((p) => [p.id, p]));
+            let changed = false;
+            apiCustom.forEach((p: Product) => {
+              if (!localMap.has(p.id)) {
+                localMap.set(p.id, { ...p, isCustom: true });
+                changed = true;
+              }
+            });
+            if (changed) {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(localMap.values())));
+            }
+          }
+
+          // Build merged products list with custom products FIRST
+          const productMap = new Map<string, Product>();
+          customLocal.forEach((p) => productMap.set(p.id, { ...p, isCustom: true }));
+          apiCustom.forEach((p: Product) => {
+            if (!productMap.has(p.id)) productMap.set(p.id, { ...p, isCustom: true });
+          });
+          data.data.forEach((p: Product) => {
+            const isCust = p.isCustom || (p.id.startsWith("case-") && p.id !== "case-tadka-signature-edition");
+            if (!productMap.has(p.id)) productMap.set(p.id, isCust ? { ...p, isCustom: true } : p);
+          });
+          PRODUCTS.forEach((p) => {
+            if (!productMap.has(p.id)) productMap.set(p.id, p);
+          });
+
           setProducts(
-            data.data
+            Array.from(productMap.values())
               .filter((p: Product) => !deletedIds.has(p.id))
               .map((p: Product) => {
                 if (p.id === "case-tadka-signature-edition" && (p.image === "/case-tadka-logo.png" || !p.image)) {
                   return { ...p, image: "/mockups/case_tadka_signature.jpg" };
                 }
-                return p;
+                const isCust = p.isCustom || (p.id.startsWith("case-") && p.id !== "case-tadka-signature-edition");
+                return isCust ? { ...p, isCustom: true } : p;
               })
           );
         }
@@ -184,6 +228,15 @@ export function useAllProducts() {
         // keep local state
       });
   }, []);
+
+  const isCustom = useCallback(
+    (productId: string) => {
+      if (isCustomProduct(productId)) return true;
+      const found = products.find((p) => p.id === productId);
+      return Boolean(found?.isCustom);
+    },
+    [products]
+  );
 
   useEffect(() => {
     setIsClient(true);
@@ -205,7 +258,7 @@ export function useAllProducts() {
     addProduct: addCustomProduct,
     updateProduct: updateCustomProduct,
     deleteProduct: deleteCustomProduct,
-    isCustom: isCustomProduct,
+    isCustom,
     refresh,
   };
 }
