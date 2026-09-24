@@ -24,7 +24,7 @@ const DeviceContext = createContext<DeviceContextType | undefined>(undefined);
 export function DeviceProvider({ children }: { children: React.ReactNode }) {
   const [selectedBrand, setSelectedBrand] = useState<string>("Apple");
   const [selectedModel, setSelectedModel] = useState<string>("iPhone 16 Pro Max");
-  const [activePhone, setActivePhone] = useState<PhoneModelItem>(ALL_PHONE_MODELS[0]);
+  const [activePhone, setActivePhone] = useState<PhoneModelItem>(() => getPhoneModelDetails("iPhone 16 Pro Max"));
   const [isDevicePickerOpen, setIsDevicePickerOpen] = useState<boolean>(false);
 
   // Load from localStorage on initial mount

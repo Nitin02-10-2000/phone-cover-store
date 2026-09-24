@@ -5,9 +5,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
+import { saveUserStudioProduct } from "@/lib/productsStorage";
+import { Product } from "@/data/products";
 import PhoneCase3D from "@/components/studio/PhoneCase3D";
 import CaseTadkaLogo from "@/components/CaseTadkaLogo";
-import { ALL_PHONE_MODELS, PhoneModelItem, CameraArchetype, getAllPhoneModels } from "@/data/phoneModels";
+import { ALL_PHONE_MODELS, PhoneModelItem, CameraArchetype, getAllPhoneModels, getPhoneModelDetails } from "@/data/phoneModels";
 import { getMockupModelByName } from "@/lib/mockupData";
 import {
   getStudioPhoneModels,
@@ -18,33 +20,7 @@ import {
   StudioPricingConfig,
 } from "@/lib/studioStorage";
 
-const INITIAL_UPLOADS = [
-  {
-    id: "art-gojo",
-    name: "Gojo Limitless Void",
-    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786122801/mockups/gojo-satoru-honored-one-poster-paper-1.jpg",
-  },
-  {
-    id: "art-akira",
-    name: "Akira Neo-Tokyo",
-    url: "/mockups/akira.jpg",
-  },
-  {
-    id: "art-luffy",
-    name: "Luffy Gear 5",
-    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787153686/mockups/luffy-gear-5-one-piece-poster-paper-5.jpg",
-  },
-  {
-    id: "art-sukuna",
-    name: "Sukuna Malevolent",
-    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787407303/mockups/ryomen-sukuna-jujutsu-kaisen-poster-cinematic-anime-wall-art-sukuna-decor-paper-1.jpg",
-  },
-  {
-    id: "art-jinwoo",
-    name: "Solo Leveling Arise",
-    url: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786123391/mockups/sung-jinwoo-arise-poster-paper-5.jpg",
-  },
-];
+const INITIAL_UPLOADS: { id: string; name: string; url: string }[] = [];
 
 const CASE_FINISHES = [
   { id: "glossy", name: "Plastic matt", subtitle: "Zero Fingerprint Velvet Touch", price: 399, tag: "POPULAR" },
@@ -252,7 +228,7 @@ function MiniPhoneCoverModel({ model, isSelected }: { model: PhoneModelItem; isS
         {/* Camera Cutout Module */}
         {(() => {
           switch (model.cameraType) {
-            // 1. iPhone 16 / 16 Plus (Authentic Vertical Pill + Flash on right)
+            // 1. iPhone 16 / 17 / 18 (Authentic Vertical Pill + Flash on right)
             case "iphone-dual-vert":
               return (
                 <div style={{ position: "absolute", top: "5px", left: "5px", zIndex: 4 }}>
@@ -392,6 +368,25 @@ function MiniPhoneCoverModel({ model, isSelected }: { model: PhoneModelItem; isS
                     }}
                   />
                 </div>
+              );
+
+            // iPhone 17 / 18 Large Rectangular Plateau Window (matching real case)
+            case "iphone-plateau":
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "5px",
+                    left: "4px",
+                    right: "4px",
+                    height: "26px",
+                    borderRadius: "6px",
+                    backgroundColor: "#09090b",
+                    border: "1.2px solid rgba(255, 255, 255, 0.45)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(0,0,0,0.8)",
+                    zIndex: 4,
+                  }}
+                />
               );
 
             // 3. iPhone Dual Diagonal (iPhone 15, 14, 13)
@@ -632,6 +627,204 @@ function MiniPhoneCoverModel({ model, isSelected }: { model: PhoneModelItem; isS
   );
 }
 
+function renderDielineCameraCutout(archetype: CameraArchetype, isMask: boolean = false) {
+  const fill = isMask ? "black" : "#f5f5f7";
+  const stroke = isMask ? "none" : "#475569";
+  const strokeWidth = isMask ? 0 : 1.5;
+
+  switch (archetype) {
+    case "iphone-plateau":
+      // Authentic iPhone 17 / 18 Large Rectangular Plateau Window (matches user photo)
+      return (
+        <rect
+          x="127"
+          y="170"
+          width="186"
+          height="125"
+          rx="28"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+
+    case "iphone-triple":
+      // iPhone Pro Squircle (iPhone 16 Pro, 15 Pro, 14 Pro, 13 Pro, 12 Pro)
+      return (
+        <rect
+          x="120"
+          y="168"
+          width="96"
+          height="102"
+          rx="26"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+
+    case "iphone-dual-vert":
+      // iPhone 16 / 16 Plus / 12 / 11 Vertical Pill with separate Flash Hole
+      return (
+        <g>
+          <rect
+            x="124"
+            y="168"
+            width="54"
+            height="116"
+            rx="27"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx="198"
+            cy="204"
+            r="9"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+          />
+        </g>
+      );
+
+    case "iphone-dual-diag":
+      // iPhone 15 / 14 / 13 Diagonal Squircle
+      return (
+        <rect
+          x="122"
+          y="168"
+          width="88"
+          height="92"
+          rx="24"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+
+    case "samsung-ultra":
+      // Samsung Galaxy S25 / S24 / S23 Ultra floating lenses
+      return (
+        <g>
+          <circle cx="140" cy="190" r="14" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+          <circle cx="140" cy="230" r="14" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+          <circle cx="140" cy="270" r="14" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+          <circle cx="176" cy="200" r="8" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+          <circle cx="176" cy="240" r="8" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+        </g>
+      );
+
+    case "samsung-triple":
+      // Samsung Galaxy S25 / S24 / S23 / A55 triple floating lenses
+      return (
+        <g>
+          <circle cx="140" cy="190" r="14" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+          <circle cx="140" cy="232" r="14" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+          <circle cx="140" cy="274" r="14" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+          <circle cx="174" cy="200" r="7" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+        </g>
+      );
+
+    case "samsung-flip":
+      return (
+        <g>
+          <rect x="122" y="166" width="196" height="150" rx="22" fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+        </g>
+      );
+
+    case "pixel-visor":
+      // Google Pixel Visor Bar
+      return (
+        <rect
+          x="115"
+          y="186"
+          width="210"
+          height="58"
+          rx="29"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+
+    case "oneplus-dial":
+      // OnePlus Circular Dial
+      return (
+        <circle
+          cx="180"
+          cy="228"
+          r="48"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+
+    case "nothing-glyph":
+      return (
+        <rect
+          x="126"
+          y="172"
+          width="52"
+          height="98"
+          rx="26"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+
+    case "matrix-island":
+    default:
+      return (
+        <rect
+          x="124"
+          y="168"
+          width="84"
+          height="112"
+          rx="22"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+  }
+}
+
+function renderDielineButtons(modelDetails: PhoneModelItem) {
+  const isSamsung = modelDetails.brand.toLowerCase().includes("samsung");
+  const isApple = modelDetails.brand.toLowerCase() === "apple";
+  const isIPhone16OrAbove = isApple && /16|17|18/i.test(modelDetails.name);
+
+  if (isSamsung) {
+    return (
+      <g>
+        {/* Samsung Right Side: Volume Rocker & Power Button */}
+        <rect x="327" y="240" width="8" height="54" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+        <rect x="327" y="315" width="8" height="32" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+      </g>
+    );
+  }
+
+  // Apple & standard layout
+  return (
+    <g>
+      {/* Left Side Fold Cutout Slots (Action Button + Volume Up + Volume Down) */}
+      <rect x="105" y="215" width="8" height="22" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+      <rect x="105" y="255" width="8" height="32" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+      <rect x="105" y="300" width="8" height="32" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+
+      {/* Right Side Fold Cutout Slots (Side/Power Key) */}
+      <rect x="327" y="245" width="8" height="48" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+      {/* Camera Control button slot on bottom right (iPhone 16 / 17 / 18) */}
+      {isIPhone16OrAbove && (
+        <rect x="327" y="380" width="8" height="36" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+      )}
+    </g>
+  );
+}
+
 const LAYOUT_PRESET_ITEMS = [
   {
     id: "solo",
@@ -773,8 +966,8 @@ const LAYOUT_PRESET_ITEMS = [
 
 export default function CustomerStudioWorkspace() {
   const router = useRouter();
-  const { addToCart } = useCart();
-  const { setDevice } = useDevice();
+  const { addToCart, totalItems, saveDesign, setIsCartOpen } = useCart();
+  const { setDevice, setDeviceByModel } = useDevice();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const unfoldFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -786,8 +979,9 @@ export default function CustomerStudioWorkspace() {
   // Model & Filter
   const [selectedBrand, setSelectedBrand] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedModel, setSelectedModel] = useState<string>("iPhone 16");
+  const [selectedModel, setSelectedModel] = useState<string>("iPhone 18 Pro");
   const [selectedFinish, setSelectedFinish] = useState<string>("glossy");
+  const currentPhoneDetails = useMemo(() => getPhoneModelDetails(selectedModel), [selectedModel]);
 
   // Artwork & Customization State
   // Default to empty string so the 3D phone case shows Pacdora's signature watermark & "Upload your images 341 x 640 px"
@@ -918,45 +1112,209 @@ export default function CustomerStudioWorkspace() {
   const currentFinishObj = CASE_FINISHES.find((f) => f.id === selectedFinish) || CASE_FINISHES[0];
   const totalPrice = currentFinishObj.price;
 
-  // Handle Add to Cart & Super Export
-  const handleAddToCart = async () => {
+  const generateCustomCaseArtwork = (): Promise<string> => {
+    return new Promise((resolve) => {
+      let resolved = false;
+      const safeResolve = (url: string) => {
+        if (!resolved) {
+          resolved = true;
+          resolve(url);
+        }
+      };
+      // Safety timeout in case image loading takes too long
+      setTimeout(() => safeResolve(artworkUrl || "/mockups/custom_pattern.png"), 1200);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 640;
+      canvas.height = 1280;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        safeResolve(artworkUrl || "/mockups/custom_pattern.png");
+        return;
+      }
+
+      // 1. Base case color background
+      ctx.fillStyle = packageColor || "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (artworkUrl && artworkUrl.trim()) {
+        const img = new window.Image();
+        if (!artworkUrl.startsWith("data:")) {
+          img.crossOrigin = "anonymous";
+        }
+        img.onload = () => {
+          ctx.save();
+          const cx = canvas.width / 2 + (artworkOffsetX || 0) * 1.5;
+          const cy = canvas.height / 2 + (artworkOffsetY || 0) * 1.5;
+          ctx.translate(cx, cy);
+          ctx.rotate(((artworkRotation || 0) * Math.PI) / 180);
+          ctx.scale(artworkScale || 1, artworkScale || 1);
+
+          const imgAspect = img.width / img.height;
+          const canvasAspect = canvas.width / canvas.height;
+          let drawW = canvas.width * 1.05;
+          let drawH = canvas.height * 1.05;
+          if (imgAspect > canvasAspect) {
+            drawW = canvas.height * 1.05 * imgAspect;
+          } else {
+            drawH = (canvas.width * 1.05) / imgAspect;
+          }
+
+          ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+          ctx.restore();
+
+          try {
+            safeResolve(canvas.toDataURL("image/jpeg", 0.88));
+          } catch {
+            safeResolve(artworkUrl);
+          }
+        };
+        img.onerror = () => {
+          safeResolve(artworkUrl);
+        };
+        img.src = artworkUrl;
+      } else {
+        // When user hasn't uploaded a photo, generate solid/watermarked custom cover matching preview
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.06)";
+        ctx.lineWidth = 1.5;
+        for (let x = -canvas.height; x < canvas.width + canvas.height; x += 90) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x + canvas.height, canvas.height);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x, canvas.height);
+          ctx.lineTo(x + canvas.height, 0);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.14)";
+        ctx.font = "600 22px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+        ctx.textAlign = "center";
+        for (let y = 140; y < canvas.height - 80; y += 180) {
+          for (let x = 90; x < canvas.width; x += 180) {
+            ctx.fillText("casetadka", x, y);
+          }
+        }
+
+        ctx.save();
+        ctx.fillStyle = "#1e2026";
+        ctx.font = "700 40px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("CaseTadka Custom", canvas.width / 2, canvas.height * 0.5);
+        ctx.fillStyle = "#64748b";
+        ctx.font = "600 28px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillText(selectedModel, canvas.width / 2, canvas.height * 0.5 + 46);
+        ctx.restore();
+
+        try {
+          safeResolve(canvas.toDataURL("image/jpeg", 0.88));
+        } catch {
+          safeResolve("/mockups/custom_pattern.png");
+        }
+      }
+    });
+  };
+
+  // Handle direct Add to Cart and proceed to Cart without opening intermediate product page
+  const handleAddToCart = async (destination: "cart" | "checkout" | "none" = "cart") => {
     setIsExporting(true);
     try {
-      const canvas = document.querySelector("#case-3d-viewport canvas") as HTMLCanvasElement | null;
-      const previewUrl = canvas ? canvas.toDataURL("image/png") : artworkUrl || "/mockups/akira.jpg";
+      const previewUrl = await generateCustomCaseArtwork();
+      const customId = `custom-${Date.now()}`;
+
+      // Map studio finish to product page case types
+      const finishMap: Record<string, string> = {
+        magsafe: "Ultra Impact MagSafe",
+        tempered: "9H Tempered Glass Back",
+        glossy: "Matte Slim EDC",
+        transparent: "Cyber Clear Hologram",
+      };
+      const mappedCaseType = finishMap[selectedFinish] || currentFinishObj.name || "Matte Slim EDC";
+      const finalImage = previewUrl || artworkUrl || "/mockups/custom_pattern.png";
+
+      const newCustomProduct: Product = {
+        id: customId,
+        name: `Custom ${selectedModel} (${currentFinishObj.name})`,
+        franchise: "custom",
+        category: "case",
+        tag: "CaseTadka 3D Custom",
+        price: totalPrice || 399,
+        originalPrice: Math.round((totalPrice || 399) * 1.5),
+        rating: 5.0,
+        reviewsCount: 1,
+        image: finalImage,
+        formats: [currentFinishObj.name],
+        description: `Custom ${selectedModel} phone case in ${currentFinishObj.name} finish. Case color: ${packageColor}.`,
+        isCustom: true,
+        artworkFit: "cover",
+        artworkScale: 1,
+        artworkOffsetX: 0,
+        artworkOffsetY: 0,
+      };
+
+      // Save to private user studio storage
+      saveUserStudioProduct(newCustomProduct);
+      setDeviceByModel(selectedModel);
+
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(`casetadka_studio_${customId}`, JSON.stringify(newCustomProduct));
+          sessionStorage.setItem("casetadka_latest_custom_product", JSON.stringify(newCustomProduct));
+          sessionStorage.setItem("casetadka_latest_custom_image", finalImage);
+        } catch (e) {
+          console.warn("sessionStorage save error:", e);
+        }
+      }
 
       addToCart(
-        {
-          id: `custom-${Date.now()}`,
-          name: `Custom ${selectedModel} (${currentFinishObj.name})`,
-          franchise: "custom",
-          category: "case",
-          tag: "CaseTadka 3D Custom",
-          price: totalPrice,
-          originalPrice: Math.round(totalPrice * 1.5),
-          rating: 5.0,
-          reviewsCount: 1,
-          image: previewUrl,
-          formats: [currentFinishObj.name],
-          description: `Custom ${selectedModel} phone case in ${currentFinishObj.name} finish.`,
-        },
+        newCustomProduct,
         currentFinishObj.name,
         selectedModel,
         undefined,
-        previewUrl
+        finalImage
       );
 
-      showToast("Added to cart! Opening checkout...");
+      if (saveDesign) {
+        saveDesign({
+          title: `Custom ${selectedModel} (${currentFinishObj.name})`,
+          productType: "phone_case",
+          phoneModel: selectedModel,
+          previewUrl: finalImage,
+          price: totalPrice,
+        });
+      }
+
       setShowExportModal(false);
-      setTimeout(() => {
-        router.push("/cart");
-      }, 500);
+
+      if (destination === "checkout") {
+        if (setIsCartOpen) setIsCartOpen(false);
+        showToast("Case saved! Opening checkout...");
+        setTimeout(() => {
+          router.push("/checkout");
+        }, 300);
+      } else if (destination === "cart") {
+        if (setIsCartOpen) setIsCartOpen(false);
+        showToast("Added to cart! Opening cart...");
+        setTimeout(() => {
+          router.push("/cart");
+        }, 300);
+      } else {
+        if (setIsCartOpen) setIsCartOpen(true);
+        showToast(`✨ Added Custom ${selectedModel} to cart! 🛒`);
+      }
     } catch (err) {
       console.error(err);
-      showToast("Error exporting. Please try again.");
+      showToast("Error adding to cart. Please try again.");
     } finally {
       setIsExporting(false);
     }
+  };
+
+  // Redirect directly to cart with the customized case
+  const handleProceedToProductPage = async () => {
+    await handleAddToCart("cart");
   };
 
   const handleDownloadMockup = () => {
@@ -1128,66 +1486,87 @@ export default function CustomerStudioWorkspace() {
         </div>
 
         {/* Right: Actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* 3D Design ↗ button */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Shop / All Cases link */}
           <button
-            onClick={() => router.push("/catalog")}
+            onClick={() => router.push("/shop")}
+            title="Browse all designs in store"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+              backgroundColor: "#ffffff",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              color: "#4b5563",
+              cursor: "pointer",
+            }}
+          >
+            <span>Shop All 🛍️</span>
+          </button>
+
+          {/* Live Shopping Cart Button */}
+          <button
+            onClick={() => router.push("/cart")}
+            title="View Shopping Cart"
             style={{
               display: "flex",
               alignItems: "center",
               gap: "6px",
-              padding: "6px 14px",
-              borderRadius: "999px",
-              border: "1px solid #d1d5db",
-              backgroundColor: "#ffffff",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+              backgroundColor: "#f9fafb",
+              color: "#1f2937",
               fontSize: "0.82rem",
-              fontWeight: 600,
-              color: "#374151",
+              fontWeight: 700,
               cursor: "pointer",
+              position: "relative",
             }}
           >
-            <span>3D Design</span>
-            <span style={{ fontSize: "0.75rem" }}>↗</span>
+            <span style={{ fontSize: "1rem" }}>🛒</span>
+            <span>Cart</span>
+            {totalItems > 0 && (
+              <span
+                style={{
+                  backgroundColor: "#FF2A3A",
+                  color: "#ffffff",
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  borderRadius: "999px",
+                  padding: "1px 6px",
+                  lineHeight: "1.2",
+                }}
+              >
+                {totalItems}
+              </span>
+            )}
           </button>
 
-          {/* User Collab Avatar Badge */}
-          <div
+          {/* Quick Snapshot / Download Mockup Icon */}
+          <button
+            onClick={handleDownloadMockup}
+            title="Download 3D Mockup Image (PNG)"
             style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              backgroundColor: "#65a30d",
-              color: "#ffffff",
+              background: "#f3f4f6",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              padding: "6px 10px",
+              cursor: "pointer",
+              color: "#4b5563",
+              fontSize: "0.82rem",
+              fontWeight: 600,
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-              fontSize: "0.75rem",
-              position: "relative",
-              cursor: "pointer",
+              gap: "4px",
             }}
           >
-            P
-            <span
-              style={{
-                position: "absolute",
-                top: "-2px",
-                right: "-2px",
-                width: "12px",
-                height: "12px",
-                borderRadius: "50%",
-                backgroundColor: "#ffffff",
-                color: "#16a34a",
-                fontSize: "10px",
-                fontWeight: 900,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              +
-            </span>
-          </div>
+            <span>📸</span>
+            <span style={{ fontSize: "0.75rem" }}>PNG</span>
+          </button>
 
           {/* Share Button */}
           <button
@@ -1215,22 +1594,60 @@ export default function CustomerStudioWorkspace() {
             </svg>
           </button>
 
-          {/* Super Export Button */}
+          {/* Direct Add to Cart Button */}
           <button
-            onClick={() => setShowExportModal(true)}
+            onClick={() => handleAddToCart("none")}
+            disabled={isExporting}
+            title="Add to cart and keep designing"
             style={{
-              padding: "7px 18px",
+              padding: "7px 14px",
               borderRadius: "8px",
-              backgroundColor: "#7c3aed",
-              color: "#ffffff",
-              border: "none",
-              fontSize: "0.85rem",
-              fontWeight: 600,
-              cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(124, 58, 237, 0.35)",
+              backgroundColor: "#f3f4f6",
+              color: "#111827",
+              border: "1px solid #d1d5db",
+              fontSize: "0.82rem",
+              fontWeight: 700,
+              cursor: isExporting ? "wait" : "pointer",
+              transition: "all 0.15s ease",
             }}
           >
-            Super export
+            {isExporting ? "Saving..." : "+ Add to Cart"}
+          </button>
+
+          {/* Primary PROCEED TO BUY CTA */}
+          <button
+            onClick={() => handleAddToCart("cart")}
+            disabled={isExporting}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "7px",
+              padding: "8px 18px",
+              borderRadius: "8px",
+              background: "linear-gradient(135deg, #FF2A3A 0%, #dc2626 100%)",
+              color: "#ffffff",
+              border: "none",
+              fontSize: "0.86rem",
+              fontWeight: 800,
+              letterSpacing: "-0.01em",
+              cursor: isExporting ? "wait" : "pointer",
+              boxShadow: "0 3px 12px rgba(255, 42, 58, 0.35)",
+              transition: "transform 0.15s ease",
+            }}
+          >
+            <span>{isExporting ? "Adding to Cart..." : "⚡ Proceed to Buy"}</span>
+            <span
+              style={{
+                fontSize: "0.76rem",
+                opacity: 0.95,
+                backgroundColor: "rgba(0,0,0,0.22)",
+                padding: "2px 7px",
+                borderRadius: "5px",
+                fontWeight: 700,
+              }}
+            >
+              ₹{totalPrice}
+            </span>
           </button>
         </div>
       </header>
@@ -2347,6 +2764,28 @@ export default function CustomerStudioWorkspace() {
 
             <div style={{ width: "1px", height: "14px", backgroundColor: "#e2e8f0" }} />
 
+            {/* Active Model Indicator */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "3px 9px",
+                borderRadius: "6px",
+                backgroundColor: "#f1f5f9",
+                border: "1px solid #e2e8f0",
+                fontSize: "0.76rem",
+                fontWeight: 700,
+                color: "#1e293b",
+              }}
+              title="Active Phone Model"
+            >
+              <span style={{ fontSize: "0.82rem" }}>📱</span>
+              <span>{selectedModel}</span>
+            </div>
+
+            <div style={{ width: "1px", height: "14px", backgroundColor: "#e2e8f0" }} />
+
             <div
               style={{
                 display: "flex",
@@ -2361,6 +2800,34 @@ export default function CustomerStudioWorkspace() {
               <span style={{ fontSize: "0.85rem" }}>🟡</span>
               <span>Watermark free</span>
             </div>
+
+            <div style={{ width: "1px", height: "14px", backgroundColor: "#e2e8f0" }} />
+
+            {/* Quick Buy CTA in Bottom Floating Bar */}
+            <button
+              onClick={() => handleAddToCart("cart")}
+              disabled={isExporting}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "5px 14px",
+                borderRadius: "999px",
+                border: "none",
+                background: "linear-gradient(135deg, #FF2A3A 0%, #dc2626 100%)",
+                color: "#ffffff",
+                fontSize: "0.8rem",
+                fontWeight: 800,
+                cursor: isExporting ? "wait" : "pointer",
+                boxShadow: "0 2px 10px rgba(255, 42, 58, 0.38)",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <span>{isExporting ? "Adding to Cart..." : "⚡ Buy Now"}</span>
+              <span style={{ fontSize: "0.72rem", opacity: 0.95, background: "rgba(0,0,0,0.22)", padding: "1px 6px", borderRadius: "999px" }}>
+                ₹{totalPrice}
+              </span>
+            </button>
           </div>
 
           {/* ─── 2E. BOTTOM-RIGHT CIRCULAR CHAT WIDGET ─── */}
@@ -2650,36 +3117,98 @@ export default function CustomerStudioWorkspace() {
                 <span>JPG, PNG, SVG</span>
               </button>
 
-              {/* Uploaded Photos Grid (Shows Gojo, etc.) */}
+              {/* Uploaded Photos Grid */}
               <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-                {uploadsList.map((item) => {
-                  const isCurrent = artworkUrl === item.url;
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        setArtworkUrl(item.url);
-                        showToast(`Placed ${item.name}`);
-                      }}
-                      style={{
-                        borderRadius: "10px",
-                        overflow: "hidden",
-                        border: isCurrent ? "2px solid #7c3aed" : "1px solid #e5e7eb",
-                        cursor: "pointer",
-                        aspectRatio: "1 / 1.25",
-                        backgroundColor: "#f3f4f6",
-                        position: "relative",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      <img
-                        src={item.url}
-                        alt={item.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    </div>
-                  );
-                })}
+                {uploadsList.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "28px 12px",
+                      textAlign: "center",
+                      color: "#9ca3af",
+                      fontSize: "0.8rem",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "10px",
+                      border: "1.5px dashed #e2e8f0",
+                      borderRadius: "12px",
+                      marginTop: "8px",
+                      backgroundColor: "#f8fafc",
+                    }}
+                  >
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span style={{ fontWeight: 600, color: "#64748b" }}>No photos uploaded yet</span>
+                    <span style={{ fontSize: "0.72rem", color: "#94a3b8", lineHeight: 1.4 }}>
+                      Click the button above to upload your JPG, PNG, or SVG artwork
+                    </span>
+                  </div>
+                ) : (
+                  uploadsList.map((item) => {
+                    const isCurrent = artworkUrl === item.url;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          setArtworkUrl(item.url);
+                          showToast(`Placed ${item.name}`);
+                        }}
+                        style={{
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          border: isCurrent ? "2px solid #7c3aed" : "1px solid #e5e7eb",
+                          cursor: "pointer",
+                          aspectRatio: "1 / 1.25",
+                          backgroundColor: "#f3f4f6",
+                          position: "relative",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <img
+                          src={item.url}
+                          alt={item.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                        {/* Remove uploaded photo button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadsList((prev) => prev.filter((u) => u.id !== item.id));
+                            if (artworkUrl === item.url) {
+                              setArtworkUrl("");
+                            }
+                            showToast("Photo removed");
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: "6px",
+                            right: "6px",
+                            width: "22px",
+                            height: "22px",
+                            borderRadius: "50%",
+                            backgroundColor: "rgba(0,0,0,0.65)",
+                            color: "#ffffff",
+                            border: "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            transition: "background-color 0.15s",
+                          }}
+                          title="Remove image"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -2769,28 +3298,10 @@ export default function CustomerStudioWorkspace() {
                       />
                     </clipPath>
 
-                    {/* Camera cutout mask (iPhone 16 organic silhouette with flash lobe) */}
+                    {/* Camera cutout mask (Dynamic per selected phone model) */}
                     <mask id="dielineMask">
                       <rect width="440" height="760" fill="white" />
-                      {/* Top-Left Camera Cutout with organic right flash lobe */}
-                      <path
-                        d="
-                          M 148 178
-                          L 172 178
-                          C 192 178, 204 188, 204 204
-                          C 204 212, 210 218, 222 222
-                          C 236 226, 244 236, 244 248
-                          C 244 260, 236 270, 222 274
-                          C 210 278, 204 284, 204 292
-                          C 204 308, 192 318, 172 318
-                          L 148 318
-                          C 128 318, 116 308, 116 292
-                          L 116 204
-                          C 116 188, 128 178, 148 178
-                          Z
-                        "
-                        fill="black"
-                      />
+                      {renderDielineCameraCutout(currentPhoneDetails.cameraType, true)}
                     </mask>
                   </defs>
 
@@ -2893,14 +3404,8 @@ export default function CustomerStudioWorkspace() {
                   <path d="M 109 605 C 109 642, 116 650, 145 650" fill="none" stroke="#94a3b8" strokeWidth="1.2" />
                   <path d="M 295 650 C 324 650, 331 642, 331 605" fill="none" stroke="#94a3b8" strokeWidth="1.2" />
 
-                  {/* 5. Left Side Fold Cutout Slots (Volume/Mute) */}
-                  <rect x="105" y="260" width="8" height="60" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
-                  <rect x="105" y="420" width="8" height="60" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
-
-                  {/* 6. Right Side Fold Cutout Slots (Volume Up, Down, Power) */}
-                  <rect x="327" y="210" width="8" height="24" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
-                  <rect x="327" y="250" width="8" height="24" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
-                  <rect x="327" y="300" width="8" height="38" rx="4" fill="#f5f5f7" stroke="#94a3b8" strokeWidth="1.2" />
+                  {/* 5 & 6. Side Fold Cutout Slots (Dynamic per phone model/brand) */}
+                  {renderDielineButtons(currentPhoneDetails)}
 
                   {/* 7. Bottom Flap Cutouts (5 Speaker holes, center hole, USB-C Port, hole, 3 Mic holes) */}
                   <circle cx="165" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
@@ -2917,27 +3422,8 @@ export default function CustomerStudioWorkspace() {
                   <circle cx="257" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
                   <circle cx="263" cy="675" r="2.0" fill="none" stroke="#64748b" strokeWidth="1.2" />
 
-                  {/* 8. Camera Hole Outline (iPhone 16 Shape with Flash Lobe) */}
-                  <path
-                    d="
-                      M 148 178
-                      L 172 178
-                      C 192 178, 204 188, 204 204
-                      C 204 212, 210 218, 222 222
-                      C 236 226, 244 236, 244 248
-                      C 244 260, 236 270, 222 274
-                      C 210 278, 204 284, 204 292
-                      C 204 308, 192 318, 172 318
-                      L 148 318
-                      C 128 318, 116 308, 116 292
-                      L 116 204
-                      C 116 188, 128 178, 148 178
-                      Z
-                    "
-                    fill="#f5f5f7"
-                    stroke="#475569"
-                    strokeWidth="1.5"
-                  />
+                  {/* 8. Camera Hole Outline (Dynamic per selected phone model) */}
+                  {renderDielineCameraCutout(currentPhoneDetails.cameraType, false)}
 
                   {/* 9. Outer Cut Perimeter Stroke Line */}
                   <path
@@ -3257,143 +3743,6 @@ export default function CustomerStudioWorkspace() {
         </div>
       )}
 
-      {/* ─── 4. SUPER EXPORT MODAL ────────────────────────────────────────── */}
-      {showExportModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(6px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "#ffffff",
-              borderRadius: "16px",
-              padding: "24px",
-              maxWidth: "460px",
-              width: "90%",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700, color: "#111827" }}>
-                  Export & Order
-                </h3>
-                <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#64748b" }}>
-                  {selectedModel} • {currentFinishObj.name}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowExportModal(false)}
-                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#9ca3af" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Export options */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <button
-                onClick={handleDownloadMockup}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "12px 16px",
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
-                  backgroundColor: "#f8fafc",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "1.2rem" }}>📸</span>
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e293b" }}>Download 3D Mockup (PNG)</div>
-                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Clean studio render with alpha channel</div>
-                  </div>
-                </div>
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#7c3aed" }}>Download ↓</span>
-              </button>
-
-              <button
-                onClick={() => showToast("300DPI production print file ready")}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "12px 16px",
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
-                  backgroundColor: "#f8fafc",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "1.2rem" }}>🖨️</span>
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e293b" }}>Production Print File</div>
-                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Full sublimation bleed template (300 DPI)</div>
-                  </div>
-                </div>
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#7c3aed" }}>Export ↓</span>
-              </button>
-            </div>
-
-            {/* Price & Buy Now */}
-            <div
-              style={{
-                backgroundColor: "#faf5ff",
-                border: "1px solid #e9d5ff",
-                borderRadius: "12px",
-                padding: "16px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "0.72rem", color: "#7c3aed", fontWeight: 700, textTransform: "uppercase" }}>
-                  Total Price
-                </span>
-                <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>
-                  ₹{totalPrice}
-                  <span style={{ fontSize: "0.8rem", color: "#6b7280", fontWeight: 400, marginLeft: "6px" }}>
-                    (Free Delivery)
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={handleAddToCart}
-                disabled={isExporting}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "8px",
-                  backgroundColor: "#7c3aed",
-                  color: "#ffffff",
-                  border: "none",
-                  fontWeight: 700,
-                  fontSize: "0.9rem",
-                  cursor: isExporting ? "wait" : "pointer",
-                  boxShadow: "0 4px 14px rgba(124, 58, 237, 0.4)",
-                }}
-              >
-                {isExporting ? "Processing..." : "Add to Cart 🛒"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

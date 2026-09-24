@@ -206,7 +206,7 @@ export default function DevicePickerModal() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search phone (e.g. S24 Ultra, Pixel 9, iPhone 16, OnePlus 12)..."
+              placeholder="Search phone (e.g. iPhone 17, iPhone 18, S25 Ultra, Pixel 9)..."
               autoFocus
               style={{
                 background: "transparent",

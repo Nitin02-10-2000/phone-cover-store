@@ -13,6 +13,9 @@ const getMockupOverlayForModel = (modelName?: string) => {
   const lower = modelName.toLowerCase();
   if (lower.includes("ultra")) return "/mockups/glass_case_samsung_ultra.png";
   if (lower.includes("oneplus")) return "/mockups/glass_case_oneplus.png";
+  if (lower.includes("iphone 18") || lower.includes("iphone 17")) {
+    return "/mockups/glass_case_iphone_18_white.png";
+  }
   if (lower.includes("iphone 16") && !lower.includes("pro")) return "/mockups/glass_case_iphone_16.png";
   if (lower.includes("iphone 15") || lower.includes("iphone 14") || lower.includes("iphone 13")) {
     return "/mockups/glass_case_iphone_dual.png";
@@ -30,6 +33,16 @@ export default function HeroBanner() {
   const [isPaused, setIsPaused] = useState(false);
   const [heroFeaturedId, setHeroFeaturedId] = useState<string | null>(null);
 
+  // Sync selectedModel whenever globalModel changes in DeviceContext (e.g. from top navbar)
+  useEffect(() => {
+    if (globalModel) {
+      setSelectedModel(globalModel);
+      const bIdx = PHONE_MODELS.findIndex((b) => b.models.includes(globalModel));
+      if (bIdx !== -1) {
+        setSelectedBrandIndex(bIdx);
+      }
+    }
+  }, [globalModel]);
 
   const currentMockupOverlay = getMockupOverlayForModel(selectedModel);
 

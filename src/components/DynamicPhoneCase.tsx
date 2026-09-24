@@ -187,12 +187,15 @@ export default function DynamicPhoneCase({
     (phone.cameraType === "iphone-triple" ||
       phone.cameraType === "iphone-dual-diag" ||
       phone.cameraType === "iphone-dual-vert" ||
+      phone.cameraType === "iphone-plateau" ||
       phone.cameraType === "samsung-ultra" ||
       phone.cameraType === "samsung-triple" ||
       phone.cameraType === "oneplus-dial");
 
   const glassOverlaySrc =
-    phone.cameraType === "iphone-triple"
+    phone.cameraType === "iphone-plateau"
+      ? "/mockups/glass_case_iphone_18_white.png"
+      : phone.cameraType === "iphone-triple"
       ? "/mockups/glass_case_iphone_pro.png"
       : phone.cameraType === "iphone-dual-diag"
       ? "/mockups/glass_case_iphone_dual.png"
@@ -771,6 +774,27 @@ export default function DynamicPhoneCase({
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#fbbf24" }} />
             </div>
           </div>
+        );
+
+      // ================= 10. APPLE IPHONE 17 / 18 (Horizontal Camera Plateau / Visor) =================
+      // ================= 10. APPLE IPHONE 17 / 18 (Large Rectangular Plateau Cutout) =================
+      case "iphone-plateau":
+        return (
+          <div
+            style={{
+              position: "absolute",
+              top: "12px",
+              left: "12px",
+              right: "12px",
+              height: "82px",
+              borderRadius: "16px",
+              backgroundColor: "transparent",
+              border: lensProtectorAddon ? "3px solid #22c55e" : "3.5px solid #18181b",
+              boxShadow: "0 6px 16px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.18)",
+              zIndex: 10,
+              pointerEvents: "none",
+            }}
+          />
         );
 
       // ================= 10. APPLE IPHONE PRO TRIPLE (Default) =================

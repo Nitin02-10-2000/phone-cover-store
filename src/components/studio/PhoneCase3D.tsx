@@ -261,10 +261,22 @@ function drawRoundedRectCW(
  * Creates through-hole camera cutout paths matching phone archetypes
  * Positioned in the TOP-LEFT of the phone back (negative X, positive Y)
  */
-function createCameraHolePaths(archetype: CameraArchetype): THREE.Path[] {
+function createCameraHolePaths(archetype: CameraArchetype, isLarge: boolean = false): THREE.Path[] {
   const paths: THREE.Path[] = [];
 
   switch (archetype) {
+    case "iphone-plateau": {
+      // Authentic iPhone 17 / 18 Large Rectangular Plateau Cutout (Calibrated to official CAD leaks: 62x40.5mm Pro / 67.5x43mm Pro Max)
+      const hole = new THREE.Path();
+      const w = isLarge ? 3.16 : 3.00;
+      const h = isLarge ? 2.02 : 1.96;
+      const r = isLarge ? 0.49 : 0.51;
+      const x = -w / 2;
+      const y = isLarge ? 1.52 : 1.45;
+      drawRoundedRectCW(hole, x, y, w, h, r);
+      paths.push(hole);
+      break;
+    }
     case "iphone-triple": {
       // iPhone Pro squircle camera cutout (Top-Left)
       const hole = new THREE.Path();
@@ -330,6 +342,30 @@ function createCameraHolePaths(archetype: CameraArchetype): THREE.Path[] {
       const radius = 0.88;
       const cx = -0.68, cy = 2.22;
       hole.absarc(cx, cy, radius, 0, Math.PI * 2, true);
+      paths.push(hole);
+      break;
+    }
+    case "matrix-island": {
+      const hole = new THREE.Path();
+      const w = 1.45, h = 1.65, r = 0.35;
+      const x = -1.50, y = 1.75;
+      drawRoundedRectCW(hole, x, y, w, h, r);
+      paths.push(hole);
+      break;
+    }
+    case "samsung-flip": {
+      const hole = new THREE.Path();
+      const w = 1.42, h = 0.72, r = 0.36;
+      const x = -1.48, y = 2.50;
+      drawRoundedRectCW(hole, x, y, w, h, r);
+      paths.push(hole);
+      break;
+    }
+    case "nothing-glyph": {
+      const hole = new THREE.Path();
+      const w = 0.90, h = 1.80, r = 0.45;
+      const x = -1.48, y = 1.55;
+      drawRoundedRectCW(hole, x, y, w, h, r);
       paths.push(hole);
       break;
     }
@@ -627,7 +663,7 @@ export default function PhoneCase3D({
       drawPlaceholderPattern();
       applyTextureToMaterial();
     }
-  }, [artworkUrl, caseColor, customText, textColor, selectedFont, activeSticker, artworkScale, artworkOffsetX, artworkOffsetY, artworkRotation, filterStyle, caseType]);
+  }, [artworkUrl, caseColor, customText, textColor, selectedFont, activeSticker, artworkScale, artworkOffsetX, artworkOffsetY, artworkRotation, filterStyle, caseType, phoneModel]);
 
   // ── Build True Hollow 3D Phone Case with Wrap Geometry ────────────────────
   useEffect(() => {
@@ -658,6 +694,7 @@ export default function PhoneCase3D({
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
+      preserveDrawingBuffer: true,
       powerPreference: "high-performance",
     });
     renderer.setSize(w, h);
@@ -717,11 +754,12 @@ export default function PhoneCase3D({
     const singleCase = new THREE.Group();
 
     // ── Dimensions of Hollow Case (Units) ──────────────────────────────────
-    const caseW = 3.65;
-    const caseH = 7.60;
+    const isLarge = /pro\s*max|plus|ultra/i.test(phoneModel);
+    const caseW = isLarge ? 3.75 : 3.58;
+    const caseH = isLarge ? 7.75 : 7.45;
     const caseD = 0.42; // Depth of the hollow tray
     const wallT = 0.07; // Thickness of the plastic wall
-    const cornerR = phoneDetails.corners === "sharp" ? 0.35 : 0.70;
+    const cornerR = phoneDetails.corners === "sharp" ? 0.32 : 0.70;
 
     // ════════════════════════════════════════════════════════════════════════
     // A. OUTER WRAP SHELL (Back Plate + 4 Side Walls with Seamless Wrap UVs)
@@ -735,7 +773,7 @@ export default function PhoneCase3D({
     const backShape = new THREE.Shape();
     drawRoundedRectCCW(backShape, -caseW / 2, -caseH / 2, caseW, caseH, cornerR, hasCameraControl);
     // Cut open the authentic camera through-holes using clockwise winding!
-    const camHoles = createCameraHolePaths(archetype);
+    const camHoles = createCameraHolePaths(archetype, isLarge);
     camHoles.forEach((h) => backShape.holes.push(h));
 
     // Back plate extruded from z = 0 backward to z = -wallT
@@ -839,7 +877,7 @@ export default function PhoneCase3D({
 
     const cavityShape = new THREE.Shape();
     drawRoundedRectCCW(cavityShape, -cavityFloorW / 2, -cavityFloorH / 2, cavityFloorW, cavityFloorH, cavityFloorR);
-    const innerCamHoles = createCameraHolePaths(archetype);
+    const innerCamHoles = createCameraHolePaths(archetype, isLarge);
     innerCamHoles.forEach((h) => cavityShape.holes.push(h));
 
     const cavityGeo = new THREE.ShapeGeometry(cavityShape);
@@ -932,6 +970,44 @@ export default function PhoneCase3D({
       );
       const ringHole = new THREE.Path();
       drawRoundedRectCW(ringHole, -1.50, 1.82, 1.48, 1.58, 0.40);
+      ringShape.holes.push(ringHole);
+
+      const ringGeo = new THREE.ExtrudeGeometry(ringShape, {
+        depth: ringH,
+        bevelEnabled: true,
+        bevelSegments: 3,
+        bevelSize: 0.02,
+        bevelThickness: 0.02,
+      });
+
+      const ringMat = new THREE.MeshPhysicalMaterial({
+        color: 0x18181f,
+        roughness: 0.35,
+        metalness: 0.35,
+        clearcoat: 0.5,
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.position.z = 0.001;
+      singleCase.add(ringMesh);
+    } else if (archetype === "iphone-plateau") {
+      const ringLipT = 0.08;
+      const ringH = 0.085;
+      const w = isLarge ? 3.16 : 3.00;
+      const h = isLarge ? 2.02 : 1.96;
+      const r = isLarge ? 0.49 : 0.51;
+      const x = -w / 2;
+      const y = isLarge ? 1.52 : 1.45;
+      const ringShape = new THREE.Shape();
+      drawRoundedRectCCW(
+        ringShape,
+        x - ringLipT,
+        y - ringLipT,
+        w + 2 * ringLipT,
+        h + 2 * ringLipT,
+        r + ringLipT
+      );
+      const ringHole = new THREE.Path();
+      drawRoundedRectCW(ringHole, x, y, w, h, r);
       ringShape.holes.push(ringHole);
 
       const ringGeo = new THREE.ExtrudeGeometry(ringShape, {
@@ -1118,7 +1194,7 @@ export default function PhoneCase3D({
         mount.removeChild(renderer.domElement);
       }
     };
-  }, [phoneModel, caseType, layout, width, height]);
+  }, [phoneModel, phoneDetails, caseType, layout, width, height]);
 
   // Keep texture updated whenever artwork, custom text, or transforms change
   useEffect(() => {

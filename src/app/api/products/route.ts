@@ -157,6 +157,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Studio customer customizations are private to the user and must NOT be saved to the public catalog
+    if (body.id?.startsWith("custom-") || franchise === "custom" || String(name).toLowerCase().startsWith("custom ")) {
+      return NextResponse.json(
+        { success: true, message: "User studio design ignored for public catalog." },
+        { status: 200 }
+      );
+    }
+
     const id = body.id || `case-${Date.now()}`;
     const formatsStr = Array.isArray(formats) ? formats.join(",") : formats;
     const brandsStr = Array.isArray(supportedBrands) ? supportedBrands.join(",") : supportedBrands;

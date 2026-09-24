@@ -73,7 +73,7 @@ export default function Home() {
                 <span>⚡ POPULAR DEVICES:</span>
               </div>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
-                {["iPhone 16 Pro Max", "iPhone 15 Pro", "Galaxy S24 Ultra", "OnePlus 12", "Pixel 9 Pro"].map((dev) => (
+                {["iPhone 18 Pro Max", "iPhone 17 Pro", "iPhone 16 Pro Max", "Galaxy S25 Ultra", "Pixel 9 Pro"].map((dev) => (
                   <Link
                     key={dev}
                     href={`/shop?device=${encodeURIComponent(dev)}`}

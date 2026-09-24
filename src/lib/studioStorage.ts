@@ -541,7 +541,10 @@ export function buildDefaultPhoneModels(): StudioPhoneModel[] {
     let cameraCutout: CameraCutoutSpec = { x: 18, y: 18, width: 78, height: 86, radius: 24 };
     let flashCutout: FlashCutoutSpec = { x: 62, y: 36, radius: 8 };
 
-    if (isSamsung && item.corners === "sharp") {
+    if (item.cameraType === "iphone-plateau") {
+      cameraCutout = { x: 14, y: 16, width: 236, height: 112, radius: 26 };
+      flashCutout = { x: 215, y: 72, radius: 7 };
+    } else if (isSamsung && item.corners === "sharp") {
       cameraCutout = { x: 20, y: 20, width: 62, height: 120, radius: 18 };
       flashCutout = { x: 58, y: 38, radius: 7 };
     } else if (isPixel) {
@@ -661,12 +664,24 @@ function notifyStudioUpdated() {
 export function getStudioPhoneModels(): StudioPhoneModel[] {
   if (typeof window === "undefined") return buildDefaultPhoneModels();
   const raw = localStorage.getItem(KEY_PHONE_MODELS);
+  const defaults = buildDefaultPhoneModels();
   if (!raw) {
-    const defaults = buildDefaultPhoneModels();
     localStorage.setItem(KEY_PHONE_MODELS, JSON.stringify(defaults));
     return defaults;
   }
-  return safeParse<StudioPhoneModel[]>(raw, buildDefaultPhoneModels());
+  const parsed = safeParse<StudioPhoneModel[]>(raw, defaults);
+  const existingIds = new Set(parsed.map((m) => m.id));
+  const missing = defaults.filter((d) => !existingIds.has(d.id));
+  if (missing.length > 0) {
+    const merged = [...missing, ...parsed];
+    try {
+      localStorage.setItem(KEY_PHONE_MODELS, JSON.stringify(merged));
+    } catch {
+      // Ignore quota errors
+    }
+    return merged;
+  }
+  return parsed;
 }
 
 export function saveStudioPhoneModel(model: StudioPhoneModel): StudioPhoneModel[] {

@@ -2,6 +2,7 @@ export type CameraArchetype =
   | "iphone-triple"
   | "iphone-dual-diag"
   | "iphone-dual-vert"
+  | "iphone-plateau"
   | "samsung-ultra"
   | "samsung-triple"
   | "samsung-flip"
@@ -30,6 +31,20 @@ export interface BrandGroup {
 
 export const ALL_PHONE_MODELS: PhoneModelItem[] = [
   // ==================== APPLE IPHONE ====================
+  // iPhone 18 Series
+  { id: "ip-18-pm", name: "iPhone 18 Pro Max", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2026, popular: true },
+  { id: "ip-18-p", name: "iPhone 18 Pro", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2026, popular: true },
+  { id: "ip-18-plus", name: "iPhone 18 Plus", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2026 },
+  { id: "ip-18", name: "iPhone 18", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2026, popular: true },
+
+  // iPhone 17 Series
+  { id: "ip-17-pm", name: "iPhone 17 Pro Max", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2025, popular: true },
+  { id: "ip-17-p", name: "iPhone 17 Pro", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2025, popular: true },
+  { id: "ip-17-air", name: "iPhone 17 Air", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2025, popular: true },
+  { id: "ip-17-plus", name: "iPhone 17 Plus", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2025 },
+  { id: "ip-17", name: "iPhone 17", brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true, releaseYear: 2025, popular: true },
+
+  // iPhone 16 Series
   { id: "ip-16-pm", name: "iPhone 16 Pro Max", brand: "Apple", cameraType: "iphone-triple", corners: "rounded", hasMagSafe: true, releaseYear: 2024, popular: true },
   { id: "ip-16-p", name: "iPhone 16 Pro", brand: "Apple", cameraType: "iphone-triple", corners: "rounded", hasMagSafe: true, releaseYear: 2024, popular: true },
   { id: "ip-16-plus", name: "iPhone 16 Plus", brand: "Apple", cameraType: "iphone-dual-vert", corners: "rounded", hasMagSafe: true, releaseYear: 2024 },
@@ -231,22 +246,27 @@ export function getAllPhoneModels(): PhoneModelItem[] {
 export function getPhoneModelDetails(modelName?: string): PhoneModelItem {
   const allModels = getAllPhoneModels();
   if (!modelName) {
-    return allModels[0]; // iPhone 16 Pro Max default
+    return allModels.find((m) => m.name === "iPhone 16 Pro Max") || allModels[0];
   }
   const clean = modelName.trim().toLowerCase();
+  const isIPhone17Or18 = clean.includes("iphone") && (clean.includes("17") || clean.includes("18"));
 
   // 1. Exact match by name or id (PRIORITY #1)
   const exactMatch = allModels.find(
     (p) => p.name.toLowerCase() === clean || p.id.toLowerCase() === clean
   );
-  if (exactMatch) return exactMatch;
+  if (exactMatch) {
+    return isIPhone17Or18 ? { ...exactMatch, cameraType: "iphone-plateau" } : exactMatch;
+  }
 
   // 2. Exact match when stripped of extra spaces/symbols
   const normalizedClean = clean.replace(/[^a-z0-9]/g, "");
   const normalizedMatch = allModels.find(
     (p) => p.name.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedClean
   );
-  if (normalizedMatch) return normalizedMatch;
+  if (normalizedMatch) {
+    return isIPhone17Or18 ? { ...normalizedMatch, cameraType: "iphone-plateau" } : normalizedMatch;
+  }
 
   // 3. For non-pro queries (e.g. "iphone 15", "iphone 16", "iphone 14"), NEVER match a "pro" or "max" model
   const isProOrMax = clean.includes("pro") || clean.includes("max") || clean.includes("ultra");
@@ -256,24 +276,31 @@ export function getPhoneModelDetails(modelName?: string): PhoneModelItem {
       const pIsPro = pLower.includes("pro") || pLower.includes("max") || pLower.includes("ultra");
       return !pIsPro && (pLower.includes(clean) || clean.includes(pLower));
     });
-    if (nonProMatch) return nonProMatch;
+    if (nonProMatch) {
+      return isIPhone17Or18 ? { ...nonProMatch, cameraType: "iphone-plateau" } : nonProMatch;
+    }
   }
 
   // 4. General partial match
   const partialMatch = allModels.find(
     (p) => clean.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(clean)
   );
-  if (partialMatch) return partialMatch;
+  if (partialMatch) {
+    return isIPhone17Or18 ? { ...partialMatch, cameraType: "iphone-plateau" } : partialMatch;
+  }
 
   // Archetype heuristics for unlisted variants
-  if (clean.includes("iphone") && (clean.includes("pro") || clean.includes("max"))) {
-    return { id: "custom-ip-pro", name: modelName, brand: "Apple", cameraType: "iphone-triple", corners: "rounded", hasMagSafe: true };
+  if (clean.includes("iphone") && (clean.includes("17") || clean.includes("18"))) {
+    return { id: `custom-ip-plateau-${clean}`, name: modelName, brand: "Apple", cameraType: "iphone-plateau", corners: "rounded", hasMagSafe: true };
   }
-  if (clean.includes("iphone") && clean.includes("16")) {
-    return { id: "custom-ip-16", name: modelName, brand: "Apple", cameraType: "iphone-dual-vert", corners: "rounded", hasMagSafe: true };
+  if (clean.includes("iphone") && (clean.includes("pro") || clean.includes("max"))) {
+    return { id: `custom-ip-pro-${clean}`, name: modelName, brand: "Apple", cameraType: "iphone-triple", corners: "rounded", hasMagSafe: true };
+  }
+  if (clean.includes("iphone") && (clean.includes("16") || clean.includes("17") || clean.includes("18"))) {
+    return { id: `custom-ip-vert-${clean}`, name: modelName, brand: "Apple", cameraType: "iphone-dual-vert", corners: "rounded", hasMagSafe: true };
   }
   if (clean.includes("iphone")) {
-    return { id: "custom-ip", name: modelName, brand: "Apple", cameraType: "iphone-dual-diag", corners: "rounded", hasMagSafe: true };
+    return { id: `custom-ip-${clean}`, name: modelName, brand: "Apple", cameraType: "iphone-dual-diag", corners: "rounded", hasMagSafe: true };
   }
   if (clean.includes("ultra")) {
     return { id: "custom-ultra", name: modelName, brand: "Samsung", cameraType: "samsung-ultra", corners: "sharp", hasMagSafe: true };

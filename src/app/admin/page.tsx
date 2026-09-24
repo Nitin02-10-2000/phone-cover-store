@@ -21,6 +21,8 @@ import OrdersDesignsView from "@/components/admin/OrdersDesignsView";
 import MockupsManagerView from "@/components/admin/MockupsManagerView";
 
 const POPULAR_PREVIEW_MODELS = [
+  "iPhone 18 Pro Max",
+  "iPhone 17 Pro Max",
   "iPhone 16 Pro Max",
   "iPhone 16",
   "Galaxy S25 Ultra",
@@ -66,51 +68,6 @@ const NAV_SECTIONS = [
   },
 ];
 
-// Sample preset phone case artworks for fast 1-click upload
-const CASE_PRESETS = [
-  {
-    title: "Gojo Satoru — Domain Expansion",
-    theme: "anime",
-    franchise: "Jujutsu Kaisen",
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1786122801/mockups/gojo-satoru-honored-one-poster-paper-1.jpg",
-    price: 599,
-  },
-  {
-    title: "Luffy Gear 5 — Sun God Awakening",
-    theme: "anime",
-    franchise: "One Piece",
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787153686/mockups/luffy-gear-5-one-piece-poster-paper-5.jpg",
-    price: 649,
-  },
-  {
-    title: "Cyberpunk Oni — Neo Tokyo Armor",
-    theme: "streetwear",
-    franchise: "Streetwear",
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1788283104/mockups/akira-poster-kaneda-neo-tokyo-anime-wall-art-paper-1.jpg",
-    price: 699,
-  },
-  {
-    title: "Sukuna Malevolent Shrine Limited",
-    theme: "anime",
-    franchise: "Jujutsu Kaisen",
-    image: "https://res.cloudinary.com/dv7oqos1m/image/upload/v1787407303/mockups/ryomen-sukuna-jujutsu-kaisen-poster-cinematic-anime-wall-art-sukuna-decor-paper-1.jpg",
-    price: 599,
-  },
-  {
-    title: "Guts Berserker Armor — Dark Blood",
-    theme: "dark-gothic",
-    franchise: "Berserk",
-    image: "https://res.cloudinary.com/dv7oqos1m/image/private/s--tUURy_y1--/t_shinra_card/v1/products/kbvsttiw8hoxpfel82du?_a=BAMAPqfk0",
-    price: 649,
-  },
-  {
-    title: "Itachi Uchiha — Crimson Tsukuyomi",
-    theme: "anime",
-    franchise: "Naruto",
-    image: "/mockups/itachi_tsukuyomi.jpg",
-    price: 599,
-  },
-];
 
 export default function AdminPage() {
   const pathname = usePathname();
@@ -229,7 +186,7 @@ export default function AdminPage() {
     badge: "NEW DROP",
     description: "Military-grade dual-layer shock absorption with high-definition UV DTF print. Scratch-resistant matte finish with raised 1.8mm camera protection ring.",
     formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "9H Tempered Glass Back"],
-    image: CASE_PRESETS[0].image,
+    image: "",
     dropProtection: "12ft Drop Tested",
   });
 
@@ -428,8 +385,8 @@ export default function AdminPage() {
       originalPrice: Number(newCase.originalPrice) || 999,
       rating: 5.0,
       reviewsCount: 1,
-      image: newCase.image || CASE_PRESETS[0].image,
-      tiltedImage: newCase.image || CASE_PRESETS[0].image,
+      image: newCase.image || "",
+      tiltedImage: newCase.image || "",
       badge: newCase.badge || "NEW DROP",
       formats: newCase.formats.length > 0 ? newCase.formats : ["Ultra Impact MagSafe", "Tough Armor Dual-Layer"],
       description: newCase.description,
@@ -459,7 +416,7 @@ export default function AdminPage() {
       badge: "NEW DROP",
       description: "Military-grade dual-layer shock absorption with high-definition UV DTF print. Scratch-resistant matte finish with raised 1.8mm camera protection ring.",
       formats: ["Ultra Impact MagSafe", "Tough Armor Dual-Layer", "9H Tempered Glass Back"],
-      image: CASE_PRESETS[0].image,
+      image: "",
       dropProtection: "12ft Drop Tested",
     });
     setModalArtworkScale(1);
@@ -662,21 +619,30 @@ export default function AdminPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--background)", color: "var(--foreground)", display: "flex" }}>
-      {/* ─── SIDEBAR ─────────────────────────────────────── */}
+    <div
+      style={{
+        height: "100vh",
+        maxHeight: "100vh",
+        backgroundColor: "var(--background)",
+        color: "var(--foreground)",
+        display: "flex",
+        overflow: "hidden",
+      }}
+    >
+      {/* ─── SIDEBAR (Fixed Left Panel) ─────────────────── */}
       <aside
         style={{
           width: "260px",
+          height: "100vh",
+          maxHeight: "100vh",
           flexShrink: 0,
           backgroundColor: "var(--surface)",
           borderRight: "1px solid var(--surface-border)",
-          minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
-          position: "sticky",
-          top: 0,
+          position: "relative",
           overflowY: "auto",
-          paddingTop: "80px",
+          zIndex: 20,
         }}
       >
         {/* Brand */}
@@ -785,8 +751,17 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      {/* ─── MAIN CONTENT ─────────────────────────────────── */}
-      <div style={{ flex: 1, overflowX: "hidden", padding: "90px 36px 80px" }}>
+      {/* ─── MAIN CONTENT (Scrolls Independently) ─────────── */}
+      <div
+        style={{
+          flex: 1,
+          height: "100vh",
+          maxHeight: "100vh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: "32px 36px 80px",
+        }}
+      >
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
           
           {adminView === "console" && (
@@ -3190,43 +3165,6 @@ export default function AdminPage() {
                         }}
                       />
                     </div>
-
-                    {/* Quick Presets */}
-                    <div style={{ marginTop: "8px" }}>
-                      <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
-                        Or Choose from High-Res Presets:
-                      </span>
-                      <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
-                        {CASE_PRESETS.map((preset) => (
-                          <div
-                            key={preset.title}
-                            onClick={() => {
-                              setNewCase((prev) => ({
-                                ...prev,
-                                name: prev.name || preset.title,
-                                franchise: preset.franchise,
-                                theme: preset.theme,
-                                image: preset.image,
-                                price: preset.price,
-                              }));
-                            }}
-                            style={{
-                              position: "relative",
-                              width: "44px",
-                              height: "58px",
-                              borderRadius: "6px",
-                              overflow: "hidden",
-                              cursor: "pointer",
-                              border: newCase.image === preset.image ? "2px solid var(--main-accent)" : "1px solid var(--surface-border)",
-                              flexShrink: 0,
-                            }}
-                            title={preset.title}
-                          >
-                            <Image src={preset.image} alt={preset.title} fill sizes="44px" style={{ objectFit: "cover" }} unoptimized />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </div>
 
                   {/* Automatic Live 3D Phone Mockup Container */}
@@ -3380,7 +3318,7 @@ export default function AdminPage() {
                       }}
                     >
                       <DynamicPhoneCase
-                        artworkUrl={newCase.image || CASE_PRESETS[0].image}
+                        artworkUrl={newCase.image || ""}
                         phoneModel={modalPreviewModel}
                         caseType={modalPreviewCaseType}
                         showMagSafe={modalPreviewShowMagSafe}
@@ -4084,39 +4022,6 @@ export default function AdminPage() {
                           outline: "none",
                         }}
                       />
-                    </div>
-
-                    {/* Quick Presets */}
-                    <div style={{ marginTop: "8px" }}>
-                      <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--foreground-muted)", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
-                        Or Swap with High-Res Preset:
-                      </span>
-                      <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
-                        {CASE_PRESETS.map((preset) => (
-                          <div
-                            key={preset.title}
-                            onClick={() => {
-                              setEditForm((prev) => ({
-                                ...prev,
-                                image: preset.image,
-                              }));
-                            }}
-                            style={{
-                              position: "relative",
-                              width: "44px",
-                              height: "58px",
-                              borderRadius: "6px",
-                              overflow: "hidden",
-                              cursor: "pointer",
-                              border: editForm.image === preset.image ? "2px solid #ffa502" : "1px solid var(--surface-border)",
-                              flexShrink: 0,
-                            }}
-                            title={preset.title}
-                          >
-                            <Image src={preset.image} alt={preset.title} fill sizes="44px" style={{ objectFit: "cover" }} unoptimized />
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </div>
 

@@ -1,41 +1,145 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, use, useEffect, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SearchModal from "@/components/SearchModal";
 import ProductCard from "@/components/ProductCard";
-import { PRODUCTS, CASE_TYPES, CASE_ANATOMY, getProductById } from "@/data/products";
+import { PRODUCTS, CASE_TYPES, CASE_ANATOMY, getProductById, type Product } from "@/data/products";
 import { BRAND_GROUPS, getPhoneModelDetails } from "@/data/phoneModels";
 import { useCart } from "@/lib/cartContext";
 import { useDevice } from "@/lib/deviceContext";
-import { useAllProducts } from "@/lib/productsStorage";
+import { useAllProducts, getCustomProducts, getUserStudioProduct } from "@/lib/productsStorage";
 import DynamicPhoneCase from "@/components/DynamicPhoneCase";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function ProductDetailPage({ params }: PageProps) {
-  const { id } = use(params);
+function ProductDetailPageContent({ id }: { id: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryModel = searchParams?.get("model");
+  const queryCaseType = searchParams?.get("caseType");
+
   const { addToCart } = useCart();
-  const { selectedModel: globalModel, setDevice } = useDevice();
+  const { selectedModel: globalModel, setDevice, setDeviceByModel } = useDevice();
   const { products } = useAllProducts();
 
-  const product = products.find((p) => p.id === id) || getProductById(id) || PRODUCTS[0];
+  const isCustomId = id.startsWith("custom-");
+  const initialModel = queryModel || globalModel;
 
-  const [selectedCaseType, setSelectedCaseType] = useState(CASE_TYPES[0].name);
-  const [selectedBrand, setSelectedBrand] = useState(() => getPhoneModelDetails(globalModel).brand);
-  const [selectedModel, setSelectedModel] = useState(globalModel);
+  const buildCustomFallback = (modelName: string): Product => {
+    let savedImg = "/mockups/custom_pattern.png";
+    if (typeof window !== "undefined") {
+      try {
+        const lImg = sessionStorage.getItem("casetadka_latest_custom_image");
+        if (lImg) savedImg = lImg;
+      } catch {}
+    }
+    return {
+      id,
+      name: `Custom ${modelName} Cover`,
+      franchise: "custom",
+      category: "case",
+      tag: "Custom 3D Studio Edition",
+      price: 399,
+      originalPrice: 799,
+      rating: 5.0,
+      reviewsCount: 1,
+      image: savedImg,
+      formats: [
+        "Ultra Impact MagSafe",
+        "Tough Armor Dual-Layer",
+        "9H Tempered Glass Back",
+        "Matte Slim EDC",
+        "Cyber Clear Hologram",
+      ],
+      description: `Custom designed phone case for ${modelName}. Created in CaseTadka 3D Custom Studio. Permanent HD UV sublimation print with shock-absorbing corners.`,
+      isCustom: true,
+      artworkFit: "cover",
+      artworkScale: 1,
+      artworkOffsetX: 0,
+      artworkOffsetY: 0,
+    };
+  };
+
+  const [product, setProduct] = useState<Product>(() => {
+    if (typeof window !== "undefined") {
+      const studioProduct = getUserStudioProduct(id);
+      if (studioProduct) return studioProduct;
+      const customLocal = getCustomProducts().find((p) => p.id === id);
+      if (customLocal) return customLocal;
+      const match = products.find((p) => p.id === id) || getProductById(id);
+      if (match) return match;
+    }
+    if (isCustomId) {
+      return buildCustomFallback(initialModel);
+    }
+    return products.find((p) => p.id === id) || getProductById(id) || PRODUCTS[0];
+  });
+
+  const [selectedCaseType, setSelectedCaseType] = useState(() => {
+    if (queryCaseType) {
+      const match = CASE_TYPES.find(
+        (c) => c.name.toLowerCase() === queryCaseType.toLowerCase() || c.id === queryCaseType
+      );
+      if (match) return match.name;
+    }
+    return CASE_TYPES[0].name;
+  });
+  const [selectedBrand, setSelectedBrand] = useState(() => getPhoneModelDetails(initialModel).brand);
+  const [selectedModel, setSelectedModel] = useState(initialModel);
   const [lensProtectorAddon, setLensProtectorAddon] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"specs" | "compatibility" | "reviews">("specs");
   const [pdpTilt, setPdpTilt] = useState<"front" | "left" | "right">("front");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const studioProduct = getUserStudioProduct(id);
+      if (studioProduct) {
+        setProduct({
+          ...studioProduct,
+          name: isCustomId ? `Custom ${selectedModel} Cover` : studioProduct.name,
+        });
+        return;
+      }
+      if (isCustomId) {
+        setProduct(buildCustomFallback(selectedModel));
+        return;
+      }
+      const customLocal = getCustomProducts().find((p) => p.id === id);
+      if (customLocal) {
+        setProduct(customLocal);
+        return;
+      }
+      const match = products.find((p) => p.id === id) || getProductById(id);
+      if (match) {
+        setProduct(match);
+      }
+    }
+  }, [id, products, isCustomId, selectedModel]);
+
+  useEffect(() => {
+    if (queryModel && queryModel !== selectedModel) {
+      setSelectedModel(queryModel);
+      setSelectedBrand(getPhoneModelDetails(queryModel).brand);
+      setDeviceByModel(queryModel);
+    }
+    if (queryCaseType) {
+      const match = CASE_TYPES.find(
+        (c) => c.name.toLowerCase() === queryCaseType.toLowerCase() || c.id === queryCaseType
+      );
+      if (match && match.name !== selectedCaseType) {
+        setSelectedCaseType(match.name);
+      }
+    }
+  }, [queryModel, queryCaseType, selectedModel, selectedCaseType, setDevice]);
 
   // Dynamic price calculation
   const caseTypeObj = CASE_TYPES.find(
@@ -55,7 +159,9 @@ export default function ProductDetailPage({ params }: PageProps) {
         price: singleUnitPrice,
       },
       selectedCaseType,
-      selectedModel
+      selectedModel,
+      undefined,
+      product.image
     );
   };
 
@@ -290,7 +396,9 @@ export default function ProductDetailPage({ params }: PageProps) {
                     textTransform: "uppercase",
                   }}
                 >
-                  {product.franchise.replace("-", " ")} ANIME ARMOR
+                  {isCustomId || product.franchise === "custom"
+                    ? "CUSTOM 3D STUDIO"
+                    : `${product.franchise.replace("-", " ")} ANIME ARMOR`}
                 </span>
                 <span style={{ color: "var(--surface-border)" }}>•</span>
                 <span
@@ -301,7 +409,7 @@ export default function ProductDetailPage({ params }: PageProps) {
                     textTransform: "uppercase",
                   }}
                 >
-                  {product.tag}
+                  {isCustomId || product.isCustom ? "BESPOKE UV PRINT" : product.tag}
                 </span>
               </div>
 
@@ -515,6 +623,13 @@ export default function ProductDetailPage({ params }: PageProps) {
                         setSelectedBrand(b.brand);
                         setSelectedModel(b.models[0]);
                         setDevice(b.brand, b.models[0]);
+                        if (isCustomId) {
+                          setProduct((prev) => ({
+                            ...prev,
+                            name: `Custom ${b.models[0]} Cover`,
+                            description: `Custom designed phone case for ${b.models[0]}. Created in CaseTadka 3D Custom Studio. Permanent HD UV sublimation print with shock-absorbing corners.`,
+                          }));
+                        }
                       }}
                       style={{
                         backgroundColor: selectedBrand === b.brand ? "var(--main-accent)" : "var(--surface)",
@@ -544,6 +659,13 @@ export default function ProductDetailPage({ params }: PageProps) {
                     const newModel = e.target.value;
                     setSelectedModel(newModel);
                     setDevice(selectedBrand, newModel);
+                    if (isCustomId) {
+                      setProduct((prev) => ({
+                        ...prev,
+                        name: `Custom ${newModel} Cover`,
+                        description: `Custom designed phone case for ${newModel}. Created in CaseTadka 3D Custom Studio. Permanent HD UV sublimation print with shock-absorbing corners.`,
+                      }));
+                    }
                   }}
                   style={{
                     width: "100%",
@@ -940,5 +1062,22 @@ export default function ProductDetailPage({ params }: PageProps) {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ProductDetailPage({ params }: PageProps) {
+  const { id } = use(params);
+  return (
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--background)" }}>
+          <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--foreground-muted)" }}>
+            Loading Case Preview...
+          </div>
+        </div>
+      }
+    >
+      <ProductDetailPageContent id={id} />
+    </Suspense>
   );
 }

@@ -23,8 +23,105 @@ export function getDeletedProductIds(): string[] {
   }
 }
 
+const STUDIO_USER_DESIGNS_KEY = "casetadka_studio_user_custom_cases";
+
 /**
- * Retrieve custom phone cases saved by the admin in localStorage
+ * Retrieve a private custom studio design created by the user (isolated from store catalog)
+ */
+export function getUserStudioProduct(id: string): Product | null {
+  if (typeof window === "undefined" || !id) return null;
+
+  // 1. Check window in-memory cache
+  try {
+    const w = window as any;
+    if (w.__CASETADKA_STUDIO_PRODUCTS__?.has(id)) {
+      return w.__CASETADKA_STUDIO_PRODUCTS__.get(id);
+    }
+    if (id.startsWith("custom-") && w.__CASETADKA_LATEST_STUDIO_PRODUCT__) {
+      return w.__CASETADKA_LATEST_STUDIO_PRODUCT__;
+    }
+  } catch {}
+
+  // 2. Check sessionStorage (fast, non-leaking across sessions)
+  try {
+    const directSession = sessionStorage.getItem(`casetadka_studio_${id}`);
+    if (directSession) return JSON.parse(directSession);
+    if (id.startsWith("custom-")) {
+      const latest = sessionStorage.getItem("casetadka_latest_custom_product");
+      if (latest) {
+        const parsed = JSON.parse(latest);
+        if (parsed.id === id || id.startsWith("custom-")) return parsed;
+      }
+    }
+  } catch {}
+
+  // 3. Check localStorage
+  try {
+    const raw = localStorage.getItem(STUDIO_USER_DESIGNS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const found = parsed.find((p: Product) => p.id === id);
+    if (found) return found;
+    // Fallback: If custom ID requested and exists in list, return latest
+    if (id.startsWith("custom-") && parsed.length > 0) {
+      return parsed[0];
+    }
+  } catch (err) {
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Save a private custom studio design (isolated for the user, NEVER added to store catalog)
+ */
+export function saveUserStudioProduct(product: Product): Product {
+  if (typeof window === "undefined") return product;
+
+  // 1. Save to window in-memory cache
+  try {
+    const w = window as any;
+    w.__CASETADKA_STUDIO_PRODUCTS__ = w.__CASETADKA_STUDIO_PRODUCTS__ || new Map();
+    w.__CASETADKA_STUDIO_PRODUCTS__.set(product.id, product);
+    w.__CASETADKA_LATEST_STUDIO_PRODUCT__ = product;
+  } catch {}
+
+  // 2. Save to sessionStorage
+  try {
+    sessionStorage.setItem(`casetadka_studio_${product.id}`, JSON.stringify(product));
+    sessionStorage.setItem("casetadka_latest_custom_product", JSON.stringify(product));
+    if (product.image) {
+      sessionStorage.setItem("casetadka_latest_custom_image", product.image);
+    }
+  } catch (err) {
+    console.warn("Failed to save to sessionStorage:", err);
+  }
+
+  // 3. Save to localStorage with quota-safe trimming
+  try {
+    const raw = localStorage.getItem(STUDIO_USER_DESIGNS_KEY);
+    const list: Product[] = raw ? JSON.parse(raw) : [];
+    // Keep max 5 items to avoid browser localStorage 5MB quota errors
+    const updated = [product, ...list.filter((p) => p.id !== product.id)].slice(0, 5);
+    try {
+      localStorage.setItem(STUDIO_USER_DESIGNS_KEY, JSON.stringify(updated));
+    } catch (quotaErr) {
+      // If quota exceeded, store only this current custom product
+      try {
+        localStorage.setItem(STUDIO_USER_DESIGNS_KEY, JSON.stringify([product]));
+      } catch (innerErr) {
+        console.warn("Quota exceeded even for single product in localStorage", innerErr);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to save user studio product to localStorage", err);
+  }
+  return product;
+}
+
+/**
+ * Retrieve custom phone cases saved by the admin in localStorage (excluding private studio designs)
  */
 export function getCustomProducts(): Product[] {
   if (typeof window === "undefined") return [];
@@ -32,8 +129,28 @@ export function getCustomProducts(): Product[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
     const deletedIds = new Set(getDeletedProductIds());
-    return (Array.isArray(parsed) ? parsed : []).filter((p: Product) => !deletedIds.has(p.id));
+
+    // Filter out deleted items and private studio creations (custom-*)
+    const validStoreProducts = parsed.filter((p: Product) => {
+      if (!p || !p.id) return false;
+      if (deletedIds.has(p.id)) return false;
+      // Private studio cases created by customers must NEVER appear in public store catalog
+      if (p.id.startsWith("custom-") || p.franchise === "custom") return false;
+      return true;
+    });
+
+    // Auto-clean any leaked studio items from localStorage so existing user sessions are cleansed
+    if (validStoreProducts.length !== parsed.length) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(validStoreProducts));
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return validStoreProducts;
   } catch (err) {
     console.error("Failed to parse custom products from localStorage", err);
     return [];
@@ -47,7 +164,7 @@ export function getAllProducts(): Product[] {
   const custom = getCustomProducts().map((p) => ({ ...p, isCustom: true }));
   const deletedIds = new Set(getDeletedProductIds());
   return [...custom, ...PRODUCTS]
-    .filter((p) => !deletedIds.has(p.id))
+    .filter((p) => !deletedIds.has(p.id) && !p.id.startsWith("custom-") && p.franchise !== "custom")
     .map((p) => {
       const isCustomCase = p.isCustom || (p.id.startsWith("case-") && p.id !== "case-tadka-signature-edition");
       if (p.id === "case-tadka-signature-edition" && (p.image === "/case-tadka-logo.png" || !p.image)) {
@@ -58,10 +175,14 @@ export function getAllProducts(): Product[] {
 }
 
 /**
- * Save a new phone case uploaded from the admin panel
+ * Save a new phone case uploaded from the admin panel (studio custom creations are safely diverted)
  */
 export function addCustomProduct(newProduct: Product): Product {
   if (typeof window === "undefined") return newProduct;
+  // If this is a private studio customization, divert to private studio storage
+  if (newProduct.id?.startsWith("custom-") || newProduct.franchise === "custom") {
+    return saveUserStudioProduct(newProduct);
+  }
   try {
     newProduct.isCustom = true;
     // Unmark as deleted if previously deleted
